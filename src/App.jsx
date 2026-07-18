@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Header } from "./components/Header.jsx";
 import { SearchBoard } from "./components/SearchBoard.jsx";
+import { PopularBrowse } from "./components/PopularBrowse.jsx";
 import { Catalog } from "./components/Catalog.jsx";
 import { SellForm } from "./components/SellForm.jsx";
 import { MarketInsights } from "./components/MarketInsights.jsx";
@@ -51,6 +52,8 @@ export function App() {
             />
           </div>
         </section>
+
+        <PopularBrowse filters={filters} onChange={patchFilters} />
 
         <Catalog
           listings={visibleListings}

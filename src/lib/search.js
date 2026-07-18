@@ -4,6 +4,8 @@ export function createDefaultFilters() {
     city: "",
     brand: "",
     model: "",
+    radius: "50",
+    body: "",
     condition: "",
     hasPhoto: false,
     hasHistory: false,
@@ -31,6 +33,7 @@ export function filterListings(listings, filters) {
       (!filters.city || listing.city === filters.city) &&
       (!filters.brand || listing.brand === filters.brand) &&
       (!filters.model || listing.model === filters.model) &&
+      (!filters.body || listing.body === filters.body) &&
       (!filters.condition || listing.condition === filters.condition) &&
       (!filters.hasPhoto || listing.hasPhoto) &&
       (!filters.cleared || listing.cleared) &&

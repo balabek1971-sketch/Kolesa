@@ -3,7 +3,7 @@ import { models, quickBrands, quickCities } from "../data/listings.js";
 export function SearchBoard({ filters, onChange, resultCount }) {
   return (
     <section className="search-board" aria-label="Поиск объявлений">
-      <h1>Выбирайте автомобиль по-своему</h1>
+      <h1>Найдите свой автомобиль</h1>
 
       <div className="primary-filters">
         <label className="select-field">
@@ -24,22 +24,33 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           </select>
         </label>
 
-        <label className="select-field location-field">
-          <span>Город</span>
-          <select value={filters.city} onChange={(event) => onChange({ city: event.target.value })}>
-            <option value="">Весь Казахстан</option>
-            {quickCities.map((city) => <option key={city} value={city}>{city}</option>)}
+        <label className="select-field distance-field">
+          <span>Радиус</span>
+          <select value={filters.radius} onChange={(event) => onChange({ radius: event.target.value })}>
+            <option value="25">25 км</option>
+            <option value="50">50 км</option>
+            <option value="100">100 км</option>
+            <option value="250">250 км</option>
+            <option value="500">Весь Казахстан</option>
           </select>
         </label>
 
-        <button className="location-chip" type="button" onClick={() => onChange({ city: "Алматы" })}>
-          <span aria-hidden="true">●</span>
-          Алматы, KZ
-        </button>
+        <label className="select-field location-field">
+          <span>Город</span>
+          <span className="location-control">
+            <i className="pin-icon" aria-hidden="true" />
+            <select value={filters.city} onChange={(event) => onChange({ city: event.target.value })}>
+              <option value="">Весь Казахстан</option>
+              {quickCities.map((city) => <option key={city} value={city}>{city}</option>)}
+            </select>
+            <i className="location-valid" aria-label="Город определен">✓</i>
+          </span>
+        </label>
 
         <a className="show-results" href="#catalog">
-          Искать <span aria-hidden="true">›</span>
-          <small>{resultCount.toLocaleString("ru-KZ")}</small>
+          <span>Искать</span>
+          <i aria-hidden="true">›</i>
+          <small>{resultCount.toLocaleString("ru-KZ")} авто</small>
         </a>
       </div>
     </section>
