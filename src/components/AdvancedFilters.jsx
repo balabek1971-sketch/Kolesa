@@ -1,4 +1,11 @@
 import { ToggleCheck } from "./controls/ToggleCheck.jsx";
+import {
+  bodyTypes,
+  colors,
+  engineTypes,
+  gearboxTypes,
+  originCountries
+} from "../data/filterOptions.js";
 
 export function AdvancedFilters({ filters, onChange }) {
   return (
@@ -8,11 +15,7 @@ export function AdvancedFilters({ filters, onChange }) {
           <span>Страна происхождения</span>
           <select value={filters.originCountry} onChange={(event) => onChange({ originCountry: event.target.value })}>
             <option value="">Неважно</option>
-            <option value="Япония">Япония</option>
-            <option value="Южная Корея">Южная Корея</option>
-            <option value="Германия">Германия</option>
-            <option value="США">США</option>
-            <option value="Китай">Китай</option>
+            {originCountries.map((country) => <option key={country} value={country}>{country}</option>)}
           </select>
         </label>
 
@@ -20,10 +23,7 @@ export function AdvancedFilters({ filters, onChange }) {
           <span>Кузов</span>
           <select value={filters.body} onChange={(event) => onChange({ body: event.target.value })}>
             <option value="">Любой кузов</option>
-            <option value="Седан">Седан</option>
-            <option value="Кроссовер">Кроссовер</option>
-            <option value="Внедорожник">Внедорожник</option>
-            <option value="Лифтбек">Лифтбек</option>
+            {bodyTypes.map((body) => <option key={body} value={body}>{body}</option>)}
           </select>
         </label>
 
@@ -31,10 +31,7 @@ export function AdvancedFilters({ filters, onChange }) {
           <span>Тип двигателя</span>
           <select value={filters.engineType} onChange={(event) => onChange({ engineType: event.target.value })}>
             <option value="">Любой двигатель</option>
-            <option value="Бензин">Бензин</option>
-            <option value="Дизель">Дизель</option>
-            <option value="Гибрид">Гибрид</option>
-            <option value="Электро">Электро</option>
+            {engineTypes.map((engine) => <option key={engine} value={engine}>{engine}</option>)}
           </select>
         </label>
 
@@ -42,9 +39,7 @@ export function AdvancedFilters({ filters, onChange }) {
           <span>КПП</span>
           <select value={filters.gearbox} onChange={(event) => onChange({ gearbox: event.target.value })}>
             <option value="">Любая КПП</option>
-            <option value="Автомат">Автомат</option>
-            <option value="Механика">Механика</option>
-            <option value="Робот">Робот</option>
+            {gearboxTypes.map((gearbox) => <option key={gearbox} value={gearbox}>{gearbox}</option>)}
           </select>
         </label>
 
@@ -111,29 +106,24 @@ export function AdvancedFilters({ filters, onChange }) {
           </div>
         </fieldset>
 
-        <label className="advanced-field">
+        <div className="advanced-field color-field">
           <span>Цвет</span>
           <select value={filters.colorName} onChange={(event) => onChange({ colorName: event.target.value })}>
             <option value="">Неважно</option>
-            <option value="Черный">Черный</option>
-            <option value="Белый">Белый</option>
-            <option value="Серый">Серый</option>
-            <option value="Синий">Синий</option>
-            <option value="Красный">Красный</option>
-            <option value="Зеленый">Зеленый</option>
+            {colors.map((color) => <option key={color} value={color}>{color}</option>)}
           </select>
-        </label>
+          <ToggleCheck
+            checked={filters.metallic}
+            label="Металлик"
+            onChange={(metallic) => onChange({ metallic })}
+          />
+        </div>
 
         <div className="advanced-checkboxes">
           <ToggleCheck
             checked={filters.dealerOnly}
             label="Только от дилеров"
             onChange={(dealerOnly) => onChange({ dealerOnly })}
-          />
-          <ToggleCheck
-            checked={filters.metallic}
-            label="Металлик"
-            onChange={(metallic) => onChange({ metallic })}
           />
         </div>
 
