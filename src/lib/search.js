@@ -16,6 +16,18 @@ export function createDefaultFilters() {
     priceFrom: "",
     priceTo: "",
     mileageTo: "",
+    originCountry: "",
+    engineType: "",
+    gearbox: "",
+    steering: "",
+    drivetrain: "",
+    availability: "in_stock",
+    engineVolumeFrom: "",
+    engineVolumeTo: "",
+    colorName: "",
+    dealerOnly: false,
+    metallic: false,
+    keyword: "",
     downPaymentFrom: "",
     downPaymentTo: "",
     monthlyPaymentFrom: "",
@@ -35,6 +47,20 @@ export function filterListings(listings, filters) {
       (!filters.model || listing.model === filters.model) &&
       (!filters.body || listing.body === filters.body) &&
       (!filters.condition || listing.condition === filters.condition) &&
+      (!filters.originCountry || listing.originCountry === filters.originCountry) &&
+      (!filters.engineType || listing.engineType === filters.engineType) &&
+      (!filters.gearbox || listing.gearbox === filters.gearbox) &&
+      (!filters.steering || listing.steering === filters.steering) &&
+      (!filters.drivetrain || listing.drivetrain === filters.drivetrain) &&
+      (!filters.availability || listing.availability === filters.availability) &&
+      (!filters.engineVolumeFrom || listing.engineVolume >= Number(filters.engineVolumeFrom)) &&
+      (!filters.engineVolumeTo || listing.engineVolume <= Number(filters.engineVolumeTo)) &&
+      (!filters.colorName || listing.colorName === filters.colorName) &&
+      (!filters.dealerOnly || listing.isDealer) &&
+      (!filters.metallic || listing.metallic) &&
+      (!filters.keyword ||
+        `${listing.title} ${listing.brand} ${listing.model}`.toLocaleLowerCase("ru-KZ")
+          .includes(filters.keyword.toLocaleLowerCase("ru-KZ").trim())) &&
       (!filters.hasPhoto || listing.hasPhoto) &&
       (!filters.cleared || listing.cleared) &&
       (!filters.damaged || listing.damaged) &&

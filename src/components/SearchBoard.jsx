@@ -1,8 +1,13 @@
+import { useState } from "react";
+import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { models, quickBrands, quickCities } from "../data/listings.js";
+import { AdvancedFilters } from "./AdvancedFilters.jsx";
 
 export function SearchBoard({ filters, onChange, resultCount }) {
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
   return (
-    <section className="search-board" aria-label="Поиск объявлений">
+    <section className={`search-board${advancedOpen ? " expanded" : ""}`} aria-label="Поиск объявлений">
       <h1>Найдите свой автомобиль</h1>
 
       <div className="primary-filters">
@@ -113,6 +118,21 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           />
         </label>
       </div>
+
+      <button
+        className="advanced-toggle"
+        type="button"
+        aria-expanded={advancedOpen}
+        onClick={() => setAdvancedOpen((current) => !current)}
+      >
+        <SlidersHorizontal aria-hidden="true" size={19} strokeWidth={1.9} />
+        <span>Расширенный поиск</span>
+        {advancedOpen
+          ? <ChevronUp aria-hidden="true" size={16} />
+          : <ChevronDown aria-hidden="true" size={16} />}
+      </button>
+
+      {advancedOpen && <AdvancedFilters filters={filters} onChange={onChange} />}
     </section>
   );
 }
