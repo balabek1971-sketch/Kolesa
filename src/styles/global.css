@@ -61,12 +61,12 @@ a { color: inherit; text-decoration: none; }
 .advanced-toggle span { border-bottom: 1px dotted currentColor; }
 .advanced-toggle:hover { color: var(--red-dark); }
 .advanced-filters { margin-top: 17px; border-top: 1px solid rgba(86, 95, 94, 0.26); padding-top: 17px; }
-.advanced-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; }
-.advanced-field { display: grid; min-width: 0; gap: 7px; margin: 0; border: 0; padding: 0; color: #272b2a; }
+.advanced-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 820px); margin: 0 auto; gap: 14px 16px; }
+.advanced-field { display: grid; align-content: start; grid-auto-rows: max-content; min-width: 0; gap: 7px; margin: 0; border: 0; padding: 0; color: #272b2a; }
 .advanced-field > span, .advanced-field legend { padding: 0; font-size: 0.78rem; font-weight: 760; }
 .advanced-field select, .advanced-field input { width: 100%; min-width: 0; min-height: 42px; border: 1px solid #cbd0ce; background: rgba(255, 255, 255, 0.96); color: #171717; padding: 9px 11px; outline: 0; }
-.availability-control, .range-control { display: grid; grid-template-columns: 1fr 1fr; }
-.availability-control button { min-height: 42px; border: 1px solid #cbd0ce; background: #fff; color: #222; font-size: 0.84rem; }
+.availability-control, .range-control { display: grid; grid-template-columns: 1fr 1fr; align-self: start; }
+.availability-control button { height: 42px; border: 1px solid #cbd0ce; background: #fff; color: #222; font-size: 0.84rem; }
 .availability-control button + button, .range-control input + input { border-left: 0; }
 .availability-control button.active { background: var(--lime); color: #111; font-weight: 800; }
 .advanced-checkboxes { display: flex; align-items: end; gap: 18px; min-height: 64px; padding-bottom: 9px; }
