@@ -4,7 +4,6 @@ export function createDefaultFilters() {
     city: "",
     brand: "",
     model: "",
-    radius: "50",
     body: "",
     condition: "",
     hasPhoto: false,
@@ -16,6 +15,7 @@ export function createDefaultFilters() {
     yearTo: "",
     priceFrom: "",
     priceTo: "",
+    mileageTo: "",
     downPaymentFrom: "",
     downPaymentTo: "",
     monthlyPaymentFrom: "",
@@ -42,7 +42,8 @@ export function filterListings(listings, filters) {
       (!filters.yearFrom || listing.year >= Number(filters.yearFrom)) &&
       (!filters.yearTo || listing.year <= Number(filters.yearTo)) &&
       (!filters.priceFrom || listing.price >= Number(filters.priceFrom)) &&
-      (!filters.priceTo || listing.price <= Number(filters.priceTo))
+      (!filters.priceTo || listing.price <= Number(filters.priceTo)) &&
+      (!filters.mileageTo || listing.mileage <= Number(filters.mileageTo))
     );
   });
 }

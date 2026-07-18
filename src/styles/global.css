@@ -26,10 +26,7 @@ a { color: inherit; text-decoration: none; }
 .header-brand { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; color: var(--red); font-size: 1.28rem; font-style: italic; font-weight: 950; letter-spacing: 0; white-space: nowrap; }
 .brand-mark { display: grid; place-items: center; width: 29px; height: 29px; border: 2px solid var(--red); color: #111; font-size: 0.82rem; font-style: normal; }
 .header-actions { flex: 0 0 auto; justify-content: flex-end; gap: 8px; }
-.region-code, .city-button, .header-icon { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid #cbcfcd; color: #111; font-weight: 800; }
-.region-code { gap: 8px; border-color: #111; border-radius: 999px; background: #111; color: #fff; padding: 0 13px; }
-.region-code > span:last-child { display: grid; line-height: 1.05; text-align: left; }
-.region-code small { font-size: 0.59rem; font-weight: 650; }
+.city-button, .header-icon { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid #cbcfcd; color: #111; font-weight: 800; }
 .pin-icon { position: relative; display: inline-block; width: 15px; height: 15px; flex: 0 0 15px; border: 2px solid currentColor; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
 .pin-icon::after { content: ""; position: absolute; top: 3px; left: 3px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 .city-button { gap: 8px; border-radius: 999px; background: var(--lime); padding: 0 8px 0 15px; }
@@ -47,18 +44,21 @@ a { color: inherit; text-decoration: none; }
 .hero-shell::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.2); }
 .hero-content { position: relative; z-index: 1; display: grid; place-items: center; min-height: 440px; padding: 28px; }
 
-.search-board { width: min(100%, 950px); padding: 28px 68px 34px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.98) 50%, rgba(202, 208, 207, 0.98) 100%); box-shadow: var(--shadow); clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
+.search-board { width: min(100%, 1080px); padding: 28px 72px 34px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.98) 50%, rgba(202, 208, 207, 0.98) 100%); box-shadow: var(--shadow); clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
 .search-board h1 { margin: 0 0 22px; color: #171717; font-size: clamp(1.75rem, 3.1vw, 2.5rem); font-style: italic; font-weight: 950; letter-spacing: 0; line-height: 1; text-align: center; }
-.primary-filters { display: grid; grid-template-columns: 1.1fr 1.1fr 0.74fr 1.18fr 1.08fr; align-items: stretch; }
+.primary-filters { display: grid; grid-template-columns: 1.1fr 1.1fr 1.15fr 0.94fr; align-items: stretch; }
+.secondary-filters { display: grid; grid-template-columns: 1.15fr 0.76fr 0.76fr 1.1fr 1.1fr 1fr; align-items: stretch; margin-top: 10px; }
 .select-field { display: grid; align-content: center; min-width: 0; min-height: 58px; border: 1px solid #bcc2c0; border-right: 0; background: #fff; padding: 7px 13px; color: #67706e; }
 .select-field > span:first-child { margin-bottom: 4px; font-size: 0.67rem; font-weight: 760; }
-.select-field select { width: 100%; min-width: 0; border: 0; background: transparent; color: #141414; padding: 0; font-size: 0.91rem; font-weight: 750; outline: 0; }
+.select-field select, .select-field input { width: 100%; min-width: 0; border: 0; background: transparent; color: #141414; padding: 0; font-size: 0.91rem; font-weight: 750; outline: 0; }
+.select-field input::placeholder { color: #8a918f; opacity: 1; }
 .location-field { border-right: 1px solid #cbd0ce; }
+.secondary-filters .mileage-field { border-right: 1px solid #cbd0ce; }
 .location-control { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .location-control .pin-icon { width: 14px; height: 14px; flex-basis: 14px; color: #222; }
 .location-control select { flex: 1; }
 .location-valid { display: grid; place-items: center; width: 20px; height: 20px; flex: 0 0 20px; border: 2px solid #111; border-radius: 50%; background: var(--lime); color: #111; font-size: 0.72rem; font-style: normal; font-weight: 950; }
-.show-results { align-self: center; display: grid; grid-template-columns: auto auto; place-content: center; align-items: center; gap: 0 12px; min-width: 158px; min-height: 46px; margin-left: 22px; background: var(--red); color: #fff; font-size: 0.9rem; font-weight: 900; text-transform: uppercase; clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%); }
+.show-results { align-self: center; display: grid; grid-template-columns: auto auto; place-content: center; align-items: center; gap: 0 12px; min-width: 158px; min-height: 46px; margin-left: 20px; background: var(--red); color: #fff; font-size: 0.9rem; font-weight: 900; text-transform: uppercase; clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%); }
 .show-results:hover { background: var(--red-dark); }
 .show-results i { font-size: 1.45rem; font-style: normal; line-height: 0.6; }
 .show-results small { grid-column: 1 / -1; margin-top: 4px; font-size: 0.58rem; font-weight: 650; opacity: 0.78; text-transform: none; }
@@ -107,9 +107,9 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 @media (max-width: 1060px) {
   .header-inner { gap: 20px; }
   .nav { gap: 18px; }
-  .region-code { display: none; }
   .primary-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .select-field, .location-field { border: 1px solid #cbd0ce; }
+  .secondary-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .select-field, .location-field, .secondary-filters .mileage-field { border: 1px solid #cbd0ce; }
   .show-results { grid-column: 1 / -1; width: 190px; margin: 4px auto 0; min-height: 48px; }
   .listingGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sellForm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -125,7 +125,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .hero-content { min-height: 570px; padding: 16px; }
   .search-board { padding: 24px 34px 28px; clip-path: polygon(4% 0, 100% 0, 96% 100%, 0 100%); }
   .search-board h1 { font-size: 1.7rem; line-height: 1.06; }
-  .primary-filters { grid-template-columns: 1fr; gap: 8px; }
+  .primary-filters, .secondary-filters { grid-template-columns: 1fr; gap: 8px; }
   .select-field, .location-field { min-height: 57px; padding: 8px 13px; }
   .show-results { grid-column: auto; width: 100%; min-height: 50px; }
   .popular-browse { width: calc(100% - 32px); padding-top: 22px; }

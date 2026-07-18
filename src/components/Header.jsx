@@ -8,17 +8,11 @@ export function Header({ favoriteCount }) {
         </a>
 
         <nav className="nav" aria-label="Основная навигация">
-          <a href="#catalog">Автомобили</a>
-          <a href="#sell">Продать авто</a>
-          <a href="#insights">Обзоры</a>
-          <a href="#insights">Для дилеров</a>
+          <a href="#catalog">Купить машину</a>
+          <a href="#sell">Продать машину</a>
         </nav>
 
         <div className="header-actions">
-          <button className="region-code" type="button" aria-label="Почтовый индекс 050000">
-            <span className="pin-icon" aria-hidden="true" />
-            <span><small>Индекс</small>050000</span>
-          </button>
           <button className="city-button" type="button">
             Алматы
             <span className="city-chevron" aria-hidden="true">⌄</span>

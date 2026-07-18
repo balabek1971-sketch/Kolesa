@@ -24,17 +24,6 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           </select>
         </label>
 
-        <label className="select-field distance-field">
-          <span>Радиус</span>
-          <select value={filters.radius} onChange={(event) => onChange({ radius: event.target.value })}>
-            <option value="25">25 км</option>
-            <option value="50">50 км</option>
-            <option value="100">100 км</option>
-            <option value="250">250 км</option>
-            <option value="500">Весь Казахстан</option>
-          </select>
-        </label>
-
         <label className="select-field location-field">
           <span>Город</span>
           <span className="location-control">
@@ -52,6 +41,77 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           <i aria-hidden="true">›</i>
           <small>{resultCount.toLocaleString("ru-KZ")} авто</small>
         </a>
+      </div>
+
+      <div className="secondary-filters">
+        <label className="select-field">
+          <span>Состояние</span>
+          <select value={filters.condition} onChange={(event) => onChange({ condition: event.target.value })}>
+            <option value="">Все автомобили</option>
+            <option value="new">Новые</option>
+            <option value="used">С пробегом</option>
+          </select>
+        </label>
+
+        <label className="select-field">
+          <span>Год от</span>
+          <input
+            type="number"
+            min="1950"
+            max="2026"
+            placeholder="2015"
+            value={filters.yearFrom}
+            onChange={(event) => onChange({ yearFrom: event.target.value })}
+          />
+        </label>
+
+        <label className="select-field">
+          <span>Год до</span>
+          <input
+            type="number"
+            min="1950"
+            max="2026"
+            placeholder="2026"
+            value={filters.yearTo}
+            onChange={(event) => onChange({ yearTo: event.target.value })}
+          />
+        </label>
+
+        <label className="select-field">
+          <span>Цена от, ₸</span>
+          <input
+            type="number"
+            min="0"
+            step="100000"
+            placeholder="5 000 000"
+            value={filters.priceFrom}
+            onChange={(event) => onChange({ priceFrom: event.target.value })}
+          />
+        </label>
+
+        <label className="select-field">
+          <span>Цена до, ₸</span>
+          <input
+            type="number"
+            min="0"
+            step="100000"
+            placeholder="20 000 000"
+            value={filters.priceTo}
+            onChange={(event) => onChange({ priceTo: event.target.value })}
+          />
+        </label>
+
+        <label className="select-field mileage-field">
+          <span>Пробег до, км</span>
+          <input
+            type="number"
+            min="0"
+            step="1000"
+            placeholder="100 000"
+            value={filters.mileageTo}
+            onChange={(event) => onChange({ mileageTo: event.target.value })}
+          />
+        </label>
       </div>
     </section>
   );
