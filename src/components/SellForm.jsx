@@ -1,4 +1,4 @@
-export function SellForm({ onSubmit }) {
+export function SellForm({ onSubmit, userEmail }) {
   function handleSubmit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -27,11 +27,12 @@ export function SellForm({ onSubmit }) {
   }
 
   return (
-    <section className="sell" id="sell">
+    <section className="sell">
       <div className="sectionHead">
         <div>
           <p className="eyebrow">Продавцам</p>
           <h2>Разместить объявление</h2>
+          <p className="signed-in-as">Вы вошли как {userEmail}</p>
         </div>
       </div>
       <form className="sellForm" onSubmit={handleSubmit}>

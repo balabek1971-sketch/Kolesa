@@ -11,7 +11,7 @@ export function Header({ favoriteCount }) {
 
         <nav className="nav" aria-label="Основная навигация">
           <a href="#catalog">Купить машину</a>
-          <a href="#sell">Продать машину</a>
+          <a href="#/sell">Продать машину</a>
         </nav>
 
         <div className="header-actions">
@@ -22,10 +22,10 @@ export function Header({ favoriteCount }) {
           <button className="header-icon favorite-summary" type="button" aria-label={`Избранное: ${favoriteCount}`}>
             <Heart aria-hidden="true" size={20} strokeWidth={1.7} />
           </button>
-          <button className="header-icon profile-button" type="button" aria-label="Личный кабинет">
+          <a className="header-icon profile-button" href="#/account" aria-label="Личный кабинет">
             <UserRound aria-hidden="true" size={20} strokeWidth={1.7} />
             <ChevronDown aria-hidden="true" size={15} strokeWidth={1.8} />
-          </button>
+          </a>
         </div>
       </div>
     </header>

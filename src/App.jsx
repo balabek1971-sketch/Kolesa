@@ -1,18 +1,32 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Header } from "./components/Header.jsx";
-import { SearchBoard } from "./components/SearchBoard.jsx";
-import { PopularBrowse } from "./components/PopularBrowse.jsx";
-import { Catalog } from "./components/Catalog.jsx";
-import { SellForm } from "./components/SellForm.jsx";
-import { MarketInsights } from "./components/MarketInsights.jsx";
+import { AccountPage } from "./pages/AccountPage.jsx";
+import { HomePage } from "./pages/HomePage.jsx";
+import { SellPage } from "./pages/SellPage.jsx";
 import { initialListings } from "./data/listings.js";
+import { useAuth } from "./hooks/useAuth.js";
 import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
 
+function getRoute() {
+  const hash = window.location.hash;
+  if (hash.startsWith("#/sell")) return "sell";
+  if (hash.startsWith("#/account")) return "account";
+  return "home";
+}
+
 export function App() {
+  const [route, setRoute] = useState(getRoute);
   const [filters, setFilters] = useState(createDefaultFilters);
   const [sort, setSort] = useState("recommended");
   const [listings, setListings] = useState(initialListings);
   const [favorites, setFavorites] = useState(() => new Set());
+  const auth = useAuth();
+
+  useEffect(() => {
+    const handleRouteChange = () => setRoute(getRoute());
+    window.addEventListener("hashchange", handleRouteChange);
+    return () => window.removeEventListener("hashchange", handleRouteChange);
+  }, []);
 
   const visibleListings = useMemo(() => {
     return sortListings(filterListings(listings, filters), sort);
@@ -20,10 +34,6 @@ export function App() {
 
   function patchFilters(patch) {
     setFilters((current) => ({ ...current, ...patch }));
-  }
-
-  function resetFilters() {
-    setFilters(createDefaultFilters());
   }
 
   function toggleFavorite(id) {
@@ -36,36 +46,32 @@ export function App() {
 
   function addListing(listing) {
     setListings((current) => [listing, ...current]);
+    window.location.hash = "catalog";
+  }
+
+  let page;
+  if (route === "sell") {
+    page = <SellPage auth={auth} onSubmit={addListing} />;
+  } else if (route === "account") {
+    page = <AccountPage auth={auth} />;
+  } else {
+    page = (
+      <HomePage
+        favorites={favorites}
+        filters={filters}
+        listings={visibleListings}
+        onFavoriteToggle={toggleFavorite}
+        onFiltersChange={patchFilters}
+        onSortChange={setSort}
+        sort={sort}
+      />
+    );
   }
 
   return (
     <>
       <Header favoriteCount={favorites.size} />
-      <main>
-        <section className="hero-shell" id="top">
-          <div className="hero-content">
-            <SearchBoard
-              filters={filters}
-              onChange={patchFilters}
-              onReset={resetFilters}
-              resultCount={visibleListings.length}
-            />
-          </div>
-        </section>
-
-        <PopularBrowse filters={filters} onChange={patchFilters} />
-
-        <Catalog
-          listings={visibleListings}
-          favorites={favorites}
-          sort={sort}
-          onSortChange={setSort}
-          onFavoriteToggle={toggleFavorite}
-        />
-
-        <MarketInsights listings={listings} />
-        <SellForm onSubmit={addListing} />
-      </main>
+      {page}
     </>
   );
 }

@@ -67,7 +67,7 @@ a { color: inherit; text-decoration: none; }
 .popular-buttons a { min-height: 38px; border: 1px solid #cfd4d2; background: #fff; padding: 9px 15px; font-size: 0.84rem; font-weight: 760; }
 .popular-buttons a:hover, .popular-buttons a.active { border-color: #111; background: var(--lime); }
 
-.catalog, .insights, .sell { margin: 34px auto; width: min(92vw, 1280px); padding: 24px; border: 1px solid var(--line); background: var(--panel); }
+.catalog, .sell { margin: 34px auto; width: min(92vw, 1280px); padding: 24px; border: 1px solid var(--line); background: var(--panel); }
 .sectionHead { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .eyebrow { margin: 0 0 8px; color: var(--red); font-size: 0.76rem; font-weight: 860; letter-spacing: 0; text-transform: uppercase; }
 .sectionHead h2 { margin: 0; font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: 0; }
@@ -98,6 +98,28 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .sellForm { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
 .sellForm label { display: grid; gap: 7px; color: var(--muted); font-size: 0.88rem; font-weight: 750; }
 .sellForm button { align-self: end; min-height: 42px; border: 0; background: var(--red); color: #fff; font-weight: 850; }
+.signed-in-as { margin: 8px 0 0; color: var(--muted); font-size: 0.88rem; }
+
+.standalone-page { display: grid; align-items: start; min-height: calc(100vh - 64px); padding: 56px 24px; background: #eef0ef; }
+.page-status { margin: 80px auto; color: var(--muted); font-weight: 750; }
+.auth-panel, .account-panel { width: min(100%, 480px); margin: 0 auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 30px; box-shadow: 0 16px 36px rgba(20, 25, 24, 0.1); }
+.auth-panel h1, .account-panel h1 { margin: 0 0 9px; font-size: 1.65rem; letter-spacing: 0; }
+.auth-panel > p:not(.eyebrow):not(.auth-message), .account-panel > p:not(.eyebrow) { margin: 0; color: var(--muted); line-height: 1.5; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 24px 0 18px; border: 1px solid var(--line); }
+.auth-tabs button { min-height: 42px; border: 0; background: #fff; color: var(--muted); font-weight: 800; }
+.auth-tabs button + button { border-left: 1px solid var(--line); }
+.auth-tabs button.active { background: var(--lime); color: #111; }
+.auth-form { display: grid; gap: 15px; }
+.auth-form label { display: grid; gap: 7px; color: var(--muted); font-size: 0.86rem; font-weight: 760; }
+.auth-form input { min-height: 44px; }
+.auth-form > button { min-height: 46px; border: 0; background: var(--red); color: #fff; font-weight: 850; }
+.auth-form > button:hover { background: var(--red-dark); }
+.auth-form > button:disabled { cursor: wait; opacity: 0.64; }
+.auth-message { margin: 15px 0 0; color: #4d5900; font-size: 0.88rem; line-height: 1.45; }
+.account-actions { display: flex; gap: 10px; margin-top: 25px; }
+.account-actions a, .account-actions button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; border: 1px solid #111; padding: 0 16px; font-weight: 800; }
+.account-actions a { background: var(--red); border-color: var(--red); color: #fff; }
+.account-actions button { background: #fff; color: #111; }
 
 @media (max-width: 1060px) {
   .header-inner { gap: 20px; }
@@ -134,7 +156,10 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .hero-shell, .hero-content { min-height: 620px; }
   .search-board { padding: 22px 26px 26px; }
   .popular-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
-  .catalog, .insights, .sell { width: calc(100% - 24px); margin: 22px 12px; padding: 16px; }
+  .catalog, .sell { width: calc(100% - 24px); margin: 22px 12px; padding: 16px; }
+  .standalone-page { padding: 28px 12px; }
+  .auth-panel, .account-panel { padding: 22px; }
+  .account-actions { align-items: stretch; flex-direction: column; }
   .listingGrid, .sellForm, .bar { grid-template-columns: 1fr; }
   .sectionHead, .sellerLine { align-items: stretch; flex-direction: column; }
 }
