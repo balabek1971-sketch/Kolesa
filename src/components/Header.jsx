@@ -1,3 +1,5 @@
+import { ChevronDown, Heart, UserRound } from "lucide-react";
+
 export function Header({ favoriteCount }) {
   return (
     <header className="site-header">
@@ -18,12 +20,11 @@ export function Header({ favoriteCount }) {
             <span className="city-chevron" aria-hidden="true">⌄</span>
           </button>
           <button className="header-icon favorite-summary" type="button" aria-label={`Избранное: ${favoriteCount}`}>
-            <span aria-hidden="true">♡</span>
-            <b>{favoriteCount}</b>
+            <Heart aria-hidden="true" size={20} strokeWidth={1.7} />
           </button>
           <button className="header-icon profile-button" type="button" aria-label="Личный кабинет">
-            <span className="profile-glyph" aria-hidden="true" />
-            <span className="profile-chevron" aria-hidden="true">⌄</span>
+            <UserRound aria-hidden="true" size={20} strokeWidth={1.7} />
+            <ChevronDown aria-hidden="true" size={15} strokeWidth={1.8} />
           </button>
         </div>
       </div>
