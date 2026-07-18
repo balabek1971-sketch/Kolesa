@@ -41,21 +41,30 @@ export function App() {
     <>
       <Header favoriteCount={favorites.size} />
       <main>
-        <section className="hero-shell">
-          <div className="hero-copy">
-            <p className="eyebrow">Автомобили по Казахстану</p>
-            <h1>QazAuto Market</h1>
-            <p>
-              Маркетплейс новых и подержанных авто с быстрым поиском, честными
-              фильтрами и архитектурой под Supabase, GitHub и Vercel.
-            </p>
+        <section className="hero-shell" id="top">
+          <div className="hero-content">
+            <SearchBoard
+              filters={filters}
+              onChange={patchFilters}
+              onReset={resetFilters}
+              resultCount={visibleListings.length}
+            />
+
+            <div className="hero-copy">
+              <p className="eyebrow">Автомобили по Казахстану</p>
+              <h1>Своя дорога начинается здесь.</h1>
+              <p>
+                Новые и проверенные автомобили от частных продавцов и дилеров. Выбирайте город,
+                марку и параметры - остальное найдём.
+              </p>
+            </div>
+
+            <div className="market-ribbon" aria-label="Преимущества QazAuto">
+              <span>Объявления со всего Казахстана</span>
+              <span>Проверка истории авто</span>
+              <span>Помощь с кредитом</span>
+            </div>
           </div>
-          <SearchBoard
-            filters={filters}
-            onChange={patchFilters}
-            onReset={resetFilters}
-            resultCount={visibleListings.length}
-          />
         </section>
 
         <Catalog
