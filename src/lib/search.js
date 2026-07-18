@@ -3,6 +3,7 @@ export function createDefaultFilters() {
     category: "cars",
     city: "",
     brand: "",
+    model: "",
     condition: "",
     hasPhoto: false,
     hasHistory: false,
@@ -29,6 +30,7 @@ export function filterListings(listings, filters) {
       categoryMatch &&
       (!filters.city || listing.city === filters.city) &&
       (!filters.brand || listing.brand === filters.brand) &&
+      (!filters.model || listing.model === filters.model) &&
       (!filters.condition || listing.condition === filters.condition) &&
       (!filters.hasPhoto || listing.hasPhoto) &&
       (!filters.cleared || listing.cleared) &&

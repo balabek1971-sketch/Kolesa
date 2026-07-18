@@ -49,21 +49,6 @@ export function App() {
               onReset={resetFilters}
               resultCount={visibleListings.length}
             />
-
-            <div className="hero-copy">
-              <p className="eyebrow">Автомобили по Казахстану</p>
-              <h1>Своя дорога начинается здесь.</h1>
-              <p>
-                Новые и проверенные автомобили от частных продавцов и дилеров. Выбирайте город,
-                марку и параметры - остальное найдём.
-              </p>
-            </div>
-
-            <div className="market-ribbon" aria-label="Преимущества QazAuto">
-              <span>Объявления со всего Казахстана</span>
-              <span>Проверка истории авто</span>
-              <span>Помощь с кредитом</span>
-            </div>
           </div>
         </section>
 
