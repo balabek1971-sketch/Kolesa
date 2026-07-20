@@ -58,7 +58,9 @@ export function SearchBoard({ filters, onChange, resultCount }) {
 
   const modelOptions = useMemo(() => models.map((model) => ({
     label: model.name,
-    meta: countLabel(model.generations.length, ["поколение", "поколения", "поколений"]),
+    meta: model.generations.length
+      ? countLabel(model.generations.length, ["поколение", "поколения", "поколений"])
+      : "",
     value: model.name,
   })), [models]);
 
@@ -105,11 +107,14 @@ export function SearchBoard({ filters, onChange, resultCount }) {
         <div className="select-field">
           <span>Поколение</span>
           <OptionPicker
-            disabled={!filters.model}
+            disabled={!filters.model || !generations.length}
+            emptyMessage="Поколения для этой модели пока не добавлены"
             label={`Поколение ${filters.brand} ${filters.model}`}
             onChange={(generation) => onChange({ generation, trim: "" })}
             options={generationOptions}
-            placeholder={filters.model ? "Любое поколение" : "Сначала модель"}
+            placeholder={filters.model
+              ? generations.length ? "Любое поколение" : "Пока нет данных"
+              : "Сначала модель"}
             value={filters.generation}
           />
         </div>
@@ -117,11 +122,14 @@ export function SearchBoard({ filters, onChange, resultCount }) {
         <div className="select-field">
           <span>Комплектация</span>
           <OptionPicker
-            disabled={!filters.generation}
+            disabled={!filters.generation || !trims.length}
+            emptyMessage="Комплектации для этого поколения пока не добавлены"
             label={`Комплектация ${filters.brand} ${filters.model}`}
             onChange={(trim) => onChange({ trim })}
             options={trimOptions}
-            placeholder={filters.generation ? "Любая комплектация" : "Сначала поколение"}
+            placeholder={filters.generation
+              ? trims.length ? "Любая комплектация" : "Пока нет данных"
+              : "Сначала поколение"}
             value={filters.trim}
           />
         </div>

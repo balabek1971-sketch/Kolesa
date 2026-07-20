@@ -1,881 +1,1188 @@
 {
-  "generatedAt": "2026-07-20T12:28:24+00:00",
-  "source": "https://cardata.wiki/",
-  "license": "CC BY 4.0",
+  "generatedAt": "2026-07-20T13:20:16+00:00",
+  "source": "kolesa_marki_modeli.txt",
   "totals": {
-    "brands": 124,
-    "models": 4466,
-    "generations": 7111,
-    "trims": 28559
+    "brands": 168,
+    "models": 1746,
+    "generations": 0,
+    "trims": 0
   },
   "brands": {
     "audi": {
-      "brand": "AUDI",
+      "brand": "Audi",
       "file": "audi.json",
-      "models": 152,
-      "generations": 315,
-      "trims": 1887
+      "models": 43,
+      "generations": 0,
+      "trims": 0
     },
     "bmw": {
       "brand": "BMW",
       "file": "bmw.json",
-      "models": 159,
-      "generations": 293,
-      "trims": 2251
-    },
-    "ford": {
-      "brand": "FORD",
-      "file": "ford.json",
-      "models": 147,
-      "generations": 346,
-      "trims": 1498
-    },
-    "honda": {
-      "brand": "HONDA",
-      "file": "honda.json",
-      "models": 87,
-      "generations": 196,
-      "trims": 568
-    },
-    "hyundai": {
-      "brand": "HYUNDAI",
-      "file": "hyundai.json",
-      "models": 80,
-      "generations": 162,
-      "trims": 701
-    },
-    "kia": {
-      "brand": "KIA",
-      "file": "kia.json",
-      "models": 60,
-      "generations": 118,
-      "trims": 530
-    },
-    "nissan": {
-      "brand": "NISSAN",
-      "file": "nissan.json",
-      "models": 109,
-      "generations": 223,
-      "trims": 662
-    },
-    "peugeot": {
-      "brand": "PEUGEOT",
-      "file": "peugeot.json",
-      "models": 95,
-      "generations": 145,
-      "trims": 892
-    },
-    "renault": {
-      "brand": "RENAULT",
-      "file": "renault.json",
-      "models": 116,
-      "generations": 215,
-      "trims": 1123
-    },
-    "skoda": {
-      "brand": "SKODA",
-      "file": "skoda.json",
-      "models": 51,
-      "generations": 90,
-      "trims": 588
-    },
-    "toyota": {
-      "brand": "TOYOTA",
-      "file": "toyota.json",
-      "models": 128,
-      "generations": 277,
-      "trims": 938
-    },
-    "vauxhall": {
-      "brand": "VAUXHALL",
-      "file": "vauxhall.json",
-      "models": 46,
-      "generations": 66,
-      "trims": 368
-    },
-    "volkswagen": {
-      "brand": "VOLKSWAGEN",
-      "file": "volkswagen.json",
-      "models": 158,
-      "generations": 265,
-      "trims": 1574
-    },
-    "volvo": {
-      "brand": "VOLVO",
-      "file": "volvo.json",
-      "models": 60,
-      "generations": 102,
-      "trims": 783
-    },
-    "ac": {
-      "brand": "AC",
-      "file": "ac.json",
-      "models": 7,
-      "generations": 7,
-      "trims": 10
-    },
-    "acura": {
-      "brand": "ACURA",
-      "file": "acura.json",
-      "models": 26,
-      "generations": 58,
-      "trims": 114
-    },
-    "alfaromeo": {
-      "brand": "ALFA ROMEO",
-      "file": "alfa-romeo.json",
-      "models": 72,
-      "generations": 97,
-      "trims": 358
-    },
-    "alpine": {
-      "brand": "ALPINE",
-      "file": "alpine.json",
-      "models": 8,
-      "generations": 9,
-      "trims": 20
-    },
-    "ariel": {
-      "brand": "ARIEL",
-      "file": "ariel.json",
-      "models": 5,
-      "generations": 5,
-      "trims": 9
-    },
-    "aro": {
-      "brand": "ARO",
-      "file": "aro.json",
-      "models": 5,
-      "generations": 6,
-      "trims": 14
-    },
-    "artega": {
-      "brand": "ARTEGA",
-      "file": "artega.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 2
-    },
-    "astonmartin": {
-      "brand": "ASTON MARTIN",
-      "file": "aston-martin.json",
-      "models": 70,
-      "generations": 86,
-      "trims": 106
-    },
-    "aurus": {
-      "brand": "AURUS",
-      "file": "aurus.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 2
-    },
-    "bentley": {
-      "brand": "BENTLEY",
-      "file": "bentley.json",
-      "models": 36,
-      "generations": 52,
-      "trims": 87
-    },
-    "bristol": {
-      "brand": "BRISTOL",
-      "file": "bristol.json",
-      "models": 22,
-      "generations": 22,
-      "trims": 27
-    },
-    "bufori": {
-      "brand": "BUFORI",
-      "file": "bufori.json",
-      "models": 5,
-      "generations": 5,
-      "trims": 10
-    },
-    "bugatti": {
-      "brand": "BUGATTI",
-      "file": "bugatti.json",
-      "models": 39,
-      "generations": 39,
-      "trims": 39
-    },
-    "buick": {
-      "brand": "BUICK",
-      "file": "buick.json",
       "models": 37,
-      "generations": 56,
-      "trims": 110
+      "generations": 0,
+      "trims": 0
     },
-    "cadillac": {
-      "brand": "CADILLAC",
-      "file": "cadillac.json",
-      "models": 47,
-      "generations": 69,
-      "trims": 179
-    },
-    "caterham": {
-      "brand": "CATERHAM",
-      "file": "caterham.json",
-      "models": 8,
-      "generations": 8,
-      "trims": 13
+    "changan": {
+      "brand": "Changan",
+      "file": "changan.json",
+      "models": 33,
+      "generations": 0,
+      "trims": 0
     },
     "chevrolet": {
-      "brand": "CHEVROLET",
+      "brand": "Chevrolet",
       "file": "chevrolet.json",
-      "models": 161,
-      "generations": 233,
-      "trims": 777
-    },
-    "chrysler": {
-      "brand": "CHRYSLER",
-      "file": "chrysler.json",
-      "models": 34,
-      "generations": 53,
-      "trims": 154
-    },
-    "citroen": {
-      "brand": "CITROEN",
-      "file": "citroen.json",
-      "models": 82,
-      "generations": 141,
-      "trims": 749
-    },
-    "cupra": {
-      "brand": "CUPRA",
-      "file": "cupra.json",
-      "models": 7,
-      "generations": 7,
-      "trims": 30
-    },
-    "dacia": {
-      "brand": "DACIA",
-      "file": "dacia.json",
-      "models": 28,
-      "generations": 49,
-      "trims": 186
+      "models": 47,
+      "generations": 0,
+      "trims": 0
     },
     "daewoo": {
-      "brand": "DAEWOO",
+      "brand": "Daewoo",
       "file": "daewoo.json",
-      "models": 25,
-      "generations": 27,
-      "trims": 91
+      "models": 21,
+      "generations": 0,
+      "trims": 0
     },
-    "daihatsu": {
-      "brand": "DAIHATSU",
-      "file": "daihatsu.json",
-      "models": 17,
-      "generations": 26,
-      "trims": 56
+    "honda": {
+      "brand": "Honda",
+      "file": "honda.json",
+      "models": 48,
+      "generations": 0,
+      "trims": 0
     },
-    "datsun": {
-      "brand": "DATSUN",
-      "file": "datsun.json",
-      "models": 3,
-      "generations": 4,
-      "trims": 9
+    "hyundai": {
+      "brand": "Hyundai",
+      "file": "hyundai.json",
+      "models": 55,
+      "generations": 0,
+      "trims": 0
     },
-    "dodge": {
-      "brand": "DODGE",
-      "file": "dodge.json",
-      "models": 41,
-      "generations": 71,
-      "trims": 259
-    },
-    "donkervoort": {
-      "brand": "DONKERVOORT",
-      "file": "donkervoort.json",
-      "models": 1,
-      "generations": 1,
-      "trims": 6
-    },
-    "drmotor": {
-      "brand": "DR MOTOR",
-      "file": "dr-motor.json",
-      "models": 4,
-      "generations": 4,
-      "trims": 7
-    },
-    "dsautomobiles": {
-      "brand": "DS AUTOMOBILES",
-      "file": "ds-automobiles.json",
-      "models": 10,
-      "generations": 12,
-      "trims": 75
-    },
-    "delorean": {
-      "brand": "DeLorean",
-      "file": "delorean.json",
-      "models": 1,
-      "generations": 1,
-      "trims": 3
-    },
-    "eagle": {
-      "brand": "EAGLE",
-      "file": "eagle.json",
-      "models": 4,
-      "generations": 4,
-      "trims": 14
-    },
-    "ferrari": {
-      "brand": "FERRARI",
-      "file": "ferrari.json",
-      "models": 110,
-      "generations": 111,
-      "trims": 150
-    },
-    "fiat": {
-      "brand": "FIAT",
-      "file": "fiat.json",
-      "models": 167,
-      "generations": 210,
-      "trims": 731
-    },
-    "fisker": {
-      "brand": "FISKER",
-      "file": "fisker.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 4
-    },
-    "fso": {
-      "brand": "FSO",
-      "file": "fso.json",
-      "models": 6,
-      "generations": 6,
-      "trims": 16
-    },
-    "geely": {
-      "brand": "GEELY",
-      "file": "geely.json",
-      "models": 6,
-      "generations": 6,
-      "trims": 9
-    },
-    "genesis": {
-      "brand": "GENESIS",
-      "file": "genesis.json",
-      "models": 7,
-      "generations": 12,
-      "trims": 54
-    },
-    "gmc": {
-      "brand": "GMC",
-      "file": "gmc.json",
-      "models": 38,
-      "generations": 58,
-      "trims": 202
-    },
-    "gordonmurrayautomotive": {
-      "brand": "GORDON MURRAY Automotive",
-      "file": "gordon-murray-automotive.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 2
-    },
-    "gtamotor": {
-      "brand": "GTA Motor",
-      "file": "gta-motor.json",
-      "models": 1,
-      "generations": 1,
-      "trims": 1
-    },
-    "hindustan": {
-      "brand": "HINDUSTAN",
-      "file": "hindustan.json",
-      "models": 3,
-      "generations": 3,
-      "trims": 9
-    },
-    "holden": {
-      "brand": "HOLDEN",
-      "file": "holden.json",
-      "models": 52,
-      "generations": 66,
-      "trims": 286
-    },
-    "hummer": {
-      "brand": "HUMMER",
-      "file": "hummer.json",
-      "models": 8,
-      "generations": 8,
-      "trims": 12
-    },
-    "ineos": {
-      "brand": "INEOS",
-      "file": "ineos.json",
-      "models": 1,
-      "generations": 1,
-      "trims": 2
-    },
-    "infiniti": {
-      "brand": "INFINITI",
-      "file": "infiniti.json",
-      "models": 40,
-      "generations": 59,
-      "trims": 158
-    },
-    "isuzu": {
-      "brand": "ISUZU",
-      "file": "isuzu.json",
-      "models": 17,
-      "generations": 17,
-      "trims": 67
-    },
-    "jaguar": {
-      "brand": "JAGUAR",
-      "file": "jaguar.json",
-      "models": 36,
-      "generations": 68,
-      "trims": 240
-    },
-    "jeep": {
-      "brand": "JEEP",
-      "file": "jeep.json",
-      "models": 34,
-      "generations": 51,
-      "trims": 230
-    },
-    "koenigsegg": {
-      "brand": "KOENIGSEGG",
-      "file": "koenigsegg.json",
-      "models": 12,
-      "generations": 12,
-      "trims": 13
-    },
-    "ktm": {
-      "brand": "KTM",
-      "file": "ktm.json",
-      "models": 4,
-      "generations": 4,
-      "trims": 4
-    },
-    "karma": {
-      "brand": "Karma",
-      "file": "karma.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 2
-    },
-    "lada": {
-      "brand": "LADA",
-      "file": "lada.json",
-      "models": 12,
-      "generations": 12,
-      "trims": 40
-    },
-    "lamborghini": {
-      "brand": "LAMBORGHINI",
-      "file": "lamborghini.json",
-      "models": 76,
-      "generations": 78,
-      "trims": 88
-    },
-    "lancia": {
-      "brand": "LANCIA",
-      "file": "lancia.json",
-      "models": 46,
-      "generations": 63,
-      "trims": 215
-    },
-    "landrover": {
-      "brand": "LAND ROVER",
-      "file": "land-rover.json",
-      "models": 34,
-      "generations": 59,
-      "trims": 223
+    "kia": {
+      "brand": "Kia",
+      "file": "kia.json",
+      "models": 55,
+      "generations": 0,
+      "trims": 0
     },
     "lexus": {
-      "brand": "LEXUS",
+      "brand": "Lexus",
       "file": "lexus.json",
-      "models": 28,
-      "generations": 73,
-      "trims": 191
-    },
-    "lightyear": {
-      "brand": "LIGHTYEAR",
-      "file": "lightyear.json",
-      "models": 1,
-      "generations": 1,
-      "trims": 1
-    },
-    "lincoln": {
-      "brand": "LINCOLN",
-      "file": "lincoln.json",
       "models": 17,
-      "generations": 45,
-      "trims": 119
-    },
-    "lotus": {
-      "brand": "LOTUS",
-      "file": "lotus.json",
-      "models": 27,
-      "generations": 32,
-      "trims": 76
-    },
-    "lucidmotors": {
-      "brand": "Lucid Motors",
-      "file": "lucid-motors.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 5
-    },
-    "marussia": {
-      "brand": "MARUSSIA",
-      "file": "marussia.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 6
-    },
-    "marutisuzuki": {
-      "brand": "MARUTI SUZUKI",
-      "file": "maruti-suzuki.json",
-      "models": 9,
-      "generations": 9,
-      "trims": 12
-    },
-    "maserati": {
-      "brand": "MASERATI",
-      "file": "maserati.json",
-      "models": 38,
-      "generations": 44,
-      "trims": 83
-    },
-    "maybach": {
-      "brand": "MAYBACH",
-      "file": "maybach.json",
-      "models": 36,
-      "generations": 36,
-      "trims": 53
+      "generations": 0,
+      "trims": 0
     },
     "mazda": {
-      "brand": "MAZDA",
+      "brand": "Mazda",
       "file": "mazda.json",
-      "models": 62,
-      "generations": 100,
-      "trims": 460
-    },
-    "mclaren": {
-      "brand": "MCLAREN",
-      "file": "mclaren.json",
-      "models": 29,
-      "generations": 29,
-      "trims": 30
+      "models": 39,
+      "generations": 0,
+      "trims": 0
     },
     "mercedesbenz": {
-      "brand": "MERCEDES BENZ",
+      "brand": "Mercedes-Benz",
       "file": "mercedes-benz.json",
-      "models": 341,
-      "generations": 466,
-      "trims": 2266
+      "models": 41,
+      "generations": 0,
+      "trims": 0
     },
-    "mercury": {
-      "brand": "MERCURY",
-      "file": "mercury.json",
-      "models": 10,
-      "generations": 15,
-      "trims": 31
+    "mitsubishi": {
+      "brand": "Mitsubishi",
+      "file": "mitsubishi.json",
+      "models": 51,
+      "generations": 0,
+      "trims": 0
+    },
+    "nissan": {
+      "brand": "Nissan",
+      "file": "nissan.json",
+      "models": 75,
+      "generations": 0,
+      "trims": 0
+    },
+    "opel": {
+      "brand": "Opel",
+      "file": "opel.json",
+      "models": 24,
+      "generations": 0,
+      "trims": 0
+    },
+    "renault": {
+      "brand": "Renault",
+      "file": "renault.json",
+      "models": 26,
+      "generations": 0,
+      "trims": 0
+    },
+    "subaru": {
+      "brand": "Subaru",
+      "file": "subaru.json",
+      "models": 18,
+      "generations": 0,
+      "trims": 0
+    },
+    "toyota": {
+      "brand": "Toyota",
+      "file": "toyota.json",
+      "models": 139,
+      "generations": 0,
+      "trims": 0
+    },
+    "volkswagen": {
+      "brand": "Volkswagen",
+      "file": "volkswagen.json",
+      "models": 46,
+      "generations": 0,
+      "trims": 0
+    },
+    "вазlada": {
+      "brand": "ВАЗ (Lada)",
+      "file": "lada.json",
+      "models": 31,
+      "generations": 0,
+      "trims": 0
+    },
+    "газ": {
+      "brand": "ГАЗ",
+      "file": "brand-9ce7a3a923.json",
+      "models": 18,
+      "generations": 0,
+      "trims": 0
+    },
+    "ford": {
+      "brand": "Ford",
+      "file": "ford.json",
+      "models": 47,
+      "generations": 0,
+      "trims": 0
+    },
+    "skoda": {
+      "brand": "Skoda",
+      "file": "skoda.json",
+      "models": 11,
+      "generations": 0,
+      "trims": 0
+    },
+    "landrover": {
+      "brand": "Land Rover",
+      "file": "land-rover.json",
+      "models": 8,
+      "generations": 0,
+      "trims": 0
+    },
+    "byd": {
+      "brand": "BYD",
+      "file": "byd.json",
+      "models": 37,
+      "generations": 0,
+      "trims": 0
+    },
+    "geely": {
+      "brand": "Geely",
+      "file": "geely.json",
+      "models": 19,
+      "generations": 0,
+      "trims": 0
+    },
+    "уаз": {
+      "brand": "УАЗ",
+      "file": "brand-eb1c409705.json",
+      "models": 12,
+      "generations": 0,
+      "trims": 0
+    },
+    "chery": {
+      "brand": "Chery",
+      "file": "chery.json",
+      "models": 31,
+      "generations": 0,
+      "trims": 0
+    },
+    "infiniti": {
+      "brand": "Infiniti",
+      "file": "infiniti.json",
+      "models": 19,
+      "generations": 0,
+      "trims": 0
+    },
+    "jac": {
+      "brand": "JAC",
+      "file": "jac.json",
+      "models": 26,
+      "generations": 0,
+      "trims": 0
+    },
+    "porsche": {
+      "brand": "Porsche",
+      "file": "porsche.json",
+      "models": 8,
+      "generations": 0,
+      "trims": 0
+    },
+    "li": {
+      "brand": "Li",
+      "file": "li.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "suzuki": {
+      "brand": "Suzuki",
+      "file": "suzuki.json",
+      "models": 21,
+      "generations": 0,
+      "trims": 0
+    },
+    "haval": {
+      "brand": "Haval",
+      "file": "haval.json",
+      "models": 12,
+      "generations": 0,
+      "trims": 0
+    },
+    "zeekr": {
+      "brand": "Zeekr",
+      "file": "zeekr.json",
+      "models": 7,
+      "generations": 0,
+      "trims": 0
+    },
+    "ravon": {
+      "brand": "Ravon",
+      "file": "ravon.json",
+      "models": 4,
+      "generations": 0,
+      "trims": 0
+    },
+    "ssangyong": {
+      "brand": "SsangYong",
+      "file": "ssangyong.json",
+      "models": 13,
+      "generations": 0,
+      "trims": 0
+    },
+    "jetour": {
+      "brand": "Jetour",
+      "file": "jetour.json",
+      "models": 11,
+      "generations": 0,
+      "trims": 0
+    },
+    "deepal": {
+      "brand": "Deepal",
+      "file": "deepal.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "peugeot": {
+      "brand": "Peugeot",
+      "file": "peugeot.json",
+      "models": 23,
+      "generations": 0,
+      "trims": 0
+    },
+    "jeep": {
+      "brand": "Jeep",
+      "file": "jeep.json",
+      "models": 11,
+      "generations": 0,
+      "trims": 0
+    },
+    "lifan": {
+      "brand": "Lifan",
+      "file": "lifan.json",
+      "models": 9,
+      "generations": 0,
+      "trims": 0
+    },
+    "заз": {
+      "brand": "ЗАЗ",
+      "file": "brand-5ce6d32320.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "dodge": {
+      "brand": "Dodge",
+      "file": "dodge.json",
+      "models": 17,
+      "generations": 0,
+      "trims": 0
+    },
+    "faw": {
+      "brand": "FAW",
+      "file": "faw.json",
+      "models": 21,
+      "generations": 0,
+      "trims": 0
+    },
+    "cadillac": {
+      "brand": "Cadillac",
+      "file": "cadillac.json",
+      "models": 17,
+      "generations": 0,
+      "trims": 0
+    },
+    "exeed": {
+      "brand": "EXEED",
+      "file": "exeed.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "gac": {
+      "brand": "GAC",
+      "file": "gac.json",
+      "models": 11,
+      "generations": 0,
+      "trims": 0
+    },
+    "tank": {
+      "brand": "Tank",
+      "file": "tank.json",
+      "models": 4,
+      "generations": 0,
+      "trims": 0
+    },
+    "volvo": {
+      "brand": "Volvo",
+      "file": "volvo.json",
+      "models": 19,
+      "generations": 0,
+      "trims": 0
+    },
+    "chrysler": {
+      "brand": "Chrysler",
+      "file": "chrysler.json",
+      "models": 13,
+      "generations": 0,
+      "trims": 0
+    },
+    "omoda": {
+      "brand": "OMODA",
+      "file": "omoda.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "hongqi": {
+      "brand": "Hongqi",
+      "file": "hongqi.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "genesis": {
+      "brand": "Genesis",
+      "file": "genesis.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "tesla": {
+      "brand": "Tesla",
+      "file": "tesla.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "lynkco": {
+      "brand": "Lynk & Co",
+      "file": "lynk-co.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "rox": {
+      "brand": "Rox",
+      "file": "rox.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "hummer": {
+      "brand": "Hummer",
+      "file": "hummer.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "geelygalaxy": {
+      "brand": "Geely Galaxy",
+      "file": "geely-galaxy.json",
+      "models": 9,
+      "generations": 0,
+      "trims": 0
+    },
+    "datsun": {
+      "brand": "Datsun",
+      "file": "datsun.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
     },
     "mg": {
       "brand": "MG",
       "file": "mg.json",
-      "models": 21,
-      "generations": 26,
-      "trims": 83
+      "models": 9,
+      "generations": 0,
+      "trims": 0
+    },
+    "isuzu": {
+      "brand": "Isuzu",
+      "file": "isuzu.json",
+      "models": 12,
+      "generations": 0,
+      "trims": 0
+    },
+    "иж": {
+      "brand": "ИЖ",
+      "file": "brand-14f8aa4023.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
     },
     "mini": {
-      "brand": "MINI",
+      "brand": "Mini",
       "file": "mini.json",
-      "models": 19,
-      "generations": 32,
-      "trims": 255
-    },
-    "mitsubishi": {
-      "brand": "MITSUBISHI",
-      "file": "mitsubishi.json",
-      "models": 74,
-      "generations": 110,
-      "trims": 350
-    },
-    "morgan": {
-      "brand": "MORGAN",
-      "file": "morgan.json",
-      "models": 14,
-      "generations": 19,
-      "trims": 23
-    },
-    "mahindra": {
-      "brand": "Mahindra",
-      "file": "mahindra.json",
-      "models": 4,
-      "generations": 4,
-      "trims": 10
-    },
-    "mercedesamg": {
-      "brand": "Mercedes-AMG",
-      "file": "mercedes-amg.json",
-      "models": 98,
-      "generations": 115,
-      "trims": 140
-    },
-    "nio": {
-      "brand": "NIO",
-      "file": "nio.json",
-      "models": 5,
-      "generations": 5,
-      "trims": 17
-    },
-    "oldsmobile": {
-      "brand": "OLDSMOBILE",
-      "file": "oldsmobile.json",
-      "models": 12,
-      "generations": 16,
-      "trims": 23
-    },
-    "opel": {
-      "brand": "OPEL",
-      "file": "opel.json",
-      "models": 89,
-      "generations": 162,
-      "trims": 1168
-    },
-    "pagani": {
-      "brand": "PAGANI",
-      "file": "pagani.json",
-      "models": 11,
-      "generations": 11,
-      "trims": 11
-    },
-    "panoz": {
-      "brand": "PANOZ",
-      "file": "panoz.json",
-      "models": 5,
-      "generations": 5,
-      "trims": 6
-    },
-    "perodua": {
-      "brand": "PERODUA",
-      "file": "perodua.json",
       "models": 6,
-      "generations": 8,
-      "trims": 20
+      "generations": 0,
+      "trims": 0
     },
-    "plymouth": {
-      "brand": "PLYMOUTH",
-      "file": "plymouth.json",
-      "models": 8,
-      "generations": 11,
-      "trims": 32
+    "jaguar": {
+      "brand": "Jaguar",
+      "file": "jaguar.json",
+      "models": 10,
+      "generations": 0,
+      "trims": 0
     },
-    "pontiac": {
-      "brand": "PONTIAC",
-      "file": "pontiac.json",
-      "models": 32,
-      "generations": 52,
-      "trims": 128
+    "москвич": {
+      "brand": "Москвич",
+      "file": "brand-3554ba2809.json",
+      "models": 10,
+      "generations": 0,
+      "trims": 0
     },
-    "porsche": {
-      "brand": "PORSCHE",
-      "file": "porsche.json",
-      "models": 156,
-      "generations": 296,
-      "trims": 439
+    "bentley": {
+      "brand": "Bentley",
+      "file": "bentley.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
     },
-    "proton": {
-      "brand": "PROTON",
-      "file": "proton.json",
-      "models": 15,
-      "generations": 17,
-      "trims": 42
+    "greatwall": {
+      "brand": "Great Wall",
+      "file": "great-wall.json",
+      "models": 14,
+      "generations": 0,
+      "trims": 0
     },
-    "pininfarina": {
-      "brand": "Pininfarina",
-      "file": "pininfarina.json",
+    "jaecoo": {
+      "brand": "Jaecoo",
+      "file": "jaecoo.json",
       "models": 2,
-      "generations": 2,
-      "trims": 2
+      "generations": 0,
+      "trims": 0
     },
-    "polestar": {
-      "brand": "Polestar",
-      "file": "polestar.json",
-      "models": 4,
-      "generations": 5,
-      "trims": 11
+    "voyah": {
+      "brand": "Voyah",
+      "file": "voyah.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
     },
-    "qoros": {
-      "brand": "QOROS",
-      "file": "qoros.json",
-      "models": 4,
-      "generations": 4,
-      "trims": 10
+    "fiat": {
+      "brand": "Fiat",
+      "file": "fiat.json",
+      "models": 17,
+      "generations": 0,
+      "trims": 0
     },
-    "ramtrucks": {
-      "brand": "RAM Trucks",
-      "file": "ram-trucks.json",
-      "models": 12,
-      "generations": 22,
-      "trims": 119
+    "renaultsamsung": {
+      "brand": "Renault Samsung",
+      "file": "renault-samsung.json",
+      "models": 7,
+      "generations": 0,
+      "trims": 0
     },
-    "rimac": {
-      "brand": "RIMAC",
-      "file": "rimac.json",
-      "models": 1,
-      "generations": 1,
-      "trims": 1
-    },
-    "rivian": {
-      "brand": "RIVIAN",
-      "file": "rivian.json",
-      "models": 2,
-      "generations": 2,
-      "trims": 7
-    },
-    "rollsroyce": {
-      "brand": "ROLLS-ROYCE",
-      "file": "rolls-royce.json",
-      "models": 28,
-      "generations": 34,
-      "trims": 41
-    },
-    "saab": {
-      "brand": "SAAB",
-      "file": "saab.json",
+    "dongfeng": {
+      "brand": "DongFeng",
+      "file": "dongfeng.json",
       "models": 20,
-      "generations": 31,
-      "trims": 284
+      "generations": 0,
+      "trims": 0
     },
-    "saleen": {
-      "brand": "SALEEN",
-      "file": "saleen.json",
-      "models": 1,
-      "generations": 2,
-      "trims": 2
-    },
-    "samsung": {
-      "brand": "SAMSUNG",
-      "file": "samsung.json",
+    "kaiyi": {
+      "brand": "Kaiyi",
+      "file": "kaiyi.json",
       "models": 4,
-      "generations": 4,
-      "trims": 7
+      "generations": 0,
+      "trims": 0
     },
-    "santana": {
-      "brand": "SANTANA",
-      "file": "santana.json",
-      "models": 4,
-      "generations": 4,
-      "trims": 5
+    "lincoln": {
+      "brand": "Lincoln",
+      "file": "lincoln.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
     },
-    "saturn": {
-      "brand": "SATURN",
-      "file": "saturn.json",
-      "models": 9,
-      "generations": 11,
-      "trims": 24
+    "wuling": {
+      "brand": "Wuling",
+      "file": "wuling.json",
+      "models": 12,
+      "generations": 0,
+      "trims": 0
     },
-    "scion": {
-      "brand": "SCION",
-      "file": "scion.json",
-      "models": 8,
-      "generations": 10,
-      "trims": 19
+    "citroen": {
+      "brand": "Citroen",
+      "file": "citroen.json",
+      "models": 15,
+      "generations": 0,
+      "trims": 0
+    },
+    "foton": {
+      "brand": "Foton",
+      "file": "foton.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "mercedesmaybach": {
+      "brand": "Mercedes-Maybach",
+      "file": "mercedes-maybach.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "gmc": {
+      "brand": "GMC",
+      "file": "gmc.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "daihatsu": {
+      "brand": "Daihatsu",
+      "file": "daihatsu.json",
+      "models": 11,
+      "generations": 0,
+      "trims": 0
     },
     "seat": {
       "brand": "SEAT",
       "file": "seat.json",
-      "models": 40,
-      "generations": 79,
-      "trims": 518
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "ретроавтомобили": {
+      "brand": "Ретро-автомобили",
+      "file": "brand-d1b8f7f636.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "soueast": {
+      "brand": "Soueast",
+      "file": "soueast.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "saab": {
+      "brand": "Saab",
+      "file": "saab.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "pontiac": {
+      "brand": "Pontiac",
+      "file": "pontiac.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "maserati": {
+      "brand": "Maserati",
+      "file": "maserati.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "aito": {
+      "brand": "AITO",
+      "file": "aito.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "acura": {
+      "brand": "Acura",
+      "file": "acura.json",
+      "models": 8,
+      "generations": 0,
+      "trims": 0
+    },
+    "avatr": {
+      "brand": "Avatr",
+      "file": "avatr.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "ram": {
+      "brand": "RAM",
+      "file": "ram.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "rover": {
+      "brand": "Rover",
+      "file": "rover.json",
+      "models": 5,
+      "generations": 0,
+      "trims": 0
+    },
+    "denza": {
+      "brand": "Denza",
+      "file": "denza.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "вис": {
+      "brand": "ВИС",
+      "file": "brand-c81a367f98.json",
+      "models": 4,
+      "generations": 0,
+      "trims": 0
+    },
+    "hozon": {
+      "brand": "Hozon",
+      "file": "hozon.json",
+      "models": 7,
+      "generations": 0,
+      "trims": 0
+    },
+    "leapmotor": {
+      "brand": "Leapmotor",
+      "file": "leapmotor.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "baic": {
+      "brand": "BAIC",
+      "file": "baic.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
     },
     "smart": {
-      "brand": "SMART",
+      "brand": "Smart",
       "file": "smart.json",
-      "models": 23,
-      "generations": 34,
-      "trims": 76
-    },
-    "spyker": {
-      "brand": "SPYKER",
-      "file": "spyker.json",
-      "models": 5,
-      "generations": 5,
-      "trims": 6
-    },
-    "ssangyong": {
-      "brand": "SSANGYONG",
-      "file": "ssangyong.json",
-      "models": 11,
-      "generations": 20,
-      "trims": 83
-    },
-    "subaru": {
-      "brand": "SUBARU",
-      "file": "subaru.json",
-      "models": 39,
-      "generations": 81,
-      "trims": 225
-    },
-    "suzuki": {
-      "brand": "SUZUKI",
-      "file": "suzuki.json",
-      "models": 46,
-      "generations": 66,
-      "trims": 247
-    },
-    "tatamotors": {
-      "brand": "TATA MOTORS",
-      "file": "tata-motors.json",
-      "models": 15,
-      "generations": 15,
-      "trims": 40
-    },
-    "tesla": {
-      "brand": "TESLA",
-      "file": "tesla.json",
-      "models": 6,
-      "generations": 12,
-      "trims": 39
-    },
-    "tvr": {
-      "brand": "TVR",
-      "file": "tvr.json",
-      "models": 12,
-      "generations": 15,
-      "trims": 33
-    },
-    "vinfast": {
-      "brand": "VinFast",
-      "file": "vinfast.json",
       "models": 2,
-      "generations": 2,
-      "trims": 6
+      "generations": 0,
+      "trims": 0
     },
-    "wiesmann": {
-      "brand": "WIESMANN",
-      "file": "wiesmann.json",
-      "models": 8,
-      "generations": 11,
-      "trims": 12
+    "xiaomi": {
+      "brand": "Xiaomi",
+      "file": "xiaomi.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "rollsroyce": {
+      "brand": "Rolls-Royce",
+      "file": "rolls-royce.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "zx": {
+      "brand": "ZX",
+      "file": "zx.json",
+      "models": 4,
+      "generations": 0,
+      "trims": 0
+    },
+    "луаз": {
+      "brand": "ЛуАЗ",
+      "file": "brand-c5a54024bf.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "alfaromeo": {
+      "brand": "Alfa Romeo",
+      "file": "alfa-romeo.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "ferrari": {
+      "brand": "Ferrari",
+      "file": "ferrari.json",
+      "models": 6,
+      "generations": 0,
+      "trims": 0
+    },
+    "lotus": {
+      "brand": "Lotus",
+      "file": "lotus.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
     },
     "xpeng": {
       "brand": "Xpeng",
       "file": "xpeng.json",
-      "models": 5,
-      "generations": 5,
-      "trims": 14
+      "models": 4,
+      "generations": 0,
+      "trims": 0
     },
-    "zender": {
-      "brand": "ZENDER",
-      "file": "zender.json",
-      "models": 6,
-      "generations": 6,
-      "trims": 6
+    "scion": {
+      "brand": "Scion",
+      "file": "scion.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
     },
-    "zenvo": {
-      "brand": "Zenvo",
-      "file": "zenvo.json",
+    "baojun": {
+      "brand": "Baojun",
+      "file": "baojun.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "irankhodro": {
+      "brand": "Iran Khodro",
+      "file": "iran-khodro.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "lamborghini": {
+      "brand": "Lamborghini",
+      "file": "lamborghini.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "maybach": {
+      "brand": "Maybach",
+      "file": "maybach.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "jinbei": {
+      "brand": "JinBei",
+      "file": "jinbei.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "baw": {
+      "brand": "BAW",
+      "file": "baw.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "seres": {
+      "brand": "Seres",
+      "file": "seres.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "hiphi": {
+      "brand": "HiPhi",
+      "file": "hiphi.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "buick": {
+      "brand": "Buick",
+      "file": "buick.json",
       "models": 5,
-      "generations": 5,
-      "trims": 5
+      "generations": 0,
+      "trims": 0
+    },
+    "зил": {
+      "brand": "ЗИЛ",
+      "file": "brand-fdbb2c7df5.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "polarstone": {
+      "brand": "Polar Stone",
+      "file": "polar-stone.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "тагаз": {
+      "brand": "ТагАЗ",
+      "file": "brand-2042014085.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "huanghai": {
+      "brand": "HuangHai",
+      "file": "huanghai.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "zotye": {
+      "brand": "Zotye",
+      "file": "zotye.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "mercury": {
+      "brand": "Mercury",
+      "file": "mercury.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "brilliance": {
+      "brand": "Brilliance",
+      "file": "brilliance.json",
+      "models": 3,
+      "generations": 0,
+      "trims": 0
+    },
+    "jetta": {
+      "brand": "Jetta",
+      "file": "jetta.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "maxus": {
+      "brand": "Maxus",
+      "file": "maxus.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "ora": {
+      "brand": "Ora",
+      "file": "ora.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "roewe": {
+      "brand": "Roewe",
+      "file": "roewe.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "раф": {
+      "brand": "РАФ",
+      "file": "brand-90ea49305e.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "alpina": {
+      "brand": "Alpina",
+      "file": "alpina.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "saturn": {
+      "brand": "Saturn",
+      "file": "saturn.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "haima": {
+      "brand": "Haima",
+      "file": "haima.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "shuanghuan": {
+      "brand": "ShuangHuan",
+      "file": "shuanghuan.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "rivian": {
+      "brand": "Rivian",
+      "file": "rivian.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "icar": {
+      "brand": "iCar",
+      "file": "icar.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "borgward": {
+      "brand": "Borgward",
+      "file": "borgward.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "radar": {
+      "brand": "Radar",
+      "file": "radar.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "farizon": {
+      "brand": "Farizon",
+      "file": "farizon.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "wey": {
+      "brand": "Wey",
+      "file": "wey.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "dfsk": {
+      "brand": "DFSK",
+      "file": "dfsk.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "weltmeister": {
+      "brand": "Weltmeister",
+      "file": "weltmeister.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "luxgen": {
+      "brand": "Luxgen",
+      "file": "luxgen.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "lancia": {
+      "brand": "Lancia",
+      "file": "lancia.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "dacia": {
+      "brand": "Dacia",
+      "file": "dacia.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "polestar": {
+      "brand": "Polestar",
+      "file": "polestar.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "changfeng": {
+      "brand": "ChangFeng",
+      "file": "changfeng.json",
+      "models": 2,
+      "generations": 0,
+      "trims": 0
+    },
+    "forthing": {
+      "brand": "Forthing",
+      "file": "forthing.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "im": {
+      "brand": "IM",
+      "file": "im.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "kyc": {
+      "brand": "KYC",
+      "file": "kyc.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "leopaard": {
+      "brand": "Leopaard",
+      "file": "leopaard.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "vinfast": {
+      "brand": "VinFast",
+      "file": "vinfast.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "srm": {
+      "brand": "SRM",
+      "file": "srm.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "swm": {
+      "brand": "SWM",
+      "file": "swm.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "huansu": {
+      "brand": "Huansu",
+      "file": "huansu.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "niutron": {
+      "brand": "Niutron",
+      "file": "niutron.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "bajaj": {
+      "brand": "Bajaj",
+      "file": "bajaj.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "vortex": {
+      "brand": "Vortex",
+      "file": "vortex.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "puch": {
+      "brand": "Puch",
+      "file": "puch.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "aro": {
+      "brand": "Aro",
+      "file": "aro.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "mclaren": {
+      "brand": "McLaren",
+      "file": "mclaren.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "karry": {
+      "brand": "Karry",
+      "file": "karry.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "enovate": {
+      "brand": "Enovate",
+      "file": "enovate.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "skywell": {
+      "brand": "Skywell",
+      "file": "skywell.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "maple": {
+      "brand": "Maple",
+      "file": "maple.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "derways": {
+      "brand": "Derways",
+      "file": "derways.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "смз": {
+      "brand": "СМЗ",
+      "file": "brand-2aeca1706d.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "aurus": {
+      "brand": "Aurus",
+      "file": "aurus.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "jmc": {
+      "brand": "JMC",
+      "file": "jmc.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "astonmartin": {
+      "brand": "Aston Martin",
+      "file": "aston-martin.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
+    },
+    "dadi": {
+      "brand": "Dadi",
+      "file": "dadi.json",
+      "models": 1,
+      "generations": 0,
+      "trims": 0
     }
   }
 }

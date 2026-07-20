@@ -2,23 +2,12 @@ import { vehicleCatalogManifest } from "../data/vehicleCatalog.generated.js";
 
 const catalogCache = new Map();
 
-const brandAliases = {
-  ds: "dsautomobiles",
-  kgmobility: "ssangyong",
-  lucid: "lucidmotors",
-  mercedesmaybach: "maybach",
-  ram: "ramtrucks",
-  renaultsamsung: "samsung",
-  "вазlada": "lada",
-};
-
 function normalizeBrand(value) {
   return value.toLocaleLowerCase("ru-KZ").replace(/[^a-zа-яё0-9]+/g, "");
 }
 
 function getManifestEntry(brand) {
-  const key = normalizeBrand(brand);
-  return vehicleCatalogManifest[brandAliases[key] || key];
+  return vehicleCatalogManifest[normalizeBrand(brand)];
 }
 
 export async function loadVehicleCatalog(brand) {
