@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Search, X } from "lucide-react";
 import { brands, popularBrands } from "../data/brands.js";
 
@@ -8,6 +9,7 @@ export function BrandPicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [letter, setLetter] = useState("");
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -23,6 +25,7 @@ export function BrandPicker({ value, onChange }) {
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      triggerRef.current?.focus();
     };
   }, [open]);
 
@@ -53,12 +56,12 @@ export function BrandPicker({ value, onChange }) {
 
   return (
     <>
-      <button className="brand-trigger" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <button ref={triggerRef} className="brand-trigger" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <span>{value || "Выберите марку"}</span>
         <ChevronDown aria-hidden="true" size={17} />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div className="brand-picker-overlay" role="presentation" onMouseDown={() => setOpen(false)}>
           <section
             className="brand-picker-dialog"
@@ -82,6 +85,7 @@ export function BrandPicker({ value, onChange }) {
               <input
                 autoFocus
                 type="search"
+                aria-label="Поиск марки"
                 placeholder="Начните вводить название"
                 value={query}
                 onChange={(event) => {
@@ -130,7 +134,8 @@ export function BrandPicker({ value, onChange }) {
               {!visibleBrands.length && <p className="brand-empty">Марка не найдена</p>}
             </div>
           </section>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
