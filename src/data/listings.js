@@ -10,7 +10,6 @@ export const initialListings = [
 ];
 
 export const quickCities = ["Алматы", "Астана", "Караганда", "Шымкент", "Павлодар", "Актобе", "Костанай"];
-export const models = initialListings.map(({ brand, model }) => ({ brand, name: model }));
 
 export const categories = [
   { id: "cars", label: "Легковые" },
