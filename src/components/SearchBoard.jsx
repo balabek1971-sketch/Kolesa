@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
-import { models, quickBrands, quickCities } from "../data/listings.js";
+import { models, quickCities } from "../data/listings.js";
 import { AdvancedFilters } from "./AdvancedFilters.jsx";
+import { BrandPicker } from "./BrandPicker.jsx";
 
 export function SearchBoard({ filters, onChange, resultCount }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -11,13 +12,10 @@ export function SearchBoard({ filters, onChange, resultCount }) {
       <h1>Найдите свой автомобиль</h1>
 
       <div className="primary-filters">
-        <label className="select-field">
+        <div className="select-field">
           <span>Марка</span>
-          <select value={filters.brand} onChange={(event) => onChange({ brand: event.target.value, model: "" })}>
-            <option value="">Выберите марку</option>
-            {quickBrands.map((brand) => <option key={brand} value={brand}>{brand}</option>)}
-          </select>
-        </label>
+          <BrandPicker value={filters.brand} onChange={(brand) => onChange({ brand, model: "" })} />
+        </div>
 
         <label className="select-field">
           <span>Модель</span>

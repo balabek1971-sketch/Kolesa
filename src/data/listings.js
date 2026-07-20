@@ -10,7 +10,6 @@ export const initialListings = [
 ];
 
 export const quickCities = ["Алматы", "Астана", "Караганда", "Шымкент", "Павлодар", "Актобе", "Костанай"];
-export const quickBrands = ["Toyota", "ВАЗ (Lada)", "Hyundai", "Mercedes-Benz", "Kia", "Volkswagen", "BMW", "Nissan", "Chevrolet", "JAC", "Yamaha", "Bayliner"];
 export const models = initialListings.map(({ brand, model }) => ({ brand, name: model }));
 
 export const categories = [
