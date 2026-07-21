@@ -74,21 +74,34 @@ export function OptionPicker({
     setQuery("");
   }
 
+  function clearValue() {
+    onChange("");
+    setQuery("");
+    triggerRef.current?.focus();
+  }
+
   return (
     <>
-      <button
-        ref={triggerRef}
-        className="catalog-trigger"
-        type="button"
-        aria-haspopup="dialog"
-        disabled={disabled || loading}
-        onClick={() => setOpen(true)}
-      >
-        <span>{loading ? "Загрузка..." : selected?.label || placeholder}</span>
-        {loading
-          ? <LoaderCircle className="loading-icon" aria-hidden="true" size={17} />
-          : <ChevronDown aria-hidden="true" size={17} />}
-      </button>
+      <div className="catalog-control">
+        <button
+          ref={triggerRef}
+          className="catalog-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          disabled={disabled || loading}
+          onClick={() => setOpen(true)}
+        >
+          <span>{loading ? "Загрузка..." : selected?.label || placeholder}</span>
+          {loading
+            ? <LoaderCircle className="loading-icon" aria-hidden="true" size={17} />
+            : <ChevronDown aria-hidden="true" size={17} />}
+        </button>
+        {selected && (
+          <button className="catalog-clear" type="button" aria-label={`Убрать модель ${selected.label}`} onClick={clearValue}>
+            <X aria-hidden="true" size={16} strokeWidth={2} />
+          </button>
+        )}
+      </div>
 
       {open && createPortal(
         <div className="option-picker-overlay" role="presentation" onMouseDown={() => setOpen(false)}>
