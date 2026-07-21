@@ -1,23 +1,23 @@
 import { useState } from "react";
 
-function normalizeMoney(value) {
+function normalizeNumber(value) {
   return String(value ?? "")
     .replace(/\D/g, "")
     .replace(/^0+(?=\d)/, "");
 }
 
-function formatMoney(value) {
-  const normalized = normalizeMoney(value);
+function formatNumber(value) {
+  const normalized = normalizeNumber(value);
   return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
-export function MoneyInput({ onValueChange, value, ...props }) {
+export function GroupedNumberInput({ onValueChange, value, ...props }) {
   const controlled = value !== undefined;
   const [internalValue, setInternalValue] = useState("");
   const rawValue = controlled ? value : internalValue;
 
   function handleChange(event) {
-    const nextValue = normalizeMoney(event.target.value);
+    const nextValue = normalizeNumber(event.target.value);
     if (!controlled) setInternalValue(nextValue);
     onValueChange?.(nextValue);
   }
@@ -28,7 +28,7 @@ export function MoneyInput({ onValueChange, value, ...props }) {
       type="text"
       inputMode="numeric"
       pattern="[0-9 ]*"
-      value={formatMoney(rawValue)}
+      value={formatNumber(rawValue)}
       onChange={handleChange}
     />
   );

@@ -5,7 +5,7 @@ import { loadVehicleCatalog } from "../lib/vehicleCatalog.js";
 import { AdvancedFilters } from "./AdvancedFilters.jsx";
 import { BrandPicker } from "./BrandPicker.jsx";
 import { OptionPicker } from "./OptionPicker.jsx";
-import { MoneyInput } from "./controls/MoneyInput.jsx";
+import { GroupedNumberInput } from "./controls/GroupedNumberInput.jsx";
 
 export function SearchBoard({ filters, onChange, resultCount }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -130,7 +130,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
 
         <label className="select-field">
           <span>Цена от, ₸</span>
-          <MoneyInput
+          <GroupedNumberInput
             placeholder="5 000 000"
             value={filters.priceFrom}
             onValueChange={(priceFrom) => onChange({ priceFrom })}
@@ -139,7 +139,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
 
         <label className="select-field">
           <span>Цена до, ₸</span>
-          <MoneyInput
+          <GroupedNumberInput
             placeholder="20 000 000"
             value={filters.priceTo}
             onValueChange={(priceTo) => onChange({ priceTo })}
@@ -148,13 +148,10 @@ export function SearchBoard({ filters, onChange, resultCount }) {
 
         <label className="select-field mileage-field">
           <span>Пробег до, км</span>
-          <input
-            type="number"
-            min="0"
-            step="1000"
+          <GroupedNumberInput
             placeholder="100 000"
             value={filters.mileageTo}
-            onChange={(event) => onChange({ mileageTo: event.target.value })}
+            onValueChange={(mileageTo) => onChange({ mileageTo })}
           />
         </label>
       </div>

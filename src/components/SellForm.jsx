@@ -1,4 +1,4 @@
-import { MoneyInput } from "./controls/MoneyInput.jsx";
+import { GroupedNumberInput } from "./controls/GroupedNumberInput.jsx";
 
 export function SellForm({ onSubmit, userEmail }) {
   function handleSubmit(event) {
@@ -42,7 +42,7 @@ export function SellForm({ onSubmit, userEmail }) {
         <label>Модель<input name="model" required placeholder="Camry" /></label>
         <label>Название<input name="title" required placeholder="Toyota Camry 75" /></label>
         <label>Город<input name="city" required placeholder="Алматы" /></label>
-        <label>Цена, ₸<MoneyInput name="price" required placeholder="14 500 000" /></label>
+        <label>Цена, ₸<GroupedNumberInput name="price" required placeholder="14 500 000" /></label>
         <label>Год<input name="year" required type="number" min="1990" max="2027" placeholder="2021" /></label>
         <label>Пробег, км<input name="mileage" required type="number" min="0" placeholder="52000" /></label>
         <label>Кузов<input name="body" required placeholder="Седан" /></label>
