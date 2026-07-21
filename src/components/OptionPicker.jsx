@@ -132,24 +132,46 @@ export function OptionPicker({
               </button>
 
               {groupByInitial
-                ? groupedOptions.map(([groupKey, groupOptions]) => (
-                  <section className="option-picker-group" key={groupKey}>
-                    <h3>{groupKey}</h3>
-                    <div className="option-picker-group-items">
-                      {groupOptions.map((option) => (
-                        <button
-                          className={`option-picker-item${option.value === value ? " active" : ""}`}
-                          key={option.value}
-                          type="button"
-                          onClick={() => choose(option.value)}
-                        >
-                          <span>{option.label}</span>
-                          {option.meta && <small>{option.meta}</small>}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                ))
+                ? groupedOptions.map(([groupKey, groupOptions]) => {
+                  const seriesOption = /^\d$/.test(groupKey)
+                    ? groupOptions.find((option) =>
+                      option.label.toLocaleLowerCase("ru-KZ") === `${groupKey} серия`)
+                    : null;
+                  const listedOptions = seriesOption
+                    ? groupOptions.filter((option) => option !== seriesOption)
+                    : groupOptions;
+
+                  return (
+                    <section className="option-picker-group" key={groupKey}>
+                      <h3>
+                        {seriesOption
+                          ? (
+                            <button
+                              className={`option-picker-group-title${seriesOption.value === value ? " active" : ""}`}
+                              type="button"
+                              onClick={() => choose(seriesOption.value)}
+                            >
+                              {seriesOption.label}
+                            </button>
+                          )
+                          : groupKey}
+                      </h3>
+                      <div className="option-picker-group-items">
+                        {listedOptions.map((option) => (
+                          <button
+                            className={`option-picker-item${option.value === value ? " active" : ""}`}
+                            key={option.value}
+                            type="button"
+                            onClick={() => choose(option.value)}
+                          >
+                            <span>{option.label}</span>
+                            {option.meta && <small>{option.meta}</small>}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })
                 : visibleOptions.map((option) => (
                   <button
                     className={`option-picker-item${option.value === value ? " active" : ""}`}
