@@ -67,8 +67,7 @@ a { color: inherit; text-decoration: none; }
 .location-valid { display: grid; place-items: center; width: 20px; height: 20px; flex: 0 0 20px; border: 2px solid #111; border-radius: 50%; background: var(--lime); color: #111; font-size: 0.72rem; font-style: normal; font-weight: 950; }
 .city-picker-control { gap: 6px; }
 .city-picker-control select { width: auto; flex: 1 1 auto; }
-.city-search-button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; min-height: 30px; border: 1px solid #cbd0ce; border-radius: 3px; background: #f7f8f6; color: #303534; padding: 0 7px; font-size: 0.67rem; font-weight: 720; white-space: nowrap; }
-.city-search-button:hover, .city-search-button:focus-visible { border-color: var(--red); background: #fff5f5; color: var(--red); outline: 0; }
+.city-more-option { background: #f4ffd0; color: var(--red); font-weight: 850; }
 .show-results { align-self: center; display: grid; grid-template-columns: auto auto; place-content: center; align-items: center; gap: 0 12px; min-width: 158px; min-height: 46px; margin-left: 20px; background: var(--red); color: #fff; font-size: 0.9rem; font-weight: 900; text-transform: uppercase; clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%); }
 .show-results:hover { background: var(--red-dark); }
 .show-results i { font-size: 1.45rem; font-style: normal; line-height: 0.6; }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, MapPinned, Search, X } from "lucide-react";
+import { ChevronRight, Search, X } from "lucide-react";
 import { kazakhstanRegions } from "../data/kazakhstanLocations.js";
 import { quickCities } from "../data/listings.js";
 
@@ -18,7 +18,7 @@ export function CityPicker({ onChange, value }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [regionName, setRegionName] = useState("");
-  const searchButtonRef = useRef(null);
+  const selectRef = useRef(null);
   const hasCustomValue = value && !quickCities.includes(value);
   const selectedRegion = kazakhstanRegions.find((region) => region.name === regionName);
 
@@ -36,7 +36,7 @@ export function CityPicker({ onChange, value }) {
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
-      searchButtonRef.current?.focus();
+      selectRef.current?.focus();
     };
   }, [open]);
 
@@ -80,22 +80,12 @@ export function CityPicker({ onChange, value }) {
     <>
       <span className="location-control city-picker-control">
         <i className="pin-icon" aria-hidden="true" />
-        <select aria-label="Город" value={value} onChange={handleQuickChange}>
+        <select ref={selectRef} aria-label="Город" value={value} onChange={handleQuickChange}>
           <option value="">Весь Казахстан</option>
           {hasCustomValue && <option value={value}>{value}</option>}
           {quickCities.map((city) => <option key={city} value={city}>{city}</option>)}
-          <option value="__more">Ещё...</option>
+          <option className="city-more-option" value="__more">Ещё</option>
         </select>
-        <button
-          ref={searchButtonRef}
-          className="city-search-button"
-          type="button"
-          aria-label="Открыть выбор города"
-          onClick={openPicker}
-        >
-          <MapPinned aria-hidden="true" size={14} strokeWidth={1.9} />
-          <span>Все города</span>
-        </button>
         <i className="location-valid" aria-label="Регион выбран">✓</i>
       </span>
 
