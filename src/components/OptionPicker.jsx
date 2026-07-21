@@ -2,9 +2,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, LoaderCircle, Search, X } from "lucide-react";
 
+const optionCollator = new Intl.Collator("ru-KZ", {
+  numeric: true,
+  sensitivity: "base",
+});
+
+function getGroupKey(label) {
+  const firstCharacter = label.trim()[0];
+  if (!firstCharacter || !/[\p{L}\p{N}]/u.test(firstCharacter)) return "#";
+  return firstCharacter.toLocaleUpperCase("ru-KZ");
+}
+
 export function OptionPicker({
   disabled = false,
   emptyMessage = "Варианты не найдены",
+  groupByInitial = false,
   label,
   loading = false,
   onChange,
@@ -41,6 +53,24 @@ export function OptionPicker({
     return options.filter((option) =>
       `${option.label} ${option.meta || ""}`.toLocaleLowerCase("ru-KZ").includes(normalizedQuery));
   }, [options, query]);
+
+  const groupedOptions = useMemo(() => {
+    if (!groupByInitial) return [];
+
+    const groups = visibleOptions.reduce((result, option) => {
+      const key = getGroupKey(option.label);
+      if (!result.has(key)) result.set(key, []);
+      result.get(key).push(option);
+      return result;
+    }, new Map());
+
+    return [...groups.entries()]
+      .sort(([left], [right]) => optionCollator.compare(left, right))
+      .map(([key, groupOptions]) => [
+        key,
+        [...groupOptions].sort((left, right) => optionCollator.compare(left.label, right.label)),
+      ]);
+  }, [groupByInitial, visibleOptions]);
 
   function choose(nextValue) {
     onChange(nextValue);
@@ -95,7 +125,7 @@ export function OptionPicker({
               />
             </label>
 
-            <div className="option-picker-list">
+            <div className={`option-picker-list${groupByInitial ? " grouped" : ""}`}>
               <button
                 className={`option-picker-item option-picker-any${!value ? " active" : ""}`}
                 type="button"
@@ -105,17 +135,36 @@ export function OptionPicker({
                 <small>Пропустить этот параметр</small>
               </button>
 
-              {visibleOptions.map((option) => (
-                <button
-                  className={`option-picker-item${option.value === value ? " active" : ""}`}
-                  key={option.value}
-                  type="button"
-                  onClick={() => choose(option.value)}
-                >
-                  <span>{option.label}</span>
-                  {option.meta && <small>{option.meta}</small>}
-                </button>
-              ))}
+              {groupByInitial
+                ? groupedOptions.map(([groupKey, groupOptions]) => (
+                  <section className="option-picker-group" key={groupKey}>
+                    <h3>{groupKey}</h3>
+                    <div className="option-picker-group-items">
+                      {groupOptions.map((option) => (
+                        <button
+                          className={`option-picker-item${option.value === value ? " active" : ""}`}
+                          key={option.value}
+                          type="button"
+                          onClick={() => choose(option.value)}
+                        >
+                          <span>{option.label}</span>
+                          {option.meta && <small>{option.meta}</small>}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                ))
+                : visibleOptions.map((option) => (
+                  <button
+                    className={`option-picker-item${option.value === value ? " active" : ""}`}
+                    key={option.value}
+                    type="button"
+                    onClick={() => choose(option.value)}
+                  >
+                    <span>{option.label}</span>
+                    {option.meta && <small>{option.meta}</small>}
+                  </button>
+                ))}
 
               {!visibleOptions.length && <p className="option-picker-empty">{emptyMessage}</p>}
             </div>

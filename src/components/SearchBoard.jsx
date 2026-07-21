@@ -96,6 +96,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
               ? "Не удалось загрузить справочник"
               : "Для этой марки модели пока не добавлены"}
             label={`Модель ${filters.brand || ""}`}
+            groupByInitial
             loading={catalogState.loading}
             onChange={(model) => onChange({ model, generation: "", trim: "" })}
             options={modelOptions}
