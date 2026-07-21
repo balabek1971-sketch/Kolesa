@@ -4,8 +4,6 @@ export function createDefaultFilters() {
     city: "",
     brand: "",
     model: "",
-    generation: "",
-    trim: "",
     body: "",
     condition: "",
     hasPhoto: false,
@@ -47,8 +45,6 @@ export function filterListings(listings, filters) {
       (!filters.city || listing.city === filters.city) &&
       (!filters.brand || listing.brand === filters.brand) &&
       (!filters.model || listing.model === filters.model) &&
-      (!filters.generation || listing.generation === filters.generation) &&
-      (!filters.trim || listing.trim === filters.trim) &&
       (!filters.body || listing.body === filters.body) &&
       (!filters.condition || listing.condition === filters.condition) &&
       (!filters.originCountry || listing.originCountry === filters.originCountry) &&

@@ -14,10 +14,6 @@ export function Header({ favoriteCount }) {
         </nav>
 
         <div className="header-actions">
-          <button className="city-button" type="button">
-            Алматы
-            <span className="city-chevron" aria-hidden="true">⌄</span>
-          </button>
           <button className="header-icon favorite-summary" type="button" aria-label={`Избранное: ${favoriteCount}`}>
             <Heart aria-hidden="true" size={20} strokeWidth={1.7} />
           </button>

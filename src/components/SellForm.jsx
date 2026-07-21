@@ -1,3 +1,5 @@
+import { MoneyInput } from "./controls/MoneyInput.jsx";
+
 export function SellForm({ onSubmit, userEmail }) {
   function handleSubmit(event) {
     event.preventDefault();
@@ -9,7 +11,7 @@ export function SellForm({ onSubmit, userEmail }) {
       model: form.get("model"),
       category: "cars",
       city: form.get("city"),
-      price: Number(form.get("price")),
+      price: Number(String(form.get("price")).replace(/\D/g, "")),
       year: Number(form.get("year")),
       mileage: Number(form.get("mileage")),
       condition: form.get("condition"),
@@ -40,7 +42,7 @@ export function SellForm({ onSubmit, userEmail }) {
         <label>Модель<input name="model" required placeholder="Camry" /></label>
         <label>Название<input name="title" required placeholder="Toyota Camry 75" /></label>
         <label>Город<input name="city" required placeholder="Алматы" /></label>
-        <label>Цена, ₸<input name="price" required type="number" min="1" placeholder="14500000" /></label>
+        <label>Цена, ₸<MoneyInput name="price" required placeholder="14 500 000" /></label>
         <label>Год<input name="year" required type="number" min="1990" max="2027" placeholder="2021" /></label>
         <label>Пробег, км<input name="mileage" required type="number" min="0" placeholder="52000" /></label>
         <label>Кузов<input name="body" required placeholder="Седан" /></label>

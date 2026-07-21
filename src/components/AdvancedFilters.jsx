@@ -13,7 +13,7 @@ export function AdvancedFilters({ filters, onChange }) {
       <div className="advanced-grid">
         <label className="advanced-field">
           <span>Страна происхождения</span>
-          <select value={filters.originCountry} onChange={(event) => onChange({ originCountry: event.target.value })}>
+          <select className={filters.originCountry ? "is-selected" : ""} value={filters.originCountry} onChange={(event) => onChange({ originCountry: event.target.value })}>
             <option value="">Неважно</option>
             {originCountries.map((country) => <option key={country} value={country}>{country}</option>)}
           </select>
@@ -21,7 +21,7 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <label className="advanced-field">
           <span>Кузов</span>
-          <select value={filters.body} onChange={(event) => onChange({ body: event.target.value })}>
+          <select className={filters.body ? "is-selected" : ""} value={filters.body} onChange={(event) => onChange({ body: event.target.value })}>
             <option value="">Любой кузов</option>
             {bodyTypes.map((body) => <option key={body} value={body}>{body}</option>)}
           </select>
@@ -29,7 +29,7 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <label className="advanced-field">
           <span>Тип двигателя</span>
-          <select value={filters.engineType} onChange={(event) => onChange({ engineType: event.target.value })}>
+          <select className={filters.engineType ? "is-selected" : ""} value={filters.engineType} onChange={(event) => onChange({ engineType: event.target.value })}>
             <option value="">Любой двигатель</option>
             {engineTypes.map((engine) => <option key={engine} value={engine}>{engine}</option>)}
           </select>
@@ -37,7 +37,7 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <label className="advanced-field">
           <span>КПП</span>
-          <select value={filters.gearbox} onChange={(event) => onChange({ gearbox: event.target.value })}>
+          <select className={filters.gearbox ? "is-selected" : ""} value={filters.gearbox} onChange={(event) => onChange({ gearbox: event.target.value })}>
             <option value="">Любая КПП</option>
             {gearboxTypes.map((gearbox) => <option key={gearbox} value={gearbox}>{gearbox}</option>)}
           </select>
@@ -45,7 +45,7 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <label className="advanced-field">
           <span>Расположение руля</span>
-          <select value={filters.steering} onChange={(event) => onChange({ steering: event.target.value })}>
+          <select className={filters.steering ? "is-selected" : ""} value={filters.steering} onChange={(event) => onChange({ steering: event.target.value })}>
             <option value="">Неважно</option>
             <option value="Левый">Левый</option>
             <option value="Правый">Правый</option>
@@ -54,7 +54,7 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <label className="advanced-field">
           <span>Привод</span>
-          <select value={filters.drivetrain} onChange={(event) => onChange({ drivetrain: event.target.value })}>
+          <select className={filters.drivetrain ? "is-selected" : ""} value={filters.drivetrain} onChange={(event) => onChange({ drivetrain: event.target.value })}>
             <option value="">Любой привод</option>
             <option value="Передний">Передний</option>
             <option value="Задний">Задний</option>
@@ -86,6 +86,7 @@ export function AdvancedFilters({ filters, onChange }) {
           <legend>Объём двигателя, л</legend>
           <div className="range-control">
             <input
+              className={filters.engineVolumeFrom ? "is-selected" : ""}
               type="number"
               min="0"
               max="10"
@@ -95,6 +96,7 @@ export function AdvancedFilters({ filters, onChange }) {
               onChange={(event) => onChange({ engineVolumeFrom: event.target.value })}
             />
             <input
+              className={filters.engineVolumeTo ? "is-selected" : ""}
               type="number"
               min="0"
               max="10"
@@ -108,7 +110,7 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <div className="advanced-field color-field">
           <span>Цвет</span>
-          <select value={filters.colorName} onChange={(event) => onChange({ colorName: event.target.value })}>
+          <select className={filters.colorName ? "is-selected" : ""} value={filters.colorName} onChange={(event) => onChange({ colorName: event.target.value })}>
             <option value="">Неважно</option>
             {colors.map((color) => <option key={color} value={color}>{color}</option>)}
           </select>
@@ -130,6 +132,7 @@ export function AdvancedFilters({ filters, onChange }) {
         <label className="advanced-field keyword-field">
           <span>Поиск по ключевым словам</span>
           <input
+            className={filters.keyword ? "is-selected" : ""}
             type="search"
             placeholder="Например: Camry 2.5"
             value={filters.keyword}
