@@ -16,8 +16,10 @@ PUBLIC_OUTPUT = ROOT / "public" / "vehicle-catalog"
 BRANDS_OUTPUT = ROOT / "src" / "data" / "brands.js"
 MANIFEST_OUTPUT = ROOT / "src" / "data" / "vehicleCatalog.generated.js"
 
-SECTION_RE = re.compile(r"^(\d+)\.\s+(.+?)\s+\((\d+)\s+[^)]+\)$")
-MODEL_RE = re.compile(r"^\s+\d+\)\s+(.+?)\s*$")
+NUMBERED_SECTION_RE = re.compile(r"^(\d+)\.\s+(.+?)\s+\((\d+)\s+[^)]+\)$")
+PLAIN_SECTION_RE = re.compile(r"^(.+?)\s+\((\d+)\)$")
+NUMBERED_MODEL_RE = re.compile(r"^\s+\d+\)\s+(.+?)\s*$")
+PLAIN_MODEL_RE = re.compile(r"^\s{2,}(\S.*?)\s*$")
 
 
 def normalize_key(value: str) -> str:
@@ -49,18 +51,38 @@ def looks_like_brand_section(brand: str, raw_models: list[str]) -> bool:
 
 
 def parse_catalog(text: str) -> list[tuple[str, list[str]]]:
-    sections: list[tuple[str, int, list[str]]] = []
-    current: tuple[str, int, list[str]] | None = None
+    sections: list[tuple[str, int, list[str], bool]] = []
+    current: tuple[str, int, list[str], bool] | None = None
 
     for line in text.splitlines():
-        section_match = SECTION_RE.match(line)
-        if section_match:
+        numbered_section = NUMBERED_SECTION_RE.match(line)
+        plain_section = PLAIN_SECTION_RE.match(line)
+        if numbered_section:
             if current:
                 sections.append(current)
-            current = (section_match.group(2).strip(), int(section_match.group(3)), [])
+            current = (
+                numbered_section.group(2).strip(),
+                int(numbered_section.group(3)),
+                [],
+                True,
+            )
+            continue
+        if plain_section:
+            if current:
+                sections.append(current)
+            current = (
+                plain_section.group(1).strip(),
+                int(plain_section.group(2)),
+                [],
+                False,
+            )
             continue
 
-        model_match = MODEL_RE.match(line)
+        model_match = (
+            NUMBERED_MODEL_RE.match(line)
+            if current and current[3]
+            else PLAIN_MODEL_RE.match(line)
+        )
         if model_match and current:
             current[2].append(model_match.group(1).strip())
 
@@ -68,8 +90,8 @@ def parse_catalog(text: str) -> list[tuple[str, list[str]]]:
         sections.append(current)
 
     catalog: list[tuple[str, list[str]]] = []
-    for brand, declared_count, raw_models in sections:
-        if not looks_like_brand_section(brand, raw_models):
+    for brand, declared_count, raw_models, has_brand_prefix in sections:
+        if has_brand_prefix and not looks_like_brand_section(brand, raw_models):
             break
         if declared_count != len(raw_models):
             raise ValueError(
@@ -79,7 +101,11 @@ def parse_catalog(text: str) -> list[tuple[str, list[str]]]:
         models: list[str] = []
         seen: set[str] = set()
         for raw_model in raw_models:
-            model = strip_brand_prefix(brand, raw_model)
+            model = (
+                strip_brand_prefix(brand, raw_model)
+                if has_brand_prefix
+                else raw_model.strip()
+            )
             if model not in seen:
                 seen.add(model)
                 models.append(model)
@@ -90,7 +116,7 @@ def parse_catalog(text: str) -> list[tuple[str, list[str]]]:
     return catalog
 
 
-def write_catalog(catalog: list[tuple[str, list[str]]]) -> None:
+def write_catalog(catalog: list[tuple[str, list[str]]], source_name: str) -> None:
     PUBLIC_OUTPUT.mkdir(parents=True, exist_ok=True)
     for old_file in PUBLIC_OUTPUT.glob("*.json"):
         old_file.unlink()
@@ -109,7 +135,7 @@ def write_catalog(catalog: list[tuple[str, list[str]]]) -> None:
         payload = {
             "brand": brand,
             "models": [{"name": model, "generations": []} for model in models],
-            "source": "kolesa_marki_modeli.txt",
+            "source": source_name,
         }
         (PUBLIC_OUTPUT / file_name).write_text(
             json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
@@ -127,7 +153,7 @@ def write_catalog(catalog: list[tuple[str, list[str]]]) -> None:
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     manifest_payload = {
         "generatedAt": generated_at,
-        "source": "kolesa_marki_modeli.txt",
+        "source": source_name,
         "totals": {
             "brands": len(catalog),
             "models": total_models,
@@ -177,8 +203,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("source", type=Path, help="Path to kolesa_marki_modeli.txt")
     args = parser.parse_args()
-    text = args.source.read_text(encoding="utf-8")
-    write_catalog(parse_catalog(text))
+    text = args.source.read_text(encoding="utf-8-sig")
+    write_catalog(parse_catalog(text), args.source.name)
 
 
 if __name__ == "__main__":
