@@ -1,5 +1,6 @@
 import { Catalog } from "../components/Catalog.jsx";
 import { PopularBrowse } from "../components/PopularBrowse.jsx";
+import { PopularModels } from "../components/PopularModels.jsx";
 import { SearchBoard } from "../components/SearchBoard.jsx";
 
 export function HomePage({
@@ -24,6 +25,8 @@ export function HomePage({
       </section>
 
       <PopularBrowse filters={filters} onChange={onFiltersChange} />
+
+      <PopularModels onChange={onFiltersChange} />
 
       <Catalog
         listings={listings}
