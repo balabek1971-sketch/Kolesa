@@ -5,7 +5,6 @@ import { AdvancedFilters } from "./AdvancedFilters.jsx";
 import { BrandPicker } from "./BrandPicker.jsx";
 import { CityPicker } from "./CityPicker.jsx";
 import { OptionPicker } from "./OptionPicker.jsx";
-import { GroupedNumberInput } from "./controls/GroupedNumberInput.jsx";
 
 export function SearchBoard({ filters, onChange, resultCount }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -85,68 +84,6 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           <i aria-hidden="true">›</i>
           <small>{resultCount.toLocaleString("ru-KZ")} авто</small>
         </a>
-      </div>
-
-      <div className="secondary-filters">
-        <label className="select-field">
-          <span>Состояние</span>
-          <select value={filters.condition} onChange={(event) => onChange({ condition: event.target.value })}>
-            <option value="">Все автомобили</option>
-            <option value="new">Новые</option>
-            <option value="used">С пробегом</option>
-          </select>
-        </label>
-
-        <label className="select-field">
-          <span>Год от</span>
-          <input
-            type="number"
-            min="1950"
-            max="2026"
-            placeholder="2015"
-            value={filters.yearFrom}
-            onChange={(event) => onChange({ yearFrom: event.target.value })}
-          />
-        </label>
-
-        <label className="select-field">
-          <span>Год до</span>
-          <input
-            type="number"
-            min="1950"
-            max="2026"
-            placeholder="2026"
-            value={filters.yearTo}
-            onChange={(event) => onChange({ yearTo: event.target.value })}
-          />
-        </label>
-
-        <label className="select-field">
-          <span>Цена от, ₸</span>
-          <GroupedNumberInput
-            placeholder="5 000 000"
-            value={filters.priceFrom}
-            onValueChange={(priceFrom) => onChange({ priceFrom })}
-          />
-        </label>
-
-        <label className="select-field">
-          <span>Цена до, ₸</span>
-          <GroupedNumberInput
-            placeholder="20 000 000"
-            value={filters.priceTo}
-            onValueChange={(priceTo) => onChange({ priceTo })}
-          />
-        </label>
-
-        <label className="select-field mileage-field">
-          <span>Пробег до, км</span>
-          <GroupedNumberInput
-            placeholder="100 000"
-            value={filters.mileageTo}
-            onValueChange={(mileageTo) => onChange({ mileageTo })}
-          />
-        </label>
       </div>
 
       <button

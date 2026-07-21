@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { GroupedNumberInput } from "./controls/GroupedNumberInput.jsx";
 import { ToggleCheck } from "./controls/ToggleCheck.jsx";
 import {
   bodyTypes,
@@ -36,6 +37,73 @@ function ClearableSelect({ children, label, onChange, value }) {
 export function AdvancedFilters({ filters, onChange }) {
   return (
     <div className="advanced-filters">
+      <div className="advanced-core-grid">
+        <div className="advanced-field">
+          <span>Состояние</span>
+          <ClearableSelect label="Состояние" value={filters.condition} onChange={(condition) => onChange({ condition })}>
+            <option value="">Все автомобили</option>
+            <option value="new">Новые</option>
+            <option value="used">С пробегом</option>
+          </ClearableSelect>
+        </div>
+
+        <label className="advanced-field">
+          <span>Год от</span>
+          <input
+            className={filters.yearFrom ? "is-selected" : ""}
+            type="number"
+            min="1950"
+            max="2026"
+            placeholder="2015"
+            value={filters.yearFrom}
+            onChange={(event) => onChange({ yearFrom: event.target.value })}
+          />
+        </label>
+
+        <label className="advanced-field">
+          <span>Год до</span>
+          <input
+            className={filters.yearTo ? "is-selected" : ""}
+            type="number"
+            min="1950"
+            max="2026"
+            placeholder="2026"
+            value={filters.yearTo}
+            onChange={(event) => onChange({ yearTo: event.target.value })}
+          />
+        </label>
+
+        <label className="advanced-field">
+          <span>Цена от, ₸</span>
+          <GroupedNumberInput
+            className={filters.priceFrom ? "is-selected" : ""}
+            placeholder="5 000 000"
+            value={filters.priceFrom}
+            onValueChange={(priceFrom) => onChange({ priceFrom })}
+          />
+        </label>
+
+        <label className="advanced-field">
+          <span>Цена до, ₸</span>
+          <GroupedNumberInput
+            className={filters.priceTo ? "is-selected" : ""}
+            placeholder="20 000 000"
+            value={filters.priceTo}
+            onValueChange={(priceTo) => onChange({ priceTo })}
+          />
+        </label>
+
+        <label className="advanced-field">
+          <span>Пробег до, км</span>
+          <GroupedNumberInput
+            className={filters.mileageTo ? "is-selected" : ""}
+            placeholder="100 000"
+            value={filters.mileageTo}
+            onValueChange={(mileageTo) => onChange({ mileageTo })}
+          />
+        </label>
+      </div>
+
       <div className="advanced-grid">
         <div className="advanced-field">
           <span>Страна происхождения</span>
