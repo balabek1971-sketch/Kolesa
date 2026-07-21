@@ -54,12 +54,26 @@ export function BrandPicker({ value, onChange }) {
     setLetter("");
   }
 
+  function clearBrand() {
+    onChange("");
+    setQuery("");
+    setLetter("");
+    triggerRef.current?.focus();
+  }
+
   return (
     <>
-      <button ref={triggerRef} className="brand-trigger" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
-        <span>{value || "Выберите марку"}</span>
-        <ChevronDown aria-hidden="true" size={17} />
-      </button>
+      <div className="brand-control">
+        <button ref={triggerRef} className="brand-trigger" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+          <span>{value || "Выберите марку"}</span>
+          <ChevronDown aria-hidden="true" size={17} />
+        </button>
+        {value && (
+          <button className="brand-clear" type="button" aria-label={`Убрать марку ${value}`} onClick={clearBrand}>
+            <X aria-hidden="true" size={16} strokeWidth={2} />
+          </button>
+        )}
+      </div>
 
       {open && createPortal(
         <div className="brand-picker-overlay" role="presentation" onMouseDown={() => setOpen(false)}>
