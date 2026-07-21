@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
-import { quickCities } from "../data/listings.js";
 import { loadVehicleCatalog } from "../lib/vehicleCatalog.js";
 import { AdvancedFilters } from "./AdvancedFilters.jsx";
 import { BrandPicker } from "./BrandPicker.jsx";
+import { CityPicker } from "./CityPicker.jsx";
 import { OptionPicker } from "./OptionPicker.jsx";
 import { GroupedNumberInput } from "./controls/GroupedNumberInput.jsx";
 
@@ -75,17 +75,10 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           />
         </div>
 
-        <label className="select-field location-field">
+        <div className="select-field location-field">
           <span>Город</span>
-          <span className="location-control">
-            <i className="pin-icon" aria-hidden="true" />
-            <select value={filters.city} onChange={(event) => onChange({ city: event.target.value })}>
-              <option value="">Весь Казахстан</option>
-              {quickCities.map((city) => <option key={city} value={city}>{city}</option>)}
-            </select>
-            <i className="location-valid" aria-label="Город определен">✓</i>
-          </span>
-        </label>
+          <CityPicker value={filters.city} onChange={(city) => onChange({ city })} />
+        </div>
 
         <a className="show-results" href="#catalog">
           <span>Искать</span>
