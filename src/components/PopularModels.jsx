@@ -57,7 +57,13 @@ export function PopularModels({ onChange }) {
             onClick={() => chooseModel(item)}
           >
             <span className="popular-model-media">
-              <img loading="lazy" decoding="async" src={item.image} alt={item.label} />
+              <img
+                loading="lazy"
+                decoding="async"
+                src={item.image}
+                alt={item.label}
+                style={{ "--model-image-offset-y": item.imageOffsetY ?? "0px" }}
+              />
             </span>
             <span className="popular-model-name">
               <span>{item.label}</span>
