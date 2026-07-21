@@ -23,8 +23,8 @@ a { color: inherit; text-decoration: none; }
 .nav, .header-actions { display: flex; align-items: center; }
 .nav { gap: 30px; margin-right: auto; color: #111; font-size: 0.86rem; font-weight: 800; white-space: nowrap; }
 .nav a:hover { color: var(--red); }
-.header-brand { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; color: var(--red); font-size: 1.28rem; font-style: italic; font-weight: 950; letter-spacing: 0; white-space: nowrap; }
-.brand-mark { display: grid; place-items: center; width: 29px; height: 29px; border: 2px solid var(--red); color: #111; font-size: 0.82rem; font-style: normal; }
+.header-brand { position: relative; flex: 0 0 178px; display: block; width: 178px; height: 42px; overflow: hidden; }
+.header-logo { position: absolute; top: 50%; left: 50%; display: block; width: 188px; max-width: none; height: auto; transform: translate(-50%, -50%); }
 .header-actions { flex: 0 0 auto; justify-content: flex-end; gap: 8px; }
 .city-button, .header-icon { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid #cbcfcd; color: #111; font-weight: 800; }
 .pin-icon { position: relative; display: inline-block; width: 15px; height: 15px; flex: 0 0 15px; border: 2px solid currentColor; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
@@ -256,6 +256,8 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 }
 
 @media (max-width: 520px) {
+  .header-brand { width: 148px; height: 36px; flex-basis: 148px; }
+  .header-logo { width: 158px; }
   .profile-button { display: none; }
   .hero-shell, .hero-content { min-height: 620px; }
   .search-board { padding: 22px 26px 26px; }

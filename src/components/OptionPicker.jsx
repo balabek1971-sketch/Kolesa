@@ -65,11 +65,7 @@ export function OptionPicker({
     }, new Map());
 
     return [...groups.entries()]
-      .sort(([left], [right]) => optionCollator.compare(left, right))
-      .map(([key, groupOptions]) => [
-        key,
-        [...groupOptions].sort((left, right) => optionCollator.compare(left.label, right.label)),
-      ]);
+      .sort(([left], [right]) => optionCollator.compare(left, right));
   }, [groupByInitial, visibleOptions]);
 
   function choose(nextValue) {

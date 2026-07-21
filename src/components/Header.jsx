@@ -5,8 +5,7 @@ export function Header({ favoriteCount }) {
     <header className="site-header">
       <div className="header-inner">
         <a className="header-brand" href="#top" aria-label="QazAuto">
-          <span className="brand-mark">Q</span>
-          <span>QazAuto</span>
+          <img className="header-logo" src="/qazauto-logo.png" alt="" />
         </a>
 
         <nav className="nav" aria-label="Основная навигация">
