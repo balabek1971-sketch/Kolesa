@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { ToggleCheck } from "./controls/ToggleCheck.jsx";
 import {
   bodyTypes,
@@ -7,60 +8,85 @@ import {
   originCountries
 } from "../data/filterOptions.js";
 
+function ClearableSelect({ children, label, onChange, value }) {
+  return (
+    <div className="advanced-select-control">
+      <select
+        aria-label={label}
+        className={value ? "is-selected" : ""}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {children}
+      </select>
+      {value && (
+        <button
+          className="advanced-select-clear"
+          type="button"
+          aria-label={`Очистить поле «${label}»`}
+          onClick={() => onChange("")}
+        >
+          <X aria-hidden="true" size={15} strokeWidth={2} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function AdvancedFilters({ filters, onChange }) {
   return (
     <div className="advanced-filters">
       <div className="advanced-grid">
-        <label className="advanced-field">
+        <div className="advanced-field">
           <span>Страна происхождения</span>
-          <select className={filters.originCountry ? "is-selected" : ""} value={filters.originCountry} onChange={(event) => onChange({ originCountry: event.target.value })}>
+          <ClearableSelect label="Страна происхождения" value={filters.originCountry} onChange={(originCountry) => onChange({ originCountry })}>
             <option value="">Неважно</option>
             {originCountries.map((country) => <option key={country} value={country}>{country}</option>)}
-          </select>
-        </label>
+          </ClearableSelect>
+        </div>
 
-        <label className="advanced-field">
+        <div className="advanced-field">
           <span>Кузов</span>
-          <select className={filters.body ? "is-selected" : ""} value={filters.body} onChange={(event) => onChange({ body: event.target.value })}>
+          <ClearableSelect label="Кузов" value={filters.body} onChange={(body) => onChange({ body })}>
             <option value="">Любой кузов</option>
             {bodyTypes.map((body) => <option key={body} value={body}>{body}</option>)}
-          </select>
-        </label>
+          </ClearableSelect>
+        </div>
 
-        <label className="advanced-field">
+        <div className="advanced-field">
           <span>Тип двигателя</span>
-          <select className={filters.engineType ? "is-selected" : ""} value={filters.engineType} onChange={(event) => onChange({ engineType: event.target.value })}>
+          <ClearableSelect label="Тип двигателя" value={filters.engineType} onChange={(engineType) => onChange({ engineType })}>
             <option value="">Любой двигатель</option>
             {engineTypes.map((engine) => <option key={engine} value={engine}>{engine}</option>)}
-          </select>
-        </label>
+          </ClearableSelect>
+        </div>
 
-        <label className="advanced-field">
+        <div className="advanced-field">
           <span>КПП</span>
-          <select className={filters.gearbox ? "is-selected" : ""} value={filters.gearbox} onChange={(event) => onChange({ gearbox: event.target.value })}>
+          <ClearableSelect label="КПП" value={filters.gearbox} onChange={(gearbox) => onChange({ gearbox })}>
             <option value="">Любая КПП</option>
             {gearboxTypes.map((gearbox) => <option key={gearbox} value={gearbox}>{gearbox}</option>)}
-          </select>
-        </label>
+          </ClearableSelect>
+        </div>
 
-        <label className="advanced-field">
+        <div className="advanced-field">
           <span>Расположение руля</span>
-          <select className={filters.steering ? "is-selected" : ""} value={filters.steering} onChange={(event) => onChange({ steering: event.target.value })}>
+          <ClearableSelect label="Расположение руля" value={filters.steering} onChange={(steering) => onChange({ steering })}>
             <option value="">Неважно</option>
             <option value="Левый">Левый</option>
             <option value="Правый">Правый</option>
-          </select>
-        </label>
+          </ClearableSelect>
+        </div>
 
-        <label className="advanced-field">
+        <div className="advanced-field">
           <span>Привод</span>
-          <select className={filters.drivetrain ? "is-selected" : ""} value={filters.drivetrain} onChange={(event) => onChange({ drivetrain: event.target.value })}>
+          <ClearableSelect label="Привод" value={filters.drivetrain} onChange={(drivetrain) => onChange({ drivetrain })}>
             <option value="">Любой привод</option>
             <option value="Передний">Передний</option>
             <option value="Задний">Задний</option>
             <option value="Полный">Полный</option>
-          </select>
-        </label>
+          </ClearableSelect>
+        </div>
 
         <fieldset className="advanced-field availability-field">
           <legend>Наличие</legend>
@@ -110,10 +136,10 @@ export function AdvancedFilters({ filters, onChange }) {
 
         <div className="advanced-field color-field">
           <span>Цвет</span>
-          <select className={filters.colorName ? "is-selected" : ""} value={filters.colorName} onChange={(event) => onChange({ colorName: event.target.value })}>
+          <ClearableSelect label="Цвет" value={filters.colorName} onChange={(colorName) => onChange({ colorName })}>
             <option value="">Неважно</option>
             {colors.map((color) => <option key={color} value={color}>{color}</option>)}
-          </select>
+          </ClearableSelect>
           <div className="color-options">
             <ToggleCheck
               checked={filters.metallic}
