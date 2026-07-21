@@ -114,19 +114,18 @@ export function AdvancedFilters({ filters, onChange }) {
             <option value="">Неважно</option>
             {colors.map((color) => <option key={color} value={color}>{color}</option>)}
           </select>
-          <ToggleCheck
-            checked={filters.metallic}
-            label="Металлик"
-            onChange={(metallic) => onChange({ metallic })}
-          />
-        </div>
-
-        <div className="advanced-checkboxes">
-          <ToggleCheck
-            checked={filters.dealerOnly}
-            label="Только от дилеров"
-            onChange={(dealerOnly) => onChange({ dealerOnly })}
-          />
+          <div className="color-options">
+            <ToggleCheck
+              checked={filters.metallic}
+              label="Металлик"
+              onChange={(metallic) => onChange({ metallic })}
+            />
+            <ToggleCheck
+              checked={filters.dealerOnly}
+              label="Только от дилеров"
+              onChange={(dealerOnly) => onChange({ dealerOnly })}
+            />
+          </div>
         </div>
 
         <label className="advanced-field keyword-field">
