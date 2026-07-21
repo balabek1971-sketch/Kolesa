@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, Search, X } from "lucide-react";
+import { ChevronRight, MapPinned, Search, X } from "lucide-react";
 import { kazakhstanRegions } from "../data/kazakhstanLocations.js";
 import { quickCities } from "../data/listings.js";
 
@@ -86,9 +86,15 @@ export function CityPicker({ onChange, value }) {
           {quickCities.map((city) => <option key={city} value={city}>{city}</option>)}
           <option value="__more">Ещё...</option>
         </select>
-        <button ref={searchButtonRef} className="city-search-button" type="button" onClick={openPicker}>
-          <Search aria-hidden="true" size={14} strokeWidth={2.2} />
-          <span>Поиск</span>
+        <button
+          ref={searchButtonRef}
+          className="city-search-button"
+          type="button"
+          aria-label="Открыть выбор города"
+          onClick={openPicker}
+        >
+          <MapPinned aria-hidden="true" size={14} strokeWidth={1.9} />
+          <span>Все города</span>
         </button>
         <i className="location-valid" aria-label="Регион выбран">✓</i>
       </span>

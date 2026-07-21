@@ -155,7 +155,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
         aria-expanded={advancedOpen}
         onClick={() => setAdvancedOpen((current) => !current)}
       >
-        <SlidersHorizontal aria-hidden="true" size={19} strokeWidth={1.9} />
+        <SlidersHorizontal aria-hidden="true" size={19} strokeWidth={1.6} />
         <span>Расширенный поиск</span>
         {advancedOpen
           ? <ChevronUp aria-hidden="true" size={16} />
