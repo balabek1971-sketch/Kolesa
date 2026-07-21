@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, LoaderCircle, Search, X } from "lucide-react";
+import { Check, ChevronDown, LoaderCircle, Search, X } from "lucide-react";
 
 const optionCollator = new Intl.Collator("ru-KZ", {
   numeric: true,
@@ -129,6 +129,7 @@ export function OptionPicker({
               >
                 <span>Неважно</span>
                 <small>Пропустить этот параметр</small>
+                {!value && <Check className="option-picker-check" aria-hidden="true" size={16} strokeWidth={2.5} />}
               </button>
 
               {groupByInitial
