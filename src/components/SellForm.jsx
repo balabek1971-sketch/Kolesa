@@ -1,31 +1,44 @@
+import { useState } from "react";
 import { GroupedNumberInput } from "./controls/GroupedNumberInput.jsx";
 
 export function SellForm({ onSubmit, userEmail }) {
-  function handleSubmit(event) {
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event) {
     event.preventDefault();
+    setMessage("");
+    setSubmitting(true);
     const form = new FormData(event.currentTarget);
-    onSubmit({
-      id: `listing-${Date.now()}`,
-      title: form.get("title"),
-      brand: form.get("brand"),
-      model: form.get("model"),
-      category: "cars",
-      city: form.get("city"),
-      price: Number(String(form.get("price")).replace(/\D/g, "")),
-      year: Number(form.get("year")),
-      mileage: Number(form.get("mileage")),
-      condition: form.get("condition"),
-      body: form.get("body"),
-      gearbox: form.get("gearbox"),
-      seller: "Новое объявление",
-      color: "#0f8b8d",
-      hasPhoto: true,
-      canFinance: false,
-      cleared: true,
-      damaged: false,
-      score: 99
-    });
-    event.currentTarget.reset();
+    const formElement = event.currentTarget;
+
+    try {
+      await onSubmit({
+        id: `listing-${Date.now()}`,
+        title: form.get("title"),
+        brand: form.get("brand"),
+        model: form.get("model"),
+        category: "cars",
+        city: form.get("city"),
+        price: Number(String(form.get("price")).replace(/\D/g, "")),
+        year: Number(form.get("year")),
+        mileage: Number(form.get("mileage")),
+        condition: form.get("condition"),
+        body: form.get("body"),
+        gearbox: form.get("gearbox"),
+        seller: "Частный продавец",
+        color: "#0f8b8d",
+        hasPhoto: false,
+        canFinance: false,
+        cleared: true,
+        damaged: false,
+        score: 99
+      });
+      formElement.reset();
+    } catch (error) {
+      setMessage(error.message || "Не удалось опубликовать объявление.");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -54,8 +67,11 @@ export function SellForm({ onSubmit, userEmail }) {
             <option value="new">Новая</option>
           </select>
         </label>
-        <button type="submit">Добавить демо-объявление</button>
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Публикуем..." : "Опубликовать объявление"}
+        </button>
       </form>
+      {message && <p className="sell-message" role="alert">{message}</p>}
     </section>
   );
 }
