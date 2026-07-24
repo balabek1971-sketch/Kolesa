@@ -268,6 +268,8 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .auth-form input { min-height: 44px; }
 .auth-form > button { min-height: 46px; border: 0; background: var(--red); color: #fff; font-weight: 850; }
 .auth-form > button:hover { background: var(--red-dark); }
+.auth-form > .auth-secondary { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.auth-form > .auth-secondary:hover { border-color: var(--red); background: #fff; color: var(--red); }
 .auth-form > button:disabled { cursor: wait; opacity: 0.64; }
 .auth-message { margin: 15px 0 0; color: #4d5900; font-size: 0.88rem; line-height: 1.45; }
 .account-actions { display: flex; gap: 10px; margin-top: 25px; }

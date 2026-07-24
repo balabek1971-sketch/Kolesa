@@ -4,4 +4,6 @@ dist/
 .env.*
 !.env.example
 *.local
+.tools/
+backend/.build/
 

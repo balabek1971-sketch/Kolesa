@@ -19,7 +19,7 @@ export function AccountPage({ auth }) {
       <section className="account-panel">
         <p className="eyebrow">Личный кабинет</p>
         <h1>Ваш аккаунт</h1>
-        <p>{auth.session.user.email}</p>
+        <p>{auth.session.user.phone || auth.session.user.email || "Пользователь QazAuto"}</p>
         <div className="account-actions">
           <a href="#/sell">Разместить объявление</a>
           <button type="button" onClick={() => supabase.auth.signOut()}>Выйти</button>
