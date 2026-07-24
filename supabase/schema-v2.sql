@@ -466,7 +466,14 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  normalized_phone text;
 begin
+  normalized_phone := nullif(regexp_replace(coalesce(new.phone, ''), '[^0-9]', '', 'g'), '');
+  if normalized_phone is not null then
+    normalized_phone := '+' || normalized_phone;
+  end if;
+
   insert into public.profiles (
     id,
     display_name,
@@ -476,7 +483,7 @@ begin
   values (
     new.id,
     nullif(new.raw_user_meta_data ->> 'full_name', ''),
-    nullif(new.phone, ''),
+    normalized_phone,
     new.phone_confirmed_at
   )
   on conflict (id) do update
@@ -771,7 +778,10 @@ insert into public.profiles (id, display_name, phone_e164, phone_verified_at)
 select
   id,
   nullif(raw_user_meta_data ->> 'full_name', ''),
-  nullif(phone, ''),
+  case
+    when nullif(regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g'), '') is null then null
+    else '+' || regexp_replace(phone, '[^0-9]', '', 'g')
+  end,
   phone_confirmed_at
 from auth.users
 on conflict (id) do update
