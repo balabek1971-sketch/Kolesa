@@ -307,6 +307,7 @@ func writeHookError(w http.ResponseWriter, status int, message string) {
 func writeHookSuccess(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("{}"))
 }
 
 func newRequestID() string {

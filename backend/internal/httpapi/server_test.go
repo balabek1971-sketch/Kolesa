@@ -110,6 +110,9 @@ func TestSendSMSHook(t *testing.T) {
 	if recorder.Header().Get("Content-Type") != "application/json" {
 		t.Fatalf("expected JSON content type, got %q", recorder.Header().Get("Content-Type"))
 	}
+	if recorder.Body.String() != "{}" {
+		t.Fatalf("expected an empty JSON object, got %q", recorder.Body.String())
+	}
 	if sender.calls != 1 || sender.phone != "+77001234567" || sender.otp != "123456" {
 		t.Fatalf("unexpected sender call: %#v", sender)
 	}
@@ -121,6 +124,9 @@ func TestSendSMSHook(t *testing.T) {
 	}
 	if replayRecorder.Header().Get("Content-Type") != "application/json" {
 		t.Fatalf("expected replay response to use JSON content type, got %q", replayRecorder.Header().Get("Content-Type"))
+	}
+	if replayRecorder.Body.String() != "{}" {
+		t.Fatalf("expected replay response to contain an empty JSON object, got %q", replayRecorder.Body.String())
 	}
 }
 
