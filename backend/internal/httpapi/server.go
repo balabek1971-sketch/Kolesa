@@ -114,7 +114,7 @@ func (s *Server) sendSMSHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !s.replayGuard.Claim(headers.ID) {
-		w.WriteHeader(http.StatusOK)
+		writeHookSuccess(w)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (s *Server) sendSMSHook(w http.ResponseWriter, r *http.Request) {
 		"message_id", result.MessageID,
 		"webhook_id", headers.ID,
 	)
-	w.WriteHeader(http.StatusOK)
+	writeHookSuccess(w)
 }
 
 func (s *Server) me(w http.ResponseWriter, r *http.Request) {
@@ -302,6 +302,11 @@ func writeHookError(w http.ResponseWriter, status int, message string) {
 			"message":   message,
 		},
 	})
+}
+
+func writeHookSuccess(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
 
 func newRequestID() string {

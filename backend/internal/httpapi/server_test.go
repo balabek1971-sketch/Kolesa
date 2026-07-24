@@ -107,6 +107,9 @@ func TestSendSMSHook(t *testing.T) {
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d: %s", recorder.Code, recorder.Body.String())
 	}
+	if recorder.Header().Get("Content-Type") != "application/json" {
+		t.Fatalf("expected JSON content type, got %q", recorder.Header().Get("Content-Type"))
+	}
 	if sender.calls != 1 || sender.phone != "+77001234567" || sender.otp != "123456" {
 		t.Fatalf("unexpected sender call: %#v", sender)
 	}
@@ -115,6 +118,9 @@ func TestSendSMSHook(t *testing.T) {
 	handler.ServeHTTP(replayRecorder, signedHookRequest(secret, "msg_123", payload))
 	if replayRecorder.Code != http.StatusOK || sender.calls != 1 {
 		t.Fatal("expected replay to succeed without sending a duplicate SMS")
+	}
+	if replayRecorder.Header().Get("Content-Type") != "application/json" {
+		t.Fatalf("expected replay response to use JSON content type, got %q", replayRecorder.Header().Get("Content-Type"))
 	}
 }
 
