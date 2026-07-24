@@ -92,7 +92,7 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   check (display_name is null or length(trim(display_name)) between 2 and 80),
-  check (phone_e164 is null or phone_e164 ~ '^\\+[1-9][0-9]{7,14}$')
+  check (phone_e164 is null or phone_e164 ~ '^[+][1-9][0-9]{7,14}$')
 );
 
 create unique index if not exists profiles_verified_phone_idx
@@ -201,7 +201,7 @@ create table if not exists public.listings (
   check (length(trim(model_name)) between 1 and 120),
   check (length(trim(city_name)) between 1 and 120),
   check (description is null or length(description) <= 10000),
-  check (contact_phone_e164 is null or contact_phone_e164 ~ '^\\+[1-9][0-9]{7,14}$'),
+  check (contact_phone_e164 is null or contact_phone_e164 ~ '^[+][1-9][0-9]{7,14}$'),
   check (expires_at is null or published_at is not null)
 );
 

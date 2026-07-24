@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const r2PublicUrl = String(import.meta.env.VITE_R2_PUBLIC_URL || "").replace(/\/+$/, "");
 
 export const supabase =
   supabaseUrl && supabaseAnonKey
@@ -14,23 +15,41 @@ export const supabase =
       })
     : null;
 
-function getPublicPhotoUrl(storagePath) {
-  if (!supabase || !storagePath) return "";
-  return supabase.storage.from("listing-photos").getPublicUrl(storagePath).data.publicUrl;
+function getPublicPhotoUrl(media) {
+  if (!media) return "";
+
+  const variants = media.variants || {};
+  const variantUrl =
+    variants.card ||
+    variants.medium ||
+    variants.thumbnail ||
+    variants.original;
+
+  if (typeof variantUrl === "string" && /^https?:\/\//.test(variantUrl)) {
+    return variantUrl;
+  }
+
+  if (r2PublicUrl && media.object_key) {
+    return `${r2PublicUrl}/${String(media.object_key).replace(/^\/+/, "")}`;
+  }
+
+  return "";
 }
 
 export function mapListingRow(row) {
-  const photos = [...(row.listing_photos || [])].sort(
+  const photos = [...(row.listing_media || [])].filter(
+    (media) => media.kind === "photo" && media.status === "ready"
+  ).sort(
     (first, second) => first.sort_order - second.sort_order
   );
 
   return {
     id: row.id,
     title: row.title,
-    brand: row.brand,
-    model: row.model,
+    brand: row.brand_name || row.brand,
+    model: row.model_name || row.model,
     category: row.category,
-    city: row.city,
+    city: row.city_name || row.city,
     price: Number(row.price_kzt),
     year: row.year,
     mileage: row.mileage_km,
@@ -48,7 +67,7 @@ export function mapListingRow(row) {
     isDealer: false,
     seller: row.seller_name || "Частный продавец",
     color: row.card_color || "#243b55",
-    imageUrl: getPublicPhotoUrl(photos[0]?.storage_path),
+    imageUrl: getPublicPhotoUrl(photos[0]),
     hasPhoto: Boolean(row.has_photo || photos.length),
     canFinance: Boolean(row.can_finance),
     cleared: Boolean(row.cleared),
@@ -63,9 +82,45 @@ export async function fetchListings() {
 
   const { data, error } = await supabase
     .from("listings")
-    .select("*, listing_photos(storage_path, sort_order)")
+    .select(`
+      id,
+      title,
+      brand_name,
+      model_name,
+      city_name,
+      category,
+      price_kzt,
+      year,
+      mileage_km,
+      condition,
+      body_type,
+      gearbox,
+      origin_country,
+      engine_type,
+      steering,
+      drivetrain,
+      availability,
+      engine_volume,
+      color_name,
+      metallic,
+      can_finance,
+      cleared,
+      damaged,
+      has_vehicle_history,
+      status,
+      published_at,
+      created_at,
+      listing_media(
+        kind,
+        provider,
+        object_key,
+        variants,
+        status,
+        sort_order
+      )
+    `)
     .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .order("published_at", { ascending: false, nullsFirst: false })
     .limit(100);
 
   if (error) throw error;
@@ -102,7 +157,7 @@ export async function createListing(listing, ownerId) {
   const { data, error } = await supabase
     .from("listings")
     .insert(payload)
-    .select("*, listing_photos(storage_path, sort_order)")
+    .select("*, listing_media(kind, provider, object_key, variants, status, sort_order)")
     .single();
 
   if (error) throw error;
