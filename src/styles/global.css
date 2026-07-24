@@ -266,6 +266,10 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .auth-form { display: grid; gap: 15px; }
 .auth-form label { display: grid; gap: 7px; color: var(--muted); font-size: 0.86rem; font-weight: 760; }
 .auth-form input { min-height: 44px; }
+.phone-input-control { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; min-height: 44px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.phone-input-control:focus-within { border-color: #7f8b87; box-shadow: 0 0 0 2px rgba(206, 240, 45, 0.45); }
+.phone-prefix { display: grid; align-self: stretch; place-items: center; border-right: 1px solid var(--line); padding: 0 12px; color: var(--ink); font-size: 1rem; font-weight: 800; }
+.auth-form .phone-input-control input { width: 100%; min-width: 0; border: 0; padding-inline: 12px; }
 .auth-form > button { min-height: 46px; border: 0; background: var(--red); color: #fff; font-weight: 850; }
 .auth-form > button:hover { background: var(--red-dark); }
 .auth-form > .auth-secondary { border: 1px solid var(--line); background: #fff; color: var(--ink); }

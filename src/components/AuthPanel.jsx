@@ -2,10 +2,26 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase.js";
 
 function normalizeKazakhstanPhone(value) {
+  const digits = value.replace(/\D/g, "");
+  return digits.length === 10 ? `+7${digits}` : "";
+}
+
+function getLocalPhoneDigits(value) {
   let digits = value.replace(/\D/g, "");
-  if (digits.length === 10) digits = `7${digits}`;
-  if (digits.length === 11 && digits.startsWith("8")) digits = `7${digits.slice(1)}`;
-  return digits.length === 11 && digits.startsWith("7") ? `+${digits}` : "";
+  if (digits.length > 10 && (digits.startsWith("7") || digits.startsWith("8"))) {
+    digits = digits.slice(1);
+  }
+  return digits.slice(0, 10);
+}
+
+function formatLocalPhone(value) {
+  const digits = getLocalPhoneDigits(value);
+  return [
+    digits.slice(0, 3),
+    digits.slice(3, 6),
+    digits.slice(6, 8),
+    digits.slice(8, 10)
+  ].filter(Boolean).join(" ");
 }
 
 export function AuthPanel({ configured, title = "Войдите в аккаунт" }) {
@@ -35,7 +51,6 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
       return;
     }
 
-    setPhone(normalizedPhone);
     setStep("code");
     setMessage("Код отправлен по SMS.");
   }
@@ -51,7 +66,11 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
 
     setSubmitting(true);
     setMessage("");
-    const { error } = await supabase.auth.verifyOtp({ phone, token, type: "sms" });
+    const { error } = await supabase.auth.verifyOtp({
+      phone: normalizeKazakhstanPhone(phone),
+      token,
+      type: "sms"
+    });
     setSubmitting(false);
     if (error) setMessage(error.message);
   }
@@ -76,16 +95,21 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
         <form className="auth-form" onSubmit={requestCode}>
           <label>
             Номер телефона
-            <input
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              inputMode="tel"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              required
-              placeholder="+7 700 000 00 00"
-            />
+            <span className="phone-input-control">
+              <span className="phone-prefix" aria-hidden="true">+7</span>
+              <input
+                name="phone"
+                type="tel"
+                aria-label="Номер телефона после +7"
+                autoComplete="tel-national"
+                inputMode="numeric"
+                value={formatLocalPhone(phone)}
+                onChange={(event) => setPhone(getLocalPhoneDigits(event.target.value))}
+                required
+                maxLength="13"
+                placeholder="700 000 00 00"
+              />
+            </span>
           </label>
           <button type="submit" disabled={submitting}>
             {submitting ? "Отправляем..." : "Получить код"}
