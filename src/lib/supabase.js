@@ -127,39 +127,39 @@ export async function fetchListings() {
   return data.map(mapListingRow);
 }
 
-export async function createListing(listing, ownerId) {
+export async function createListing(listing) {
   if (!supabase) throw new Error("Supabase не настроен.");
-  if (!ownerId) throw new Error("Для публикации необходимо войти в аккаунт.");
 
   const payload = {
-    owner_id: ownerId,
     title: listing.title,
-    brand: listing.brand,
-    model: listing.model,
-    category: listing.category || "cars",
-    city: listing.city,
+    brand_name: listing.brand,
+    model_name: listing.model,
+    city_name: listing.city,
     price_kzt: listing.price,
     year: listing.year,
     mileage_km: listing.mileage,
     condition: listing.condition,
     body_type: listing.body,
     gearbox: listing.gearbox,
-    seller_name: listing.seller || "Частный продавец",
-    card_color: listing.color || "#243b55",
-    has_photo: false,
-    can_finance: Boolean(listing.canFinance),
+    origin_country: listing.originCountry || "",
+    engine_type: listing.engineType || "",
+    steering: listing.steering || "",
+    drivetrain: listing.drivetrain || "",
+    engine_volume: listing.engineVolume,
+    color_name: listing.colorName || "",
+    metallic: Boolean(listing.metallic),
     cleared: Boolean(listing.cleared),
     damaged: Boolean(listing.damaged),
-    score: listing.score || 0,
-    status: "active"
+    has_vehicle_history: Boolean(listing.hasVehicleHistory),
+    description: listing.description || ""
   };
 
   const { data, error } = await supabase
-    .from("listings")
-    .insert(payload)
-    .select("*, listing_media(kind, provider, object_key, variants, status, sort_order)")
-    .single();
+    .rpc("save_listing_draft", {
+      p_listing_id: null,
+      p_payload: payload
+    });
 
   if (error) throw error;
-  return mapListingRow(data);
+  return data;
 }

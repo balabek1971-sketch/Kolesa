@@ -5,6 +5,7 @@ import { HomePage } from "./pages/HomePage.jsx";
 import { SellPage } from "./pages/SellPage.jsx";
 import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
+import { mediaApiConfigured, uploadListingMedia } from "./lib/mediaApi.js";
 import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
 import { createListing, fetchListings, supabase } from "./lib/supabase.js";
 
@@ -62,13 +63,26 @@ export function App() {
     });
   }
 
-  async function addListing(listing) {
-    const nextListing = supabase && auth.session
-      ? await createListing(listing, auth.session.user.id)
-      : listing;
+  async function addListing(listing, onMediaProgress) {
+    if (!supabase || !auth.session) {
+      throw new Error("Для сохранения объявления необходимо войти в аккаунт.");
+    }
+    if ((listing.photos.length || listing.video) && !mediaApiConfigured) {
+      throw new Error("Сервис загрузки фото и видео ещё не подключён.");
+    }
+    const listingId = await createListing(listing);
 
-    setListings((current) => [nextListing, ...current]);
-    window.location.hash = "catalog";
+    if ((listing.photos.length || listing.video) && mediaApiConfigured) {
+      await uploadListingMedia({
+        accessToken: auth.session.access_token,
+        listingId,
+        photos: listing.photos,
+        video: listing.video,
+        onProgress: onMediaProgress,
+      });
+    }
+
+    return listingId;
   }
 
   let page;

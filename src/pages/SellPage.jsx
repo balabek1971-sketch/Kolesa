@@ -9,7 +9,7 @@ export function SellPage({ auth, onSubmit }) {
   return (
     <main className="standalone-page">
       {auth.session ? (
-        <SellForm onSubmit={onSubmit} userEmail={auth.session.user.email} />
+        <SellForm onSubmit={onSubmit} userPhone={auth.session.user.phone} />
       ) : (
         <AuthPanel
           configured={auth.configured}

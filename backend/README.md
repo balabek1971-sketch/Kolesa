@@ -16,6 +16,9 @@ Available routes:
 - `GET /healthz` and `GET /readyz` for Railway health checks.
 - `GET /v1/status` for public service metadata.
 - `GET /v1/me` for a verified Supabase user. Send `Authorization: Bearer <access_token>`.
+- `POST /v1/listings/{id}/media/photos/upload-url` creates a short-lived R2 upload.
+- `POST /v1/listings/{id}/media/video/upload-url` creates a direct Stream upload.
+- `POST /v1/listings/{id}/media/{mediaId}/complete` verifies and records an upload.
 - `POST /v1/hooks/supabase/send-sms` for the signed Supabase Send SMS Hook.
 
 The API verifies ES256 access tokens against the project's public JWKS and validates
@@ -44,3 +47,15 @@ Variables and deploy using the included `Dockerfile` and `railway.json`.
 Supabase creates the OTP. The API verifies the Standard Webhooks HMAC signature before
 sending it to Mobizon. Only Kazakhstan E.164 numbers (`+7` plus 10 digits) are accepted.
 The API key, phone number, and OTP are never written to application logs.
+
+## Cloudflare media
+
+Railway holds `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+`R2_PUBLIC_BUCKET`, `R2_PUBLIC_BASE_URL`, `CLOUDFLARE_STREAM_ACCOUNT_ID`, and
+`CLOUDFLARE_STREAM_API_TOKEN`. The browser receives only short-lived upload URLs.
+
+Configure R2 bucket CORS for the production Vercel origin and `PUT` requests with the
+`Content-Type` header. Add `VITE_API_BASE_URL` and `VITE_R2_PUBLIC_URL` to Vercel.
+Photos upload with concurrency 3; Railway never receives their bytes. Video uploads
+directly to Cloudflare Stream and remains in `processing` until the Stream webhook
+marks it ready.

@@ -1,0 +1,271 @@
+package httpapi
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/balabek1971-sketch/Kolesa/backend/internal/repository"
+)
+
+const (
+	maxPhotoBytes = 15 << 20
+	maxVideoBytes = 200 << 20
+)
+
+var photoExtensions = map[string]string{
+	"image/jpeg": ".jpg",
+	"image/png":  ".png",
+	"image/webp": ".webp",
+	"image/avif": ".avif",
+}
+
+var videoTypes = map[string]bool{
+	"video/mp4":       true,
+	"video/webm":      true,
+	"video/quicktime": true,
+}
+
+type mediaUploadRequest struct {
+	ContentType        string `json:"content_type"`
+	Filename           string `json:"filename"`
+	SizeBytes          int64  `json:"size_bytes"`
+	SortOrder          int    `json:"sort_order"`
+	MaxDurationSeconds int    `json:"max_duration_seconds"`
+}
+
+type mediaCompleteRequest struct {
+	UploadID        string `json:"upload_id"`
+	ProviderAssetID string `json:"provider_asset_id"`
+}
+
+func (s *Server) createPhotoUpload(w http.ResponseWriter, r *http.Request) {
+	claims, ok := claimsFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+	if !s.r2.Configured() {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "photo_storage_not_configured"})
+		return
+	}
+
+	listingID := r.PathValue("listingID")
+	if !s.requireEditableListing(w, r, listingID, claims.Subject) {
+		return
+	}
+
+	var payload mediaUploadRequest
+	if err := decodeJSON(w, r, &payload); err != nil {
+		return
+	}
+	extension, allowed := photoExtensions[strings.ToLower(payload.ContentType)]
+	if !allowed || payload.SizeBytes < 1 || payload.SizeBytes > maxPhotoBytes || payload.SortOrder < 0 || payload.SortOrder > 19 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_photo"})
+		return
+	}
+
+	objectKey := fmt.Sprintf(
+		"listings/%s/%s/%02d-%s%s",
+		claims.Subject,
+		listingID,
+		payload.SortOrder,
+		newRequestID(),
+		extension,
+	)
+	expiresAt := time.Now().UTC().Add(15 * time.Minute)
+	intent, err := s.repository.CreatePhotoIntent(
+		r.Context(),
+		listingID,
+		claims.Subject,
+		objectKey,
+		payload.ContentType,
+		payload.SizeBytes,
+		payload.SortOrder,
+		expiresAt,
+	)
+	if err != nil {
+		s.logger.Error("photo upload intent failed", "error", err, "listing_id", listingID)
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "photo_slot_unavailable"})
+		return
+	}
+
+	uploadURL, err := s.r2.PresignPut(objectKey, payload.ContentType, 15*time.Minute)
+	if err != nil {
+		s.logger.Error("r2 presign failed", "error", err, "listing_id", listingID)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "photo_upload_unavailable"})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"media_id":  intent.MediaID,
+		"upload_id": intent.ID,
+		"upload_url": uploadURL,
+		"expires_at": expiresAt.Format(time.RFC3339),
+	})
+}
+
+func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
+	claims, ok := claimsFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+	if !s.stream.Configured() {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "video_storage_not_configured"})
+		return
+	}
+
+	listingID := r.PathValue("listingID")
+	if !s.requireEditableListing(w, r, listingID, claims.Subject) {
+		return
+	}
+
+	var payload mediaUploadRequest
+	if err := decodeJSON(w, r, &payload); err != nil {
+		return
+	}
+	if !videoTypes[strings.ToLower(payload.ContentType)] ||
+		payload.SizeBytes < 1 ||
+		payload.SizeBytes > maxVideoBytes ||
+		payload.MaxDurationSeconds < 1 ||
+		payload.MaxDurationSeconds > 60 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_video"})
+		return
+	}
+
+	directUpload, err := s.stream.CreateDirectUpload(r.Context(), listingID, claims.Subject)
+	if err != nil {
+		s.logger.Error("stream direct upload failed", "error", err, "listing_id", listingID)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_upload_unavailable"})
+		return
+	}
+
+	expiresAt := time.Now().UTC().Add(30 * time.Minute)
+	intent, err := s.repository.CreateVideoIntent(
+		r.Context(),
+		listingID,
+		claims.Subject,
+		directUpload.UID,
+		payload.ContentType,
+		payload.SizeBytes,
+		expiresAt,
+	)
+	if err != nil {
+		s.logger.Error("video upload intent failed", "error", err, "listing_id", listingID)
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "video_slot_unavailable"})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"media_id":          intent.MediaID,
+		"upload_id":         intent.ID,
+		"provider_asset_id": directUpload.UID,
+		"upload_url":        directUpload.UploadURL,
+		"expires_at":        expiresAt.Format(time.RFC3339),
+	})
+}
+
+func (s *Server) completeMediaUpload(w http.ResponseWriter, r *http.Request) {
+	claims, ok := claimsFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+
+	listingID := r.PathValue("listingID")
+	mediaID := r.PathValue("mediaID")
+	if !s.requireEditableListing(w, r, listingID, claims.Subject) {
+		return
+	}
+
+	var payload mediaCompleteRequest
+	if err := decodeJSON(w, r, &payload); err != nil {
+		return
+	}
+	if payload.UploadID == "" && payload.ProviderAssetID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "upload_reference_required"})
+		return
+	}
+
+	media, err := s.repository.GetMedia(r.Context(), mediaID, listingID)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, repository.ErrNotFound) {
+			status = http.StatusNotFound
+		}
+		writeJSON(w, status, map[string]string{"error": "media_not_found"})
+		return
+	}
+
+	switch media.Provider {
+	case "cloudflare_r2":
+		if payload.UploadID == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "upload_id_required"})
+			return
+		}
+		info, err := s.r2.HeadObject(r.Context(), media.ObjectKey)
+		if err != nil {
+			s.logger.Warn("r2 object verification failed", "error", err, "media_id", mediaID)
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "photo_not_uploaded"})
+			return
+		}
+		if info.SizeBytes < 1 || info.SizeBytes > media.SizeBytes ||
+			!strings.EqualFold(strings.TrimSpace(info.ContentType), strings.TrimSpace(media.MimeType)) {
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "photo_metadata_mismatch"})
+			return
+		}
+		if err := s.repository.CompletePhoto(r.Context(), mediaID, payload.UploadID, info.SizeBytes, info.ContentType); err != nil {
+			s.logger.Error("photo completion failed", "error", err, "media_id", mediaID)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "photo_completion_failed"})
+			return
+		}
+	case "cloudflare_stream":
+		if payload.UploadID == "" || payload.ProviderAssetID == "" || payload.ProviderAssetID != media.ProviderAssetID {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_video_asset"})
+			return
+		}
+		if err := s.repository.CompleteVideo(r.Context(), mediaID, payload.UploadID); err != nil {
+			s.logger.Error("video completion failed", "error", err, "media_id", mediaID)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "video_completion_failed"})
+			return
+		}
+	default:
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported_media_provider"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "accepted"})
+}
+
+func (s *Server) requireEditableListing(w http.ResponseWriter, r *http.Request, listingID, ownerID string) bool {
+	if listingID == "" || filepath.Base(listingID) != listingID {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_listing_id"})
+		return false
+	}
+	owns, err := s.repository.OwnsEditableListing(r.Context(), listingID, ownerID)
+	if err != nil {
+		s.logger.Error("listing ownership check failed", "error", err, "listing_id", listingID)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "ownership_check_failed"})
+		return false
+	}
+	if !owns {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "listing_not_found"})
+		return false
+	}
+	return true
+}
+
+func decodeJSON(w http.ResponseWriter, r *http.Request, target any) error {
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_json"})
+		return err
+	}
+	return nil
+}

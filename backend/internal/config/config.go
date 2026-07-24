@@ -22,6 +22,13 @@ type Config struct {
 	MobizonAPIKey          string
 	MobizonSender          string
 	CookieDomain           string
+	R2AccountID            string
+	R2AccessKeyID          string
+	R2SecretAccessKey      string
+	R2PublicBucket         string
+	R2PublicBaseURL        string
+	CloudflareStreamAccountID string
+	CloudflareStreamAPIToken  string
 	ReadTimeout            time.Duration
 	WriteTimeout           time.Duration
 	IdleTimeout            time.Duration
@@ -42,6 +49,13 @@ func Load() (Config, error) {
 		MobizonAPIKey:          os.Getenv("MOBIZON_API_KEY"),
 		MobizonSender:          os.Getenv("MOBIZON_SENDER"),
 		CookieDomain:           os.Getenv("COOKIE_DOMAIN"),
+		R2AccountID:            os.Getenv("R2_ACCOUNT_ID"),
+		R2AccessKeyID:          os.Getenv("R2_ACCESS_KEY_ID"),
+		R2SecretAccessKey:      os.Getenv("R2_SECRET_ACCESS_KEY"),
+		R2PublicBucket:         os.Getenv("R2_PUBLIC_BUCKET"),
+		R2PublicBaseURL:        strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
+		CloudflareStreamAccountID: os.Getenv("CLOUDFLARE_STREAM_ACCOUNT_ID"),
+		CloudflareStreamAPIToken:  os.Getenv("CLOUDFLARE_STREAM_API_TOKEN"),
 		ReadTimeout:            10 * time.Second,
 		WriteTimeout:           15 * time.Second,
 		IdleTimeout:            60 * time.Second,

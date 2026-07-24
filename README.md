@@ -13,7 +13,8 @@
 - Redis — кеш и ограничения запросов.
 
 Секреты `service_role`, R2 и Stream разрешены только в Railway. В Vercel находятся
-только публичные переменные `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`.
+только публичные переменные `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+`VITE_API_BASE_URL` и `VITE_R2_PUBLIC_URL`.
 
 ## Локальный запуск интерфейса
 
@@ -39,6 +40,10 @@ go run ./cmd/api
 
 `schema-v2.sql` и `hotfix-20260722-media-rls.sql` применены 22 июля 2026 года.
 Прежний `schema.sql` оставлен только как история MVP и повторно запускать его нельзя.
+
+Для пошаговой публикации требуется один раз выполнить
+`supabase/hotfix-20260724-listing-drafts.sql`. Он добавляет защищённое сохранение
+черновиков и отправку собственного объявления на модерацию.
 
 В Supabase Dashboard ещё требуется:
 
