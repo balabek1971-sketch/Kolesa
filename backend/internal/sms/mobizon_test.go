@@ -47,6 +47,25 @@ func TestMobizonSendOTP(t *testing.T) {
 	}
 }
 
+func TestMobizonAcceptsSupabasePhoneFormat(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			t.Fatalf("ParseForm() returned an error: %v", err)
+		}
+		if r.Form.Get("recipient") != "77001234567" {
+			t.Fatalf("unexpected recipient: %q", r.Form.Get("recipient"))
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"code":0,"data":{"messageId":43}}`))
+	}))
+	defer server.Close()
+
+	sender := NewMobizon(server.URL, "test-api-key", "", server.Client())
+	if _, err := sender.SendOTP(context.Background(), "77001234567", "123456"); err != nil {
+		t.Fatalf("SendOTP() returned an error: %v", err)
+	}
+}
+
 func TestMobizonRejectsInvalidInput(t *testing.T) {
 	sender := NewMobizon("https://api.mobizon.kz", "test-api-key", "", nil)
 

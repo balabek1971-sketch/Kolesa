@@ -17,7 +17,7 @@ import (
 const otpMessageTemplate = "QazAuto: kod vhoda %s. Nikomu ne soobshchaite ego."
 
 var (
-	kazakhstanPhonePattern = regexp.MustCompile(`^\+7\d{10}$`)
+	kazakhstanPhonePattern = regexp.MustCompile(`^7\d{10}$`)
 	otpPattern             = regexp.MustCompile(`^\d{4,8}$`)
 )
 
@@ -52,7 +52,8 @@ func NewMobizon(baseURL, apiKey, senderName string, client *http.Client) *Mobizo
 }
 
 func (m *Mobizon) SendOTP(ctx context.Context, phone, otp string) (Result, error) {
-	if !kazakhstanPhonePattern.MatchString(phone) {
+	normalizedPhone, ok := normalizeKazakhstanPhone(phone)
+	if !ok {
 		return Result{}, errors.New("phone must be a Kazakhstan number in E.164 format")
 	}
 	if !otpPattern.MatchString(otp) {
@@ -73,7 +74,7 @@ func (m *Mobizon) SendOTP(ctx context.Context, phone, otp string) (Result, error
 	endpoint.RawQuery = query.Encode()
 
 	form := url.Values{
-		"recipient":        {strings.TrimPrefix(phone, "+")},
+		"recipient":        {strings.TrimPrefix(normalizedPhone, "+")},
 		"text":             {fmt.Sprintf(otpMessageTemplate, otp)},
 		"params[validity]": {"60"},
 	}
@@ -119,6 +120,14 @@ func (m *Mobizon) SendOTP(ctx context.Context, phone, otp string) (Result, error
 	}
 
 	return Result{Provider: "mobizon", MessageID: messageID}, nil
+}
+
+func normalizeKazakhstanPhone(phone string) (string, bool) {
+	digits := strings.TrimPrefix(strings.TrimSpace(phone), "+")
+	if !kazakhstanPhonePattern.MatchString(digits) {
+		return "", false
+	}
+	return "+" + digits, true
 }
 
 func scalarString(value any) string {
