@@ -15,7 +15,7 @@ export const supabase =
       })
     : null;
 
-function getPublicPhotoUrl(media) {
+export function getPublicPhotoUrl(media) {
   if (!media) return "";
 
   const variants = media.variants || {};
@@ -162,4 +162,44 @@ export async function createListing(listing) {
 
   if (error) throw error;
   return data;
+}
+
+export async function submitListingForModeration(listingId) {
+  if (!supabase) throw new Error("Supabase не настроен.");
+
+  const { error } = await supabase.rpc("submit_own_listing_for_moderation", {
+    p_listing_id: listingId
+  });
+
+  if (error) throw error;
+}
+
+export async function fetchOwnListings() {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase.rpc("get_own_listings");
+  if (error) throw error;
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    brand: row.brand_name,
+    model: row.model_name,
+    city: row.city_name,
+    price: Number(row.price_kzt),
+    year: row.year,
+    mileage: row.mileage_km,
+    condition: row.condition,
+    body: row.body_type || "Не указан",
+    status: row.status,
+    rejectionReason: row.rejection_reason || "",
+    imageUrl: getPublicPhotoUrl({ object_key: row.cover_object_key }),
+    photoCount: Number(row.photo_count || 0),
+    videoCount: Number(row.video_count || 0),
+    publishedAt: row.published_at,
+    expiresAt: row.expires_at,
+    archivedAt: row.archived_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }));
 }

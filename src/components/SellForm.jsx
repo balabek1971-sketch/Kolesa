@@ -4,7 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   LoaderCircle,
-  Save,
+  Send,
   ShieldCheck,
 } from "lucide-react";
 import { bodyTypes, colors, engineTypes, gearboxTypes, originCountries } from "../data/filterOptions.js";
@@ -179,10 +179,10 @@ export function SellForm({ onSubmit, userPhone }) {
     return (
       <section className="sell sell-success">
         <BadgeCheck aria-hidden="true" size={54} strokeWidth={1.6} />
-        <p className="eyebrow">Черновик создан</p>
-        <h1>Объявление сохранено</h1>
-        <p>Фотографии и видео будут загружены напрямую в облако, затем объявление отправится на модерацию.</p>
-        <strong>Номер черновика: {submittedId}</strong>
+        <p className="eyebrow">Заявка принята</p>
+        <h1>Объявление на модерации</h1>
+        <p>Все фотографии и видео загружены. Мы сообщим о результате проверки в личном кабинете.</p>
+        <strong>Номер объявления: {submittedId}</strong>
         <a href="#/account">Перейти в аккаунт</a>
       </section>
     );
@@ -441,8 +441,8 @@ export function SellForm({ onSubmit, userPhone }) {
               <button className="sell-submit" type="button" disabled={submitting} onClick={handleSubmit}>
                 {submitting
                   ? <LoaderCircle className="loading-icon" aria-hidden="true" size={19} />
-                  : <Save aria-hidden="true" size={19} />}
-                {submitting ? uploadStatus || "Сохраняем..." : "Сохранить черновик"}
+                  : <Send aria-hidden="true" size={19} />}
+                {submitting ? uploadStatus || "Отправляем..." : "Отправить на модерацию"}
               </button>
             )}
           </footer>

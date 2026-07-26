@@ -7,7 +7,12 @@ import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { mediaApiConfigured, uploadListingMedia } from "./lib/mediaApi.js";
 import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
-import { createListing, fetchListings, supabase } from "./lib/supabase.js";
+import {
+  createListing,
+  fetchListings,
+  submitListingForModeration,
+  supabase
+} from "./lib/supabase.js";
 
 function getRoute() {
   const hash = window.location.hash;
@@ -82,6 +87,7 @@ export function App() {
       });
     }
 
+    await submitListingForModeration(listingId);
     return listingId;
   }
 
