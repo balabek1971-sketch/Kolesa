@@ -171,6 +171,10 @@ export async function publishListing(listingId) {
     p_listing_id: listingId
   });
 
+  if (error?.code === "23505" || error?.message?.includes("listings_owner_active_duplicate_idx")) {
+    throw new Error("Этот автомобиль уже опубликован в вашем аккаунте. Измените существующее объявление или удалите его.");
+  }
+
   if (error) throw error;
 }
 

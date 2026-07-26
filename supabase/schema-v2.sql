@@ -193,6 +193,7 @@ create table if not exists public.listings (
   sold_at timestamptz,
   archived_at timestamptz,
   deleted_at timestamptz,
+  duplicate_fingerprint text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   version integer not null default 1,
@@ -541,6 +542,66 @@ begin
 end;
 $$;
 
+create or replace function public.normalize_listing_duplicate_value(
+  p_value text
+)
+returns text
+language sql
+immutable
+parallel safe
+set search_path = public
+as $$
+  select regexp_replace(
+    lower(trim(coalesce(p_value, ''))),
+    '[[:space:]]+',
+    ' ',
+    'g'
+  );
+$$;
+
+create or replace function public.build_listing_duplicate_fingerprint(
+  p_listing public.listings
+)
+returns text
+language sql
+immutable
+parallel safe
+set search_path = public
+as $$
+  select md5(concat_ws(
+    chr(31),
+    public.normalize_listing_duplicate_value(p_listing.brand_name),
+    public.normalize_listing_duplicate_value(p_listing.model_name),
+    p_listing.year::text,
+    p_listing.condition::text,
+    p_listing.mileage_km::text,
+    public.normalize_listing_duplicate_value(p_listing.body_type),
+    public.normalize_listing_duplicate_value(p_listing.engine_type),
+    coalesce(p_listing.engine_volume::text, ''),
+    public.normalize_listing_duplicate_value(p_listing.gearbox),
+    public.normalize_listing_duplicate_value(p_listing.drivetrain),
+    public.normalize_listing_duplicate_value(p_listing.steering),
+    public.normalize_listing_duplicate_value(p_listing.color_name)
+  ));
+$$;
+
+create or replace function public.set_listing_duplicate_fingerprint()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.status = 'active' and new.deleted_at is null then
+    new.duplicate_fingerprint :=
+      public.build_listing_duplicate_fingerprint(new);
+  else
+    new.duplicate_fingerprint := null;
+  end if;
+
+  return new;
+end;
+$$;
+
 create or replace function public.log_listing_status_change()
 returns trigger
 language plpgsql
@@ -764,6 +825,11 @@ create trigger listings_validate_relationships
 before insert or update of owner_id, dealer_id, brand_id, model_id on public.listings
 for each row execute function public.validate_listing_relationships();
 
+drop trigger if exists listings_set_duplicate_fingerprint on public.listings;
+create trigger listings_set_duplicate_fingerprint
+before insert or update on public.listings
+for each row execute function public.set_listing_duplicate_fingerprint();
+
 drop trigger if exists listings_log_status on public.listings;
 create trigger listings_log_status
 after insert or update of status on public.listings
@@ -802,6 +868,12 @@ create index if not exists locations_parent_idx
 create index if not exists listings_owner_created_idx
   on public.listings (owner_id, created_at desc)
   where deleted_at is null;
+
+create unique index if not exists listings_owner_active_duplicate_idx
+  on public.listings (owner_id, duplicate_fingerprint)
+  where status = 'active'
+    and deleted_at is null
+    and duplicate_fingerprint is not null;
 
 create index if not exists listings_active_recent_idx
   on public.listings (published_at desc, id)
@@ -1054,6 +1126,9 @@ revoke all on function public.ensure_behavior_events_partition(date) from public
 revoke all on function public.is_listing_public(uuid) from public, anon, authenticated;
 revoke all on function public.owns_listing(uuid) from public, anon, authenticated;
 revoke all on function public.can_favorite_listing(uuid) from public, anon, authenticated;
+revoke all on function public.normalize_listing_duplicate_value(text) from public, anon, authenticated;
+revoke all on function public.build_listing_duplicate_fingerprint(public.listings) from public, anon, authenticated;
+revoke all on function public.set_listing_duplicate_fingerprint() from public, anon, authenticated;
 revoke all on function public.submit_listing_for_moderation(uuid, uuid) from public, anon, authenticated;
 revoke all on function public.moderate_listing(uuid, uuid, public.moderation_decision, text) from public, anon, authenticated;
 revoke all on function public.expire_listings() from public, anon, authenticated;
@@ -1062,6 +1137,9 @@ grant execute on function public.ensure_behavior_events_partition(date) to servi
 grant execute on function public.is_listing_public(uuid) to anon, authenticated, service_role;
 grant execute on function public.owns_listing(uuid) to authenticated, service_role;
 grant execute on function public.can_favorite_listing(uuid) to authenticated, service_role;
+grant execute on function public.normalize_listing_duplicate_value(text) to service_role;
+grant execute on function public.build_listing_duplicate_fingerprint(public.listings) to service_role;
+grant execute on function public.set_listing_duplicate_fingerprint() to service_role;
 grant execute on function public.submit_listing_for_moderation(uuid, uuid) to service_role;
 grant execute on function public.moderate_listing(uuid, uuid, public.moderation_decision, text) to service_role;
 grant execute on function public.expire_listings() to service_role;
