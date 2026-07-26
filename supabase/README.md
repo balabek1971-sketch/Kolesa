@@ -11,5 +11,5 @@ Required dashboard configuration:
 3. Seed `vehicle_brands`, `vehicle_models`, and `locations` in separate migrations.
 4. Create the first moderator role through a controlled administrative operation.
 
-Cloudflare R2 buckets and Cloudflare Stream are external services. The SQL stores only
-their object keys, asset IDs, dimensions, durations, and processing states.
+Cloudflare R2 is an external service. The SQL stores only object keys, dimensions,
+durations, and processing states.

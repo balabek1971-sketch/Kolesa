@@ -102,15 +102,15 @@ func (c *Client) CreatePhotoIntent(
 
 func (c *Client) CreateVideoIntent(
 	ctx context.Context,
-	listingID, ownerID, assetID, mimeType string,
+	listingID, ownerID, objectKey, mimeType string,
 	sizeBytes int64,
 	expiresAt time.Time,
 ) (UploadIntent, error) {
 	media, err := c.insertMedia(ctx, map[string]any{
 		"listing_id": listingID,
 		"kind": "video",
-		"provider": "cloudflare_stream",
-		"provider_asset_id": assetID,
+		"provider": "cloudflare_r2",
+		"object_key": objectKey,
 		"status": "pending_upload",
 		"sort_order": 0,
 		"mime_type": mimeType,
@@ -124,7 +124,7 @@ func (c *Client) CreateVideoIntent(
 		"listing_id": listingID,
 		"owner_id": ownerID,
 		"media_id": media.ID,
-		"object_key": "stream:" + assetID,
+		"object_key": objectKey,
 		"expected_mime_type": mimeType,
 		"max_size_bytes": sizeBytes,
 		"expires_at": expiresAt.UTC().Format(time.RFC3339),
@@ -153,22 +153,11 @@ func (c *Client) GetMedia(ctx context.Context, mediaID, listingID string) (Media
 	return rows[0], nil
 }
 
-func (c *Client) CompletePhoto(ctx context.Context, mediaID, uploadID string, sizeBytes int64, mimeType string) error {
+func (c *Client) CompleteR2Media(ctx context.Context, mediaID, uploadID string, sizeBytes int64, mimeType string) error {
 	if err := c.patch(ctx, "/listing_media?id=eq."+url.QueryEscape(mediaID), map[string]any{
 		"status": "ready",
 		"size_bytes": sizeBytes,
 		"mime_type": mimeType,
-	}); err != nil {
-		return err
-	}
-	return c.patch(ctx, "/media_uploads?id=eq."+url.QueryEscape(uploadID), map[string]any{
-		"completed_at": time.Now().UTC().Format(time.RFC3339),
-	})
-}
-
-func (c *Client) CompleteVideo(ctx context.Context, mediaID, uploadID string) error {
-	if err := c.patch(ctx, "/listing_media?id=eq."+url.QueryEscape(mediaID), map[string]any{
-		"status": "processing",
 	}); err != nil {
 		return err
 	}

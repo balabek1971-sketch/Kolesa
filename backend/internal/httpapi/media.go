@@ -24,10 +24,10 @@ var photoExtensions = map[string]string{
 	"image/avif": ".avif",
 }
 
-var videoTypes = map[string]bool{
-	"video/mp4":       true,
-	"video/webm":      true,
-	"video/quicktime": true,
+var videoExtensions = map[string]string{
+	"video/mp4":       ".mp4",
+	"video/webm":      ".webm",
+	"video/quicktime": ".mov",
 }
 
 type mediaUploadRequest struct {
@@ -115,7 +115,7 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
 	}
-	if !s.stream.Configured() {
+	if !s.r2.Configured() {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "video_storage_not_configured"})
 		return
 	}
@@ -129,7 +129,8 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 	if err := decodeJSON(w, r, &payload); err != nil {
 		return
 	}
-	if !videoTypes[strings.ToLower(payload.ContentType)] ||
+	extension, allowed := videoExtensions[strings.ToLower(payload.ContentType)]
+	if !allowed ||
 		payload.SizeBytes < 1 ||
 		payload.SizeBytes > maxVideoBytes ||
 		payload.MaxDurationSeconds < 1 ||
@@ -138,19 +139,19 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	directUpload, err := s.stream.CreateDirectUpload(r.Context(), listingID, claims.Subject)
-	if err != nil {
-		s.logger.Error("stream direct upload failed", "error", err, "listing_id", listingID)
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_upload_unavailable"})
-		return
-	}
-
-	expiresAt := time.Now().UTC().Add(30 * time.Minute)
+	objectKey := fmt.Sprintf(
+		"listings/%s/%s/video-%s%s",
+		claims.Subject,
+		listingID,
+		newRequestID(),
+		extension,
+	)
+	expiresAt := time.Now().UTC().Add(15 * time.Minute)
 	intent, err := s.repository.CreateVideoIntent(
 		r.Context(),
 		listingID,
 		claims.Subject,
-		directUpload.UID,
+		objectKey,
 		payload.ContentType,
 		payload.SizeBytes,
 		expiresAt,
@@ -161,12 +162,18 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	uploadURL, err := s.r2.PresignPut(objectKey, payload.ContentType, 15*time.Minute)
+	if err != nil {
+		s.logger.Error("r2 video presign failed", "error", err, "listing_id", listingID)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_upload_unavailable"})
+		return
+	}
+
 	writeJSON(w, http.StatusCreated, map[string]any{
-		"media_id":          intent.MediaID,
-		"upload_id":         intent.ID,
-		"provider_asset_id": directUpload.UID,
-		"upload_url":        directUpload.UploadURL,
-		"expires_at":        expiresAt.Format(time.RFC3339),
+		"media_id":  intent.MediaID,
+		"upload_id": intent.ID,
+		"upload_url": uploadURL,
+		"expires_at": expiresAt.Format(time.RFC3339),
 	})
 }
 
@@ -211,27 +218,17 @@ func (s *Server) completeMediaUpload(w http.ResponseWriter, r *http.Request) {
 		info, err := s.r2.HeadObject(r.Context(), media.ObjectKey)
 		if err != nil {
 			s.logger.Warn("r2 object verification failed", "error", err, "media_id", mediaID)
-			writeJSON(w, http.StatusConflict, map[string]string{"error": "photo_not_uploaded"})
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "media_not_uploaded"})
 			return
 		}
 		if info.SizeBytes < 1 || info.SizeBytes > media.SizeBytes ||
 			!strings.EqualFold(strings.TrimSpace(info.ContentType), strings.TrimSpace(media.MimeType)) {
-			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "photo_metadata_mismatch"})
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": "media_metadata_mismatch"})
 			return
 		}
-		if err := s.repository.CompletePhoto(r.Context(), mediaID, payload.UploadID, info.SizeBytes, info.ContentType); err != nil {
-			s.logger.Error("photo completion failed", "error", err, "media_id", mediaID)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "photo_completion_failed"})
-			return
-		}
-	case "cloudflare_stream":
-		if payload.UploadID == "" || payload.ProviderAssetID == "" || payload.ProviderAssetID != media.ProviderAssetID {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_video_asset"})
-			return
-		}
-		if err := s.repository.CompleteVideo(r.Context(), mediaID, payload.UploadID); err != nil {
-			s.logger.Error("video completion failed", "error", err, "media_id", mediaID)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "video_completion_failed"})
+		if err := s.repository.CompleteR2Media(r.Context(), mediaID, payload.UploadID, info.SizeBytes, info.ContentType); err != nil {
+			s.logger.Error("r2 media completion failed", "error", err, "media_id", mediaID)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "media_completion_failed"})
 			return
 		}
 	default:

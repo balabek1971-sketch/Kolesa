@@ -36,24 +36,6 @@ function uploadWithProgress(url, body, headers, onProgress) {
   });
 }
 
-function uploadMultipartWithProgress(url, file, onProgress) {
-  return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest();
-    const body = new FormData();
-    body.append("file", file);
-    request.open("POST", url);
-    request.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress?.(event.loaded / event.total);
-    };
-    request.onload = () => {
-      if (request.status >= 200 && request.status < 300) resolve();
-      else reject(new Error("Cloudflare Stream не принял видео."));
-    };
-    request.onerror = () => reject(new Error("Соединение прервалось во время загрузки видео."));
-    request.send(body);
-  });
-}
-
 async function uploadPhoto(listingId, file, sortOrder, accessToken, onProgress) {
   const intent = await apiRequest(`/v1/listings/${listingId}/media/photos/upload-url`, accessToken, {
     method: "POST",
@@ -89,18 +71,16 @@ async function uploadVideo(listingId, file, accessToken, onProgress) {
     }),
   });
 
-  await uploadMultipartWithProgress(
+  await uploadWithProgress(
     intent.upload_url,
     file,
+    { "Content-Type": file.type },
     (progress) => onProgress?.({ kind: "video", index: 0, progress }),
   );
 
   await apiRequest(`/v1/listings/${listingId}/media/${intent.media_id}/complete`, accessToken, {
     method: "POST",
-    body: JSON.stringify({
-      upload_id: intent.upload_id,
-      provider_asset_id: intent.provider_asset_id,
-    }),
+    body: JSON.stringify({ upload_id: intent.upload_id }),
   });
 }
 

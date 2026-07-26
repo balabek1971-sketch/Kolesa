@@ -8,11 +8,10 @@
 - `backend` — Go API для защищённых операций, развёртывается на Railway.
 - `supabase/schema-v2.sql` — PostgreSQL-схема, RLS, модерация, события и ранжирование.
 - Supabase Auth — вход и регистрация только по номеру телефона.
-- Cloudflare R2 — фотографии объявлений.
-- Cloudflare Stream — одно видео до 60 секунд.
+- Cloudflare R2 — фотографии и одно видео до 60 секунд.
 - Redis — кеш и ограничения запросов.
 
-Секреты `service_role`, R2 и Stream разрешены только в Railway. В Vercel находятся
+Секреты `service_role` и R2 разрешены только в Railway. В Vercel находятся
 только публичные переменные `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
 `VITE_API_BASE_URL` и `VITE_R2_PUBLIC_URL`.
 

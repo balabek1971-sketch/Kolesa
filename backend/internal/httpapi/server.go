@@ -19,7 +19,6 @@ import (
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/r2"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/repository"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/sms"
-	cloudflarestream "github.com/balabek1971-sketch/Kolesa/backend/internal/stream"
 )
 
 type contextKey string
@@ -35,7 +34,6 @@ type Server struct {
 	smsSender    sms.Sender
 	repository   *repository.Client
 	r2           *r2.Client
-	stream       *cloudflarestream.Client
 }
 
 type sendSMSHookPayload struct {
@@ -75,7 +73,6 @@ func newHandler(cfg config.Config, logger *slog.Logger, hookVerifier *authhook.V
 		smsSender:    smsSender,
 		repository:   repository.New(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, nil),
 		r2:           r2.New(cfg.R2AccountID, cfg.R2AccessKeyID, cfg.R2SecretAccessKey, cfg.R2PublicBucket, nil),
-		stream:       cloudflarestream.New(cfg.CloudflareStreamAccountID, cfg.CloudflareStreamAPIToken, nil),
 	}
 	mux := http.NewServeMux()
 

@@ -228,10 +228,10 @@ create table if not exists public.listing_media (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
-  check (
+  constraint listing_media_kind_provider_check check (
     (kind = 'photo' and provider = 'cloudflare_r2' and sort_order between 0 and 19)
     or
-    (kind = 'video' and provider = 'cloudflare_stream' and sort_order = 0)
+    (kind = 'video' and provider in ('cloudflare_r2', 'cloudflare_stream') and sort_order = 0)
   ),
   check (object_key is not null or provider_asset_id is not null)
 );
