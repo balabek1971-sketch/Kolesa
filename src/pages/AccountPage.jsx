@@ -49,17 +49,17 @@ function AccountListing({ listing, busy, onDelete, onPublish }) {
 
   return (
     <article className="account-listing">
-      <div className="account-listing-media">
+      <a className="account-listing-media" href={`#/cars/${listing.id}`} aria-label={`Открыть объявление ${listing.title}`}>
         {listing.imageUrl
           ? <img src={listing.imageUrl} alt="" loading="lazy" />
           : <CarFront aria-hidden="true" size={38} strokeWidth={1.4} />}
-      </div>
+      </a>
 
       <div className="account-listing-main">
         <div className="account-listing-heading">
           <div>
             <span className={`listing-status ${status.tone}`}>{status.label}</span>
-            <h2>{listing.title}</h2>
+            <a className="account-listing-title" href={`#/cars/${listing.id}`}><h2>{listing.title}</h2></a>
           </div>
           <strong>{formatNumber(listing.price)} ₸</strong>
         </div>

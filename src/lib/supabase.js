@@ -127,6 +127,60 @@ export async function fetchListings() {
   return data.map(mapListingRow);
 }
 
+export async function fetchListingById(listingId) {
+  if (!supabase || !listingId) return null;
+
+  const { data, error } = await supabase
+    .rpc("get_public_listing_detail", { p_listing_id: listingId })
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const media = (data.media || [])
+    .map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      mimeType: item.mime_type || "",
+      url: getPublicPhotoUrl(item),
+      posterUrl: item.poster_object_key
+        ? getPublicPhotoUrl({ object_key: item.poster_object_key })
+        : ""
+    }))
+    .filter((item) => item.url);
+
+  return {
+    id: data.id,
+    title: data.title,
+    brand: data.brand_name,
+    model: data.model_name,
+    city: data.city_name,
+    category: data.category,
+    price: Number(data.price_kzt),
+    year: data.year,
+    mileage: data.mileage_km,
+    condition: data.condition,
+    body: data.body_type || "",
+    gearbox: data.gearbox || "",
+    originCountry: data.origin_country || "",
+    engineType: data.engine_type || "",
+    steering: data.steering || "",
+    drivetrain: data.drivetrain || "",
+    engineVolume: data.engine_volume ? Number(data.engine_volume) : 0,
+    colorName: data.color_name || "",
+    metallic: Boolean(data.metallic),
+    cleared: Boolean(data.cleared),
+    damaged: Boolean(data.damaged),
+    hasVehicleHistory: Boolean(data.has_vehicle_history),
+    description: data.description || "",
+    phone: data.contact_phone_e164 || "",
+    seller: data.seller_name || "Частный продавец",
+    publishedAt: data.published_at,
+    media,
+    imageUrl: media.find((item) => item.kind === "photo")?.url || ""
+  };
+}
+
 export async function createListing(listing) {
   if (!supabase) throw new Error("Supabase не настроен.");
 

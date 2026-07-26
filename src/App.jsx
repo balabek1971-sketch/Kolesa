@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "./components/Header.jsx";
 import { AccountPage } from "./pages/AccountPage.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
+import { ListingPage } from "./pages/ListingPage.jsx";
 import { SellPage } from "./pages/SellPage.jsx";
 import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
@@ -16,9 +17,11 @@ import {
 
 function getRoute() {
   const hash = window.location.hash;
-  if (hash.startsWith("#/sell")) return "sell";
-  if (hash.startsWith("#/account")) return "account";
-  return "home";
+  const listingMatch = hash.match(/^#\/cars\/([^/?#]+)/);
+  if (listingMatch) return { name: "listing", listingId: decodeURIComponent(listingMatch[1]) };
+  if (hash.startsWith("#/sell")) return { name: "sell" };
+  if (hash.startsWith("#/account")) return { name: "account" };
+  return { name: "home" };
 }
 
 export function App() {
@@ -95,10 +98,20 @@ export function App() {
   }
 
   let page;
-  if (route === "sell") {
+  if (route.name === "sell") {
     page = <SellPage auth={auth} onSubmit={addListing} />;
-  } else if (route === "account") {
+  } else if (route.name === "account") {
     page = <AccountPage auth={auth} />;
+  } else if (route.name === "listing") {
+    const fallbackListing = listings.find((listing) => listing.id === route.listingId);
+    page = (
+      <ListingPage
+        fallbackListing={fallbackListing}
+        favorite={favorites.has(route.listingId)}
+        listingId={route.listingId}
+        onFavoriteToggle={toggleFavorite}
+      />
+    );
   } else {
     page = (
       <HomePage
