@@ -164,10 +164,20 @@ export async function createListing(listing) {
   return data;
 }
 
-export async function submitListingForModeration(listingId) {
+export async function publishListing(listingId) {
   if (!supabase) throw new Error("Supabase не настроен.");
 
-  const { error } = await supabase.rpc("submit_own_listing_for_moderation", {
+  const { error } = await supabase.rpc("publish_own_listing", {
+    p_listing_id: listingId
+  });
+
+  if (error) throw error;
+}
+
+export async function deleteOwnListing(listingId) {
+  if (!supabase) throw new Error("Supabase не настроен.");
+
+  const { error } = await supabase.rpc("delete_own_listing", {
     p_listing_id: listingId
   });
 

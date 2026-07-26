@@ -347,9 +347,12 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .sell-form-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 128px; min-height: 44px; border-radius: 4px; padding: 0 16px; font-size: 0.8rem; font-weight: 790; }
 .sell-back { border: 1px solid #c5ccca; background: #fff; color: #333936; }
 .sell-back:disabled { cursor: default; opacity: 0.35; }
+.sell-final-actions { display: flex; gap: 8px; }
+.sell-draft { border: 1px solid #aeb6b3; background: #fff; color: #2d3331; }
+.sell-draft:hover { border-color: #656d6a; color: #111; }
 .sell-next, .sell-submit { border: 1px solid var(--red); background: var(--red); color: #fff; }
 .sell-next:hover, .sell-submit:hover { border-color: var(--red-dark); background: var(--red-dark); }
-.sell-submit:disabled { cursor: wait; opacity: 0.65; }
+.sell-submit:disabled, .sell-draft:disabled { cursor: wait; opacity: 0.65; }
 .sell-success { display: grid; justify-items: center; max-width: 660px; border: 1px solid #d2d8d6; border-radius: 6px; background: #fff; padding: 50px 34px; text-align: center; box-shadow: 0 14px 34px rgba(20, 25, 24, 0.07); }
 .sell-success > svg { margin-bottom: 16px; color: #819600; }
 .sell-success h1 { margin: 0; font-size: 1.8rem; }
@@ -415,8 +418,12 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .account-listing-date { color: #8a918f; font-size: 0.7rem; }
 .listing-rejection { max-width: 680px; margin: 10px 0 0; border-left: 2px solid var(--red); background: #fff3f3; padding: 7px 9px; color: #6c3333; font-size: 0.73rem; line-height: 1.4; }
 .account-listing-actions { display: flex; align-items: flex-end; justify-content: space-between; flex-direction: column; min-width: 142px; padding: 4px 0; color: #848c89; font-size: 0.7rem; }
-.account-listing-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; border: 1px solid var(--red); background: #fff; color: var(--red); padding: 0 11px; font-size: 0.72rem; font-weight: 800; }
-.account-listing-actions button:hover { background: var(--red); color: #fff; }
+.account-listing-actions > div { display: flex; gap: 6px; }
+.account-listing-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; background: #fff; padding: 0 11px; font-size: 0.72rem; font-weight: 800; }
+.account-listing-actions .listing-publish { border: 1px solid var(--red); color: var(--red); }
+.account-listing-actions .listing-publish:hover { background: var(--red); color: #fff; }
+.account-listing-actions .listing-delete { width: 40px; border: 1px solid #cbd1cf; color: #737b78; padding: 0; }
+.account-listing-actions .listing-delete:hover { border-color: var(--red); color: var(--red); }
 .account-listing-actions button:disabled { cursor: wait; opacity: 0.55; }
 .account-empty { display: grid; justify-items: center; gap: 8px; min-height: 250px; place-content: center; margin-top: 18px; border: 1px solid var(--line); background: #fff; color: #78817e; text-align: center; }
 .account-empty strong { color: #303634; }
@@ -509,6 +516,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .sell-field-grid.two-columns { grid-template-columns: 1fr; gap: 15px; }
   .sell-form-actions { position: sticky; z-index: 8; bottom: 0; padding: 11px 18px calc(11px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 20px rgba(20, 25, 24, 0.08); }
   .sell-form-actions button { min-height: 46px; }
+  .sell-final-actions { flex: 1 1 auto; justify-content: flex-end; }
   .sell-form-panel > .sell-message { margin-inline: 18px; }
   .photo-preview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sell-review-list { grid-template-columns: 1fr; }
@@ -585,6 +593,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .sell-review-hero h3 { font-size: 1rem; }
   .sell-form-actions { padding-inline: 14px; }
   .sell-form-actions button { flex: 1 1 0; min-width: 0; padding-inline: 10px; }
+  .sell-final-actions { display: grid; grid-template-columns: 1fr 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

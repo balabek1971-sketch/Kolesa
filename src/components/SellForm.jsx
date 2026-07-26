@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   LoaderCircle,
+  Save,
   Send,
   ShieldCheck,
 } from "lucide-react";
@@ -86,6 +87,7 @@ export function SellForm({ onSubmit, userPhone }) {
   const [catalogState, setCatalogState] = useState({ brand: "", catalog: null, loading: false });
   const [message, setMessage] = useState("");
   const [submittedId, setSubmittedId] = useState("");
+  const [submittedMode, setSubmittedMode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
 
@@ -146,7 +148,7 @@ export function SellForm({ onSubmit, userPhone }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(mode) {
     setSubmitting(true);
     setMessage("");
 
@@ -165,7 +167,8 @@ export function SellForm({ onSubmit, userPhone }) {
         setUploadStatus(kind === "photo"
           ? `Фото ${index + 1} из ${photos.length}: ${percent}%`
           : `Видео: ${percent}%`);
-      });
+      }, { publish: mode === "publish" });
+      setSubmittedMode(mode);
       setSubmittedId(listingId);
     } catch (error) {
       setMessage(error.message || "Не удалось сохранить объявление.");
@@ -176,12 +179,18 @@ export function SellForm({ onSubmit, userPhone }) {
   }
 
   if (submittedId) {
+    const published = submittedMode === "publish";
+
     return (
       <section className="sell sell-success">
         <BadgeCheck aria-hidden="true" size={54} strokeWidth={1.6} />
-        <p className="eyebrow">Заявка принята</p>
-        <h1>Объявление на модерации</h1>
-        <p>Все фотографии и видео загружены. Мы сообщим о результате проверки в личном кабинете.</p>
+        <p className="eyebrow">{published ? "Опубликовано" : "Черновик сохранён"}</p>
+        <h1>{published ? "Объявление уже в поиске" : "Можно продолжить позже"}</h1>
+        <p>
+          {published
+            ? "Автоматическая проверка пройдена. Покупатели уже могут увидеть автомобиль."
+            : "Данные, фотографии и видео сохранены только в вашем аккаунте."}
+        </p>
         <strong>Номер объявления: {submittedId}</strong>
         <a href="#/account">Перейти в аккаунт</a>
       </section>
@@ -386,7 +395,7 @@ export function SellForm({ onSubmit, userPhone }) {
               <div className="sell-stage-heading">
                 <p className="eyebrow">Шаг 5</p>
                 <h2>Проверьте объявление</h2>
-                <p>После отправки данные и материалы пройдут автоматическую и ручную модерацию.</p>
+                <p>Сохраните объявление на потом или опубликуйте после автоматической проверки.</p>
               </div>
 
               <div className="sell-review-hero">
@@ -412,8 +421,8 @@ export function SellForm({ onSubmit, userPhone }) {
               <div className="moderation-note">
                 <ShieldCheck aria-hidden="true" size={22} />
                 <div>
-                  <strong>Безопасная публикация</strong>
-                  <p>Черновик принадлежит только вашему аккаунту. Объявление появится в поиске после модерации.</p>
+                  <strong>Автоматическая проверка</strong>
+                  <p>Проверяем обязательные данные и наличие фотографий. Цена ниже рынка не мешает публикации.</p>
                 </div>
               </div>
             </div>
@@ -438,12 +447,18 @@ export function SellForm({ onSubmit, userPhone }) {
                 <ArrowRight aria-hidden="true" size={18} />
               </button>
             ) : (
-              <button className="sell-submit" type="button" disabled={submitting} onClick={handleSubmit}>
-                {submitting
-                  ? <LoaderCircle className="loading-icon" aria-hidden="true" size={19} />
-                  : <Send aria-hidden="true" size={19} />}
-                {submitting ? uploadStatus || "Отправляем..." : "Отправить на модерацию"}
-              </button>
+              <div className="sell-final-actions">
+                <button className="sell-draft" type="button" disabled={submitting} onClick={() => handleSubmit("draft")}>
+                  <Save aria-hidden="true" size={18} />
+                  В черновик
+                </button>
+                <button className="sell-submit" type="button" disabled={submitting} onClick={() => handleSubmit("publish")}>
+                  {submitting
+                    ? <LoaderCircle className="loading-icon" aria-hidden="true" size={19} />
+                    : <Send aria-hidden="true" size={19} />}
+                  {submitting ? uploadStatus || "Публикуем..." : "Опубликовать"}
+                </button>
+              </div>
             )}
           </footer>
         </form>

@@ -10,7 +10,7 @@ import { createDefaultFilters, filterListings, sortListings } from "./lib/search
 import {
   createListing,
   fetchListings,
-  submitListingForModeration,
+  publishListing,
   supabase
 } from "./lib/supabase.js";
 
@@ -68,7 +68,7 @@ export function App() {
     });
   }
 
-  async function addListing(listing, onMediaProgress) {
+  async function addListing(listing, onMediaProgress, options = {}) {
     if (!supabase || !auth.session) {
       throw new Error("Для сохранения объявления необходимо войти в аккаунт.");
     }
@@ -87,7 +87,10 @@ export function App() {
       });
     }
 
-    await submitListingForModeration(listingId);
+    if (options.publish) {
+      await publishListing(listingId);
+    }
+
     return listingId;
   }
 

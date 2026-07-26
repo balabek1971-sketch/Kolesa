@@ -7,11 +7,13 @@ import {
   Plus,
   RefreshCw,
   Send,
+  Trash2,
 } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
 import {
+  deleteOwnListing,
   fetchOwnListings,
-  submitListingForModeration,
+  publishListing,
   supabase,
 } from "../lib/supabase.js";
 
@@ -41,9 +43,9 @@ const formatDate = (value) => value
   ? new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value))
   : "";
 
-function AccountListing({ listing, busy, onSubmit }) {
+function AccountListing({ listing, busy, onDelete, onPublish }) {
   const status = statusDetails[listing.status] || statusDetails.draft;
-  const canSubmit = listing.status === "draft" || listing.status === "rejected";
+  const canSubmit = ["draft", "rejected", "pending_moderation"].includes(listing.status);
 
   return (
     <article className="account-listing">
@@ -78,12 +80,24 @@ function AccountListing({ listing, busy, onSubmit }) {
 
       <div className="account-listing-actions">
         <span>{listing.photoCount} фото{listing.videoCount ? ` · ${listing.videoCount} видео` : ""}</span>
-        {canSubmit && (
-          <button type="button" disabled={busy} onClick={() => onSubmit(listing.id)}>
-            {busy ? <RefreshCw className="loading-icon" aria-hidden="true" size={16} /> : <Send aria-hidden="true" size={16} />}
-            На модерацию
+        <div>
+          {canSubmit && (
+            <button className="listing-publish" type="button" disabled={busy} onClick={() => onPublish(listing.id)}>
+              {busy ? <RefreshCw className="loading-icon" aria-hidden="true" size={16} /> : <Send aria-hidden="true" size={16} />}
+              Опубликовать
+            </button>
+          )}
+          <button
+            className="listing-delete"
+            type="button"
+            title="Удалить объявление"
+            aria-label={`Удалить объявление ${listing.title}`}
+            disabled={busy}
+            onClick={() => onDelete(listing)}
+          >
+            <Trash2 aria-hidden="true" size={17} />
           </button>
-        )}
+        </div>
       </div>
     </article>
   );
@@ -127,15 +141,31 @@ export function AccountPage({ auth }) {
       : listings.length,
   ])), [listings]);
 
-  async function handleSubmit(listingId) {
+  async function handlePublish(listingId) {
     setBusyId(listingId);
     setError("");
     try {
-      await submitListingForModeration(listingId);
+      await publishListing(listingId);
       await loadListings();
-      setActiveTab("moderation");
+      setActiveTab("active");
     } catch (submitError) {
-      setError(submitError.message || "Не удалось отправить объявление на модерацию.");
+      setError(submitError.message || "Не удалось опубликовать объявление.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function handleDelete(listing) {
+    const confirmed = window.confirm(`Удалить объявление «${listing.title}»? Восстановить его будет нельзя.`);
+    if (!confirmed) return;
+
+    setBusyId(listing.id);
+    setError("");
+    try {
+      await deleteOwnListing(listing.id);
+      setListings((current) => current.filter((item) => item.id !== listing.id));
+    } catch (deleteError) {
+      setError(deleteError.message || "Не удалось удалить объявление.");
     } finally {
       setBusyId("");
     }
@@ -196,7 +226,8 @@ export function AccountPage({ auth }) {
                 busy={busyId === listing.id}
                 key={listing.id}
                 listing={listing}
-                onSubmit={handleSubmit}
+                onDelete={handleDelete}
+                onPublish={handlePublish}
               />
             ))}
           </div>
