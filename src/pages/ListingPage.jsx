@@ -1,14 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   CalendarDays,
+  Camera,
   CarFront,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Gauge,
   Heart,
   MapPin,
+  Maximize2,
+  Pause,
   Phone,
+  Play,
   ShieldCheck,
+  Video,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { formatMileage, formatPrice } from "../lib/format.js";
 import { fetchListingById } from "../lib/supabase.js";
@@ -24,11 +33,147 @@ function valueOrDash(value) {
   return value || "Не указано";
 }
 
+function VideoSlide({ active, item, title }) {
+  const videoRef = useRef(null);
+  const [opened, setOpened] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    if (active) return;
+    videoRef.current?.pause();
+    setPlaying(false);
+  }, [active]);
+
+  useEffect(() => {
+    setOpened(false);
+    setPlaying(false);
+    setMuted(false);
+  }, [item.id]);
+
+  async function openVideo() {
+    setOpened(true);
+    try {
+      await videoRef.current?.play();
+    } catch {
+      // Native controls remain available when autoplay is blocked.
+    }
+  }
+
+  async function togglePlayback() {
+    const video = videoRef.current;
+    if (!video) return;
+    setOpened(true);
+    if (video.paused) {
+      try {
+        await video.play();
+      } catch {
+        // The native play button remains available as a fallback.
+      }
+    } else {
+      video.pause();
+    }
+  }
+
+  function toggleSound() {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setMuted(video.muted);
+  }
+
+  async function openFullscreen() {
+    const video = videoRef.current;
+    if (!video) return;
+    setOpened(true);
+    video.controls = true;
+    if (typeof video.webkitEnterFullscreen === "function") {
+      video.webkitEnterFullscreen();
+      return;
+    }
+    try {
+      await video.requestFullscreen?.();
+    } catch {
+      // Some browsers only expose fullscreen through their native controls.
+    }
+  }
+
+  return (
+    <div className={opened ? "listing-video-frame opened" : "listing-video-frame"}>
+      <video
+        ref={videoRef}
+        controls={opened && active}
+        muted={muted}
+        playsInline
+        preload={active ? "metadata" : "none"}
+        poster={item.posterUrl || undefined}
+        onEnded={() => setPlaying(false)}
+        onPause={() => setPlaying(false)}
+        onPlay={() => setPlaying(true)}
+        onVolumeChange={(event) => setMuted(event.currentTarget.muted)}
+      >
+        <source src={item.url} type={item.mimeType || "video/mp4"} />
+      </video>
+
+      {!opened && (
+        <button
+          className="listing-video-open"
+          type="button"
+          tabIndex={active ? 0 : -1}
+          onClick={openVideo}
+        >
+          <Play aria-hidden="true" size={21} fill="currentColor" />
+          Открыть видео
+        </button>
+      )}
+
+      <div className="listing-video-tools">
+        {opened && (
+          <button
+            type="button"
+            tabIndex={active ? 0 : -1}
+            title={playing ? "Пауза" : "Воспроизвести"}
+            aria-label={playing ? "Поставить видео на паузу" : "Воспроизвести видео"}
+            onClick={togglePlayback}
+          >
+            {playing ? <Pause aria-hidden="true" size={19} fill="currentColor" /> : <Play aria-hidden="true" size={19} fill="currentColor" />}
+          </button>
+        )}
+        <button
+          type="button"
+          tabIndex={active ? 0 : -1}
+          title={muted ? "Включить звук" : "Выключить звук"}
+          aria-label={muted ? "Включить звук видео" : "Выключить звук видео"}
+          onClick={toggleSound}
+        >
+          {muted ? <VolumeX aria-hidden="true" size={20} /> : <Volume2 aria-hidden="true" size={20} />}
+        </button>
+        <button
+          type="button"
+          tabIndex={active ? 0 : -1}
+          title="Открыть на весь экран"
+          aria-label={`Открыть видео ${title} на весь экран`}
+          onClick={openFullscreen}
+        >
+          <Maximize2 aria-hidden="true" size={19} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteToggle }) {
   const [listing, setListing] = useState(fallbackListing || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedMediaId, setSelectedMediaId] = useState("");
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const mediaTrackRef = useRef(null);
+  const scrollFrameRef = useRef(0);
+  const pointerDragRef = useRef(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [listingId]);
 
   useEffect(() => {
     let active = true;
@@ -43,7 +188,6 @@ export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteTo
           return;
         }
         setListing(result);
-        setSelectedMediaId(result.media[0]?.id || "");
       })
       .catch((loadError) => {
         if (active && !fallbackListing) {
@@ -59,11 +203,116 @@ export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteTo
     };
   }, [fallbackListing, listingId]);
 
-  const media = listing?.media || [];
-  const selectedMedia = useMemo(
-    () => media.find((item) => item.id === selectedMediaId) || media[0],
-    [media, selectedMediaId],
-  );
+  const media = useMemo(() => {
+    const listingMedia = listing?.media?.length
+      ? listing.media
+      : listing?.imageUrl
+        ? [{ id: `${listing.id}-cover`, kind: "photo", url: listing.imageUrl }]
+        : [];
+
+    return [
+      ...listingMedia.filter((item) => item.kind === "photo"),
+      ...listingMedia.filter((item) => item.kind === "video"),
+      ...listingMedia.filter((item) => item.kind !== "photo" && item.kind !== "video"),
+    ];
+  }, [listing]);
+
+  const photoCount = useMemo(() => media.filter((item) => item.kind === "photo").length, [media]);
+  const videoCount = useMemo(() => media.filter((item) => item.kind === "video").length, [media]);
+  const currentMedia = media[currentMediaIndex] || media[0];
+  const currentPhotoNumber = currentMedia?.kind === "photo"
+    ? media.slice(0, currentMediaIndex + 1).filter((item) => item.kind === "photo").length
+    : 0;
+  const currentVideoNumber = currentMedia?.kind === "video"
+    ? media.slice(0, currentMediaIndex + 1).filter((item) => item.kind === "video").length
+    : 0;
+  const currentMediaLabel = currentMedia?.kind === "video"
+    ? `Видео ${currentVideoNumber} из ${videoCount}`
+    : `Фото ${currentPhotoNumber || 1} из ${photoCount || 1}`;
+
+  useEffect(() => {
+    setCurrentMediaIndex(0);
+    const frame = window.requestAnimationFrame(() => {
+      mediaTrackRef.current?.scrollTo({ left: 0, behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [listingId, media.length]);
+
+  useEffect(() => () => window.cancelAnimationFrame(scrollFrameRef.current), []);
+
+  function goToMedia(index, behavior = "smooth") {
+    if (!media.length) return;
+    const nextIndex = Math.max(0, Math.min(index, media.length - 1));
+    const track = mediaTrackRef.current;
+    if (track) {
+      track.scrollTo({ left: track.clientWidth * nextIndex, behavior });
+    }
+    setCurrentMediaIndex(nextIndex);
+  }
+
+  function finishPointerDragById(pointerId) {
+    const drag = pointerDragRef.current;
+    const track = mediaTrackRef.current;
+    if (!drag || drag.id !== pointerId || !track) return;
+    pointerDragRef.current = null;
+    track.classList.remove("dragging");
+    if (track.hasPointerCapture(pointerId)) {
+      track.releasePointerCapture(pointerId);
+    }
+    const nextIndex = Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+    goToMedia(nextIndex);
+  }
+
+  useEffect(() => {
+    const finishWindowDrag = (event) => finishPointerDragById(event.pointerId);
+    window.addEventListener("pointerup", finishWindowDrag, true);
+    window.addEventListener("pointercancel", finishWindowDrag, true);
+    return () => {
+      window.removeEventListener("pointerup", finishWindowDrag, true);
+      window.removeEventListener("pointercancel", finishWindowDrag, true);
+    };
+  }, [media.length]);
+
+  function handleMediaScroll(event) {
+    const track = event.currentTarget;
+    window.cancelAnimationFrame(scrollFrameRef.current);
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      const nextIndex = Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+      setCurrentMediaIndex(Math.max(0, Math.min(nextIndex, media.length - 1)));
+    });
+  }
+
+  function handleMediaKeyDown(event) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      goToMedia(currentMediaIndex - 1);
+    }
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      goToMedia(currentMediaIndex + 1);
+    }
+  }
+
+  function handlePointerDown(event) {
+    if (event.pointerType !== "mouse" || event.button !== 0 || event.target.closest("button, video")) return;
+    pointerDragRef.current = {
+      id: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: event.currentTarget.scrollLeft,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.classList.add("dragging");
+  }
+
+  function handlePointerMove(event) {
+    const drag = pointerDragRef.current;
+    if (!drag || drag.id !== event.pointerId) return;
+    event.currentTarget.scrollLeft = drag.startScrollLeft - (event.clientX - drag.startX);
+  }
+
+  function finishPointerDrag(event) {
+    finishPointerDragById(event.pointerId);
+  }
 
   if (loading && !listing) {
     return <main className="listing-detail-page"><p className="page-status">Загружаем объявление...</p></main>;
@@ -108,33 +357,101 @@ export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteTo
         <div className="listing-detail-grid">
           <section className="listing-gallery" aria-label="Фотографии и видео автомобиля">
             <div className="listing-main-media">
-              {selectedMedia?.kind === "video" ? (
-                <video controls playsInline preload="metadata" poster={selectedMedia.posterUrl || undefined}>
-                  <source src={selectedMedia.url} type={selectedMedia.mimeType || "video/mp4"} />
-                </video>
-              ) : selectedMedia?.url ? (
-                <img src={selectedMedia.url} alt={listing.title} fetchPriority="high" />
+              {media.length ? (
+                <div
+                  ref={mediaTrackRef}
+                  className="listing-media-track"
+                  role="group"
+                  aria-label="Галерея автомобиля"
+                  aria-roledescription="карусель"
+                  tabIndex={media.length > 1 ? 0 : -1}
+                  onKeyDown={handleMediaKeyDown}
+                  onPointerCancel={finishPointerDrag}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={finishPointerDrag}
+                  onScroll={handleMediaScroll}
+                >
+                  {media.map((item, index) => (
+                    <div
+                      className={item.kind === "video" ? "listing-media-slide video" : "listing-media-slide photo"}
+                      key={item.id}
+                      role="group"
+                      aria-label={item.kind === "video" ? `Видео ${index - photoCount + 1}` : `Фото ${index + 1}`}
+                      aria-roledescription="слайд"
+                    >
+                      {item.kind === "video" ? (
+                        <VideoSlide active={index === currentMediaIndex} item={item} title={listing.title} />
+                      ) : (
+                        <img
+                          src={item.url}
+                          alt={`${listing.title}, фото ${index + 1}`}
+                          draggable="false"
+                          fetchpriority={index === 0 ? "high" : "auto"}
+                          loading={index === 0 ? "eager" : "lazy"}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <span className="listing-media-empty"><CarFront aria-hidden="true" size={64} strokeWidth={1.2} /></span>
+              )}
+
+              {media.length > 0 && (
+                <>
+                  <span className="listing-media-total">
+                    <Camera aria-hidden="true" size={15} />
+                    {photoCount} фото
+                    {videoCount > 0 && <><i aria-hidden="true" /> <Video aria-hidden="true" size={15} />{videoCount} видео</>}
+                  </span>
+                  <span className="listing-media-counter" aria-live="polite">{currentMediaLabel}</span>
+                </>
+              )}
+
+              {media.length > 1 && (
+                <>
+                  <button
+                    className="listing-gallery-arrow previous"
+                    type="button"
+                    disabled={currentMediaIndex === 0}
+                    title="Предыдущее фото"
+                    aria-label="Показать предыдущее медиа"
+                    onClick={() => goToMedia(currentMediaIndex - 1)}
+                  >
+                    <ChevronLeft aria-hidden="true" size={24} />
+                  </button>
+                  <button
+                    className="listing-gallery-arrow next"
+                    type="button"
+                    disabled={currentMediaIndex === media.length - 1}
+                    title="Следующее фото или видео"
+                    aria-label="Показать следующее медиа"
+                    onClick={() => goToMedia(currentMediaIndex + 1)}
+                  >
+                    <ChevronRight aria-hidden="true" size={24} />
+                  </button>
+                </>
               )}
             </div>
 
             {media.length > 1 && (
-              <div className="listing-thumbnails">
+              <div className="listing-thumbnails" aria-label="Миниатюры галереи">
                 {media.map((item, index) => (
                   <button
-                    className={item.id === selectedMedia?.id ? "active" : ""}
+                    className={index === currentMediaIndex ? "active" : ""}
                     key={item.id}
                     type="button"
-                    aria-label={item.kind === "video" ? "Показать видео" : `Показать фото ${index + 1}`}
-                    onClick={() => setSelectedMediaId(item.id)}
+                    aria-current={index === currentMediaIndex ? "true" : undefined}
+                    aria-label={item.kind === "video" ? `Показать видео ${index - photoCount + 1}` : `Показать фото ${index + 1}`}
+                    onClick={() => goToMedia(index)}
                   >
                     {item.kind === "video" ? (
-                      <video muted playsInline preload="metadata" src={item.url} />
+                      <video muted playsInline preload="metadata" poster={item.posterUrl || undefined} src={item.url} />
                     ) : (
                       <img src={item.url} alt="" loading="lazy" />
                     )}
-                    {item.kind === "video" && <span>Видео</span>}
+                    {item.kind === "video" && <span><Video aria-hidden="true" size={12} />Видео</span>}
                   </button>
                 ))}
               </div>

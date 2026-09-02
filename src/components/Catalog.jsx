@@ -14,7 +14,7 @@ function CatalogCard({ favorite, index, listing, onFavoriteToggle }) {
               src={listing.imageUrl}
               alt={listing.title}
               loading={index < 8 ? "eager" : "lazy"}
-              fetchPriority={index < 4 ? "high" : "auto"}
+              fetchpriority={index < 4 ? "high" : "auto"}
               onError={() => setImageFailed(true)}
             />
           ) : (
