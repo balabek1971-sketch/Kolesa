@@ -35,6 +35,38 @@ export function createDefaultFilters() {
   };
 }
 
+function normalizeModel(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .toLocaleLowerCase("ru-KZ")
+    .replace(/\u0451/g, "\u0435")
+    .replace(/\u0441\u0435\u0440\u0438\u044f/g, "series")
+    .replace(/\u043a\u043b\u0430\u0441\u0441/g, "class")
+    .replace(/[^a-z\u0430-\u044f0-9]+/g, "");
+}
+
+export function modelMatchesFilter(brand, selectedModel, listingModel) {
+  if (!selectedModel) return true;
+
+  const selected = normalizeModel(selectedModel);
+  const candidate = normalizeModel(listingModel);
+  if (!selected || selected === candidate) return true;
+
+  const numberedSeries = selected.match(/^([1-9])series(.*)$/);
+  if (numberedSeries) {
+    const [, series, qualifier] = numberedSeries;
+    if (qualifier) return false;
+    return new RegExp(`^${series}\\d{2}[a-z]*$`).test(candidate);
+  }
+
+  const letterClass = selected.match(/^([a-z]{1,3})class$/);
+  if (letterClass) {
+    return new RegExp(`^${letterClass[1]}\\d`).test(candidate);
+  }
+
+  return false;
+}
+
 export function filterListings(listings, filters) {
   return listings.filter((listing) => {
     const categoryMatch =
@@ -44,7 +76,7 @@ export function filterListings(listings, filters) {
       categoryMatch &&
       (!filters.city || listing.city === filters.city) &&
       (!filters.brand || listing.brand === filters.brand) &&
-      (!filters.model || listing.model === filters.model) &&
+      modelMatchesFilter(filters.brand || listing.brand, filters.model, listing.model) &&
       (!filters.body || listing.body === filters.body) &&
       (!filters.condition || listing.condition === filters.condition) &&
       (!filters.originCountry || listing.originCountry === filters.originCountry) &&
