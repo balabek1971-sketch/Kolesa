@@ -19,10 +19,10 @@ async function apiRequest(path, accessToken, options = {}) {
   return payload;
 }
 
-function uploadWithProgress(url, body, headers, onProgress) {
+function uploadWithProgress(url, body, headers, onProgress, method = "PUT") {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open("PUT", url);
+    request.open(method, url);
     Object.entries(headers || {}).forEach(([name, value]) => request.setRequestHeader(name, value));
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress?.(event.loaded / event.total);
@@ -71,16 +71,24 @@ async function uploadVideo(listingId, file, accessToken, onProgress) {
     }),
   });
 
+  const streamUpload = intent.provider === "cloudflare_stream";
+  const uploadBody = streamUpload ? new FormData() : file;
+  if (streamUpload) uploadBody.append("file", file, file.name);
+
   await uploadWithProgress(
     intent.upload_url,
-    file,
-    { "Content-Type": file.type },
+    uploadBody,
+    streamUpload ? {} : { "Content-Type": file.type },
     (progress) => onProgress?.({ kind: "video", index: 0, progress }),
+    intent.upload_method || (streamUpload ? "POST" : "PUT"),
   );
 
   await apiRequest(`/v1/listings/${listingId}/media/${intent.media_id}/complete`, accessToken, {
     method: "POST",
-    body: JSON.stringify({ upload_id: intent.upload_id }),
+    body: JSON.stringify({
+      upload_id: intent.upload_id || "",
+      provider_asset_id: intent.provider_asset_id || "",
+    }),
   });
 }
 

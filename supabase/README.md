@@ -13,3 +13,11 @@ Required dashboard configuration:
 
 Cloudflare R2 is an external service. The SQL stores only object keys, dimensions,
 durations, and processing states.
+
+## Autolenta and chat
+
+Apply `hotfix-20260905-autofeed-chat.sql` after the earlier production hotfixes.
+It adds participant-only conversations, Realtime messages, consent-aware behavior
+events, and a five-item personalized Autolenta RPC. The RPC contract is stable;
+when traffic grows, a queue worker can materialize the same scores into
+`user_preference_features` without changing the frontend.

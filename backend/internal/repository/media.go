@@ -30,6 +30,18 @@ type Media struct {
 	ProviderAssetID string `json:"provider_asset_id"`
 	MimeType        string `json:"mime_type"`
 	SizeBytes       int64  `json:"size_bytes"`
+	Status          string `json:"status"`
+}
+
+type StreamMediaUpdate struct {
+	Status           string
+	DurationSeconds  float64
+	Width            int
+	Height           int
+	HLSURL           string
+	DASHURL          string
+	ThumbnailURL     string
+	ModerationReason string
 }
 
 type UploadIntent struct {
@@ -57,7 +69,9 @@ func (c *Client) OwnsEditableListing(ctx context.Context, listingID, ownerID str
 	query.Set("select", "id")
 	query.Set("limit", "1")
 
-	var rows []struct{ ID string `json:"id"` }
+	var rows []struct {
+		ID string `json:"id"`
+	}
 	if err := c.get(ctx, "/listings?"+query.Encode(), &rows); err != nil {
 		return false, err
 	}
@@ -73,12 +87,12 @@ func (c *Client) CreatePhotoIntent(
 ) (UploadIntent, error) {
 	media, err := c.insertMedia(ctx, map[string]any{
 		"listing_id": listingID,
-		"kind": "photo",
-		"provider": "cloudflare_r2",
+		"kind":       "photo",
+		"provider":   "cloudflare_r2",
 		"object_key": objectKey,
-		"status": "pending_upload",
+		"status":     "pending_upload",
 		"sort_order": sortOrder,
-		"mime_type": mimeType,
+		"mime_type":  mimeType,
 		"size_bytes": sizeBytes,
 	})
 	if err != nil {
@@ -86,13 +100,13 @@ func (c *Client) CreatePhotoIntent(
 	}
 
 	uploadID, err := c.insertUpload(ctx, map[string]any{
-		"listing_id": listingID,
-		"owner_id": ownerID,
-		"media_id": media.ID,
-		"object_key": objectKey,
+		"listing_id":         listingID,
+		"owner_id":           ownerID,
+		"media_id":           media.ID,
+		"object_key":         objectKey,
 		"expected_mime_type": mimeType,
-		"max_size_bytes": sizeBytes,
-		"expires_at": expiresAt.UTC().Format(time.RFC3339),
+		"max_size_bytes":     sizeBytes,
+		"expires_at":         expiresAt.UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		return UploadIntent{}, err
@@ -108,12 +122,12 @@ func (c *Client) CreateVideoIntent(
 ) (UploadIntent, error) {
 	media, err := c.insertMedia(ctx, map[string]any{
 		"listing_id": listingID,
-		"kind": "video",
-		"provider": "cloudflare_r2",
+		"kind":       "video",
+		"provider":   "cloudflare_r2",
 		"object_key": objectKey,
-		"status": "pending_upload",
+		"status":     "pending_upload",
 		"sort_order": 0,
-		"mime_type": mimeType,
+		"mime_type":  mimeType,
 		"size_bytes": sizeBytes,
 	})
 	if err != nil {
@@ -121,13 +135,13 @@ func (c *Client) CreateVideoIntent(
 	}
 
 	uploadID, err := c.insertUpload(ctx, map[string]any{
-		"listing_id": listingID,
-		"owner_id": ownerID,
-		"media_id": media.ID,
-		"object_key": objectKey,
+		"listing_id":         listingID,
+		"owner_id":           ownerID,
+		"media_id":           media.ID,
+		"object_key":         objectKey,
 		"expected_mime_type": mimeType,
-		"max_size_bytes": sizeBytes,
-		"expires_at": expiresAt.UTC().Format(time.RFC3339),
+		"max_size_bytes":     sizeBytes,
+		"expires_at":         expiresAt.UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		return UploadIntent{}, err
@@ -135,12 +149,29 @@ func (c *Client) CreateVideoIntent(
 	return UploadIntent{ID: uploadID, MediaID: media.ID}, nil
 }
 
+func (c *Client) CreateStreamVideoIntent(
+	ctx context.Context,
+	listingID, providerAssetID, mimeType string,
+	sizeBytes int64,
+) (Media, error) {
+	return c.insertMedia(ctx, map[string]any{
+		"listing_id":        listingID,
+		"kind":              "video",
+		"provider":          "cloudflare_stream",
+		"provider_asset_id": providerAssetID,
+		"status":            "pending_upload",
+		"sort_order":        0,
+		"mime_type":         mimeType,
+		"size_bytes":        sizeBytes,
+	})
+}
+
 func (c *Client) GetMedia(ctx context.Context, mediaID, listingID string) (Media, error) {
 	query := url.Values{}
 	query.Set("id", "eq."+mediaID)
 	query.Set("listing_id", "eq."+listingID)
 	query.Set("deleted_at", "is.null")
-	query.Set("select", "id,listing_id,provider,object_key,provider_asset_id,mime_type,size_bytes")
+	query.Set("select", "id,listing_id,provider,object_key,provider_asset_id,mime_type,size_bytes,status")
 	query.Set("limit", "1")
 
 	var rows []Media
@@ -153,11 +184,35 @@ func (c *Client) GetMedia(ctx context.Context, mediaID, listingID string) (Media
 	return rows[0], nil
 }
 
+func (c *Client) UpdateStreamMediaByAsset(ctx context.Context, providerAssetID string, update StreamMediaUpdate) error {
+	value := map[string]any{
+		"status": update.Status,
+		"variants": map[string]string{
+			"hls":       update.HLSURL,
+			"dash":      update.DASHURL,
+			"thumbnail": update.ThumbnailURL,
+		},
+	}
+	if update.DurationSeconds > 0 {
+		value["duration_seconds"] = update.DurationSeconds
+	}
+	if update.Width > 0 {
+		value["width"] = update.Width
+	}
+	if update.Height > 0 {
+		value["height"] = update.Height
+	}
+	if update.ModerationReason != "" {
+		value["moderation_reason"] = update.ModerationReason
+	}
+	return c.patch(ctx, "/listing_media?provider=eq.cloudflare_stream&provider_asset_id=eq."+url.QueryEscape(providerAssetID), value)
+}
+
 func (c *Client) CompleteR2Media(ctx context.Context, mediaID, uploadID string, sizeBytes int64, mimeType string) error {
 	if err := c.patch(ctx, "/listing_media?id=eq."+url.QueryEscape(mediaID), map[string]any{
-		"status": "ready",
+		"status":     "ready",
 		"size_bytes": sizeBytes,
-		"mime_type": mimeType,
+		"mime_type":  mimeType,
 	}); err != nil {
 		return err
 	}
@@ -178,7 +233,9 @@ func (c *Client) insertMedia(ctx context.Context, value map[string]any) (Media, 
 }
 
 func (c *Client) insertUpload(ctx context.Context, value map[string]any) (string, error) {
-	var rows []struct{ ID string `json:"id"` }
+	var rows []struct {
+		ID string `json:"id"`
+	}
 	if err := c.request(ctx, http.MethodPost, "/media_uploads", value, &rows, true); err != nil {
 		return "", err
 	}

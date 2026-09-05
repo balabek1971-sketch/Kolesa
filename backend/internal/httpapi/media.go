@@ -102,8 +102,8 @@ func (s *Server) createPhotoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]any{
-		"media_id":  intent.MediaID,
-		"upload_id": intent.ID,
+		"media_id":   intent.MediaID,
+		"upload_id":  intent.ID,
 		"upload_url": uploadURL,
 		"expires_at": expiresAt.Format(time.RFC3339),
 	})
@@ -115,7 +115,7 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
 	}
-	if !s.r2.Configured() {
+	if !s.stream.Configured() && !s.r2.Configured() {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "video_storage_not_configured"})
 		return
 	}
@@ -136,6 +136,36 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 		payload.MaxDurationSeconds < 1 ||
 		payload.MaxDurationSeconds > 60 {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_video"})
+		return
+	}
+
+	if s.stream.Configured() {
+		upload, err := s.stream.CreateDirectUpload(r.Context(), claims.Subject, map[string]string{
+			"listing_id": listingID,
+			"owner_id":   claims.Subject,
+		})
+		if err != nil {
+			s.logger.Error("stream direct upload failed", "error", err, "listing_id", listingID)
+			writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_upload_unavailable"})
+			return
+		}
+		media, err := s.repository.CreateStreamVideoIntent(
+			r.Context(), listingID, upload.UID, payload.ContentType, payload.SizeBytes,
+		)
+		if err != nil {
+			_ = s.stream.DeleteVideo(r.Context(), upload.UID)
+			s.logger.Error("stream video intent failed", "error", err, "listing_id", listingID)
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "video_slot_unavailable"})
+			return
+		}
+		writeJSON(w, http.StatusCreated, map[string]any{
+			"media_id":          media.ID,
+			"provider":          "cloudflare_stream",
+			"provider_asset_id": upload.UID,
+			"upload_url":        upload.UploadURL,
+			"upload_method":     http.MethodPost,
+			"expires_at":        upload.ExpiresAt.Format(time.RFC3339),
+		})
 		return
 	}
 
@@ -170,10 +200,12 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]any{
-		"media_id":  intent.MediaID,
-		"upload_id": intent.ID,
-		"upload_url": uploadURL,
-		"expires_at": expiresAt.Format(time.RFC3339),
+		"media_id":      intent.MediaID,
+		"upload_id":     intent.ID,
+		"provider":      "cloudflare_r2",
+		"upload_url":    uploadURL,
+		"upload_method": http.MethodPut,
+		"expires_at":    expiresAt.Format(time.RFC3339),
 	})
 }
 
@@ -231,12 +263,66 @@ func (s *Server) completeMediaUpload(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "media_completion_failed"})
 			return
 		}
+	case "cloudflare_stream":
+		if payload.ProviderAssetID == "" || payload.ProviderAssetID != media.ProviderAssetID {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "provider_asset_id_required"})
+			return
+		}
+		video, err := s.stream.GetVideo(r.Context(), media.ProviderAssetID)
+		if err != nil {
+			s.logger.Warn("stream video status unavailable", "error", err, "media_id", mediaID)
+			writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_status_unavailable"})
+			return
+		}
+		if err := s.updateStreamMedia(r.Context(), video); err != nil {
+			s.logger.Error("stream media completion failed", "error", err, "media_id", mediaID)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "media_completion_failed"})
+			return
+		}
 	default:
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported_media_provider"})
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "accepted"})
+}
+
+func (s *Server) getMediaStatus(w http.ResponseWriter, r *http.Request) {
+	claims, ok := claimsFromContext(r.Context())
+	if !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+	listingID := r.PathValue("listingID")
+	mediaID := r.PathValue("mediaID")
+	if !s.requireEditableListing(w, r, listingID, claims.Subject) {
+		return
+	}
+	media, err := s.repository.GetMedia(r.Context(), mediaID, listingID)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "media_not_found"})
+		return
+	}
+	if media.Provider != "cloudflare_stream" {
+		writeJSON(w, http.StatusOK, map[string]string{"status": media.Status})
+		return
+	}
+	video, err := s.stream.GetVideo(r.Context(), media.ProviderAssetID)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_status_unavailable"})
+		return
+	}
+	if err := s.updateStreamMedia(r.Context(), video); err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "media_status_update_failed"})
+		return
+	}
+	status := "processing"
+	if video.ReadyToStream {
+		status = "ready"
+	} else if video.Status.State == "error" {
+		status = "failed"
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": status})
 }
 
 func (s *Server) requireEditableListing(w http.ResponseWriter, r *http.Request, listingID, ownerID string) bool {

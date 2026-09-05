@@ -11,6 +11,7 @@ import {
   Heart,
   MapPin,
   Maximize2,
+	MessageCircle,
   Pause,
   Phone,
   Play,
@@ -20,7 +21,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { formatMileage, formatPrice } from "../lib/format.js";
-import { fetchListingById } from "../lib/supabase.js";
+import { fetchListingById, startListingConversation } from "../lib/supabase.js";
 
 function readablePhone(phone) {
   if (!phone) return "";
@@ -162,10 +163,12 @@ function VideoSlide({ active, item, title }) {
   );
 }
 
-export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteToggle }) {
+export function ListingPage({ auth, fallbackListing, favorite, listingId, onFavoriteToggle }) {
   const [listing, setListing] = useState(fallbackListing || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+	const [contactError, setContactError] = useState("");
+	const [openingChat, setOpeningChat] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const mediaTrackRef = useRef(null);
   const scrollFrameRef = useRef(0);
@@ -333,6 +336,23 @@ export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteTo
 
   const phone = readablePhone(listing.phone);
   const phoneHref = listing.phone ? `tel:${listing.phone.replace(/[^\d+]/g, "")}` : "";
+
+	async function handleMessageSeller() {
+		if (!auth?.session) {
+			window.location.hash = "/account";
+			return;
+		}
+		setOpeningChat(true);
+		setContactError("");
+		try {
+			const conversationId = await startListingConversation(listingId);
+			window.location.hash = `/messages/${conversationId}`;
+		} catch (chatError) {
+			setContactError(chatError.message || "Не удалось открыть диалог.");
+		} finally {
+			setOpeningChat(false);
+		}
+	}
   const facts = [
     ["Год выпуска", listing.year],
     ["Пробег", formatMileage(listing.mileage)],
@@ -489,6 +509,11 @@ export function ListingPage({ fallbackListing, favorite, listingId, onFavoriteTo
               ) : (
                 <p>Телефон не указан</p>
               )}
+			  <button className="listing-message-seller" type="button" disabled={openingChat} onClick={handleMessageSeller}>
+				<MessageCircle aria-hidden="true" size={18} />
+				{openingChat ? "Открываем диалог..." : "Написать продавцу"}
+			  </button>
+			  {contactError && <p className="listing-contact-error" role="alert">{contactError}</p>}
             </div>
 
             <p className="listing-safety">

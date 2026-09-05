@@ -36,12 +36,52 @@ export function getPublicPhotoUrl(media) {
   return "";
 }
 
+export function getPublicMediaUrl(media) {
+  if (!media) return "";
+  if (media.provider === "cloudflare_stream") {
+    return media.variants?.hls || media.variants?.dash || "";
+  }
+  return getPublicPhotoUrl(media);
+}
+
+export function getMediaPosterUrl(media) {
+  if (!media) return "";
+  if (media.provider === "cloudflare_stream" && media.variants?.thumbnail) {
+    return media.variants.thumbnail;
+  }
+  return media.poster_object_key
+    ? getPublicPhotoUrl({ object_key: media.poster_object_key })
+    : "";
+}
+
+function mapMediaItem(item) {
+  return {
+    id: item.id,
+    kind: item.kind,
+    provider: item.provider,
+    providerAssetId: item.provider_asset_id || "",
+    mimeType: item.mime_type || "",
+    sortOrder: Number(item.sort_order || 0),
+	status: item.status || "ready",
+    url: getPublicMediaUrl(item),
+    posterUrl: getMediaPosterUrl(item),
+  };
+}
+
 export function mapListingRow(row) {
   const photos = [...(row.listing_media || [])].filter(
     (media) => media.kind === "photo" && media.status === "ready"
   ).sort(
     (first, second) => first.sort_order - second.sort_order
   );
+
+  const media = [...(row.listing_media || row.media || [])]
+    .map(mapMediaItem)
+    .filter((item) => item.url)
+    .sort((first, second) => {
+      if (first.kind !== second.kind) return first.kind === "video" ? -1 : 1;
+      return first.sortOrder - second.sortOrder;
+    });
 
   return {
     id: row.id,
@@ -68,6 +108,9 @@ export function mapListingRow(row) {
     seller: row.seller_name || "Частный продавец",
     color: row.card_color || "#243b55",
     imageUrl: getPublicPhotoUrl(photos[0]),
+	media,
+	video: media.find((item) => item.kind === "video") || null,
+	photos: media.filter((item) => item.kind === "photo"),
     hasPhoto: Boolean(row.has_photo || photos.length),
     canFinance: Boolean(row.can_finance),
     cleared: Boolean(row.cleared),
@@ -111,9 +154,12 @@ export async function fetchListings() {
       published_at,
       created_at,
       listing_media(
+		id,
         kind,
         provider,
         object_key,
+		provider_asset_id,
+		poster_object_key,
         variants,
         status,
         sort_order
@@ -138,15 +184,7 @@ export async function fetchListingById(listingId) {
   if (!data) return null;
 
   const media = (data.media || [])
-    .map((item) => ({
-      id: item.id,
-      kind: item.kind,
-      mimeType: item.mime_type || "",
-      url: getPublicPhotoUrl(item),
-      posterUrl: item.poster_object_key
-        ? getPublicPhotoUrl({ object_key: item.poster_object_key })
-        : ""
-    }))
+	.map(mapMediaItem)
     .filter((item) => item.url);
 
   return {
@@ -179,6 +217,139 @@ export async function fetchListingById(listingId) {
     media,
     imageUrl: media.find((item) => item.kind === "photo")?.url || ""
   };
+}
+
+export async function fetchPersonalizedAutofeed({ anonymousId, sessionId, filters, offset = 0, limit = 5 }) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_personalized_autofeed", {
+    p_anonymous_id: anonymousId,
+    p_session_id: sessionId,
+    p_limit: limit,
+    p_offset: offset,
+    p_filters: filters || {},
+  });
+	if (error?.code === "PGRST202") {
+		let query = supabase
+			.from("listings")
+			.select(`
+				id, title, brand_name, model_name, city_name, price_kzt, year, mileage_km,
+				body_type, gearbox, engine_type, engine_volume, published_at,
+				feed_video:listing_media!inner(id),
+				listing_media(id, kind, provider, object_key, provider_asset_id, poster_object_key, variants, status, sort_order)
+			`)
+			.eq("status", "active")
+			.eq("feed_video.kind", "video")
+			.eq("feed_video.status", "ready")
+			.order("published_at", { ascending: false })
+			.range(offset, offset + limit - 1);
+		if (filters?.brand) query = query.eq("brand_name", filters.brand);
+		if (filters?.model) query = query.eq("model_name", filters.model);
+		if (filters?.city) query = query.eq("city_name", filters.city);
+		if (filters?.body) query = query.eq("body_type", filters.body);
+		if (filters?.yearFrom) query = query.gte("year", Number(filters.yearFrom));
+		if (filters?.yearTo) query = query.lte("year", Number(filters.yearTo));
+		if (filters?.priceFrom) query = query.gte("price_kzt", Number(filters.priceFrom));
+		if (filters?.priceTo) query = query.lte("price_kzt", Number(filters.priceTo));
+		const fallback = await query;
+		if (fallback.error) throw fallback.error;
+		return (fallback.data || []).map(mapListingRow);
+	}
+	if (error) throw error;
+  return (data || []).map((row) => mapListingRow({
+    ...row,
+    listing_media: row.media,
+    score: Number(row.rank_score || 0),
+  }));
+}
+
+export async function recordBehaviorEvent(event) {
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc("record_behavior_event", {
+    p_event_id: event.id,
+    p_occurred_at: event.occurredAt,
+    p_event_type: event.type,
+    p_anonymous_id: event.anonymousId,
+    p_session_id: event.sessionId,
+    p_listing_id: event.listingId || null,
+    p_position: Number.isInteger(event.position) ? event.position : null,
+    p_active_milliseconds: Number.isFinite(event.activeMilliseconds) ? Math.round(event.activeMilliseconds) : null,
+    p_metadata: event.metadata || {},
+  });
+  if (error) throw error;
+  return Boolean(data);
+}
+
+export async function fetchFavoriteIds() {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from("favorites").select("listing_id");
+  if (error) throw error;
+  return (data || []).map((item) => item.listing_id);
+}
+
+export async function setFavorite(listingId, favorite) {
+  if (!supabase) return;
+  if (favorite) {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) throw new Error("Войдите, чтобы сохранять объявления.");
+    const { error } = await supabase.from("favorites").upsert({ user_id: userId, listing_id: listingId });
+    if (error) throw error;
+    return;
+  }
+  const { error } = await supabase.from("favorites").delete().eq("listing_id", listingId);
+  if (error) throw error;
+}
+
+export async function startListingConversation(listingId) {
+  if (!supabase) throw new Error("Supabase не настроен.");
+  const { data, error } = await supabase.rpc("start_listing_conversation", { p_listing_id: listingId });
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchConversations() {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_my_conversations");
+  if (error) throw error;
+  return (data || []).map((item) => ({
+    id: item.id,
+    listingId: item.listing_id,
+    listingTitle: item.listing_title,
+    listingPrice: Number(item.listing_price_kzt || 0),
+    imageUrl: getPublicPhotoUrl({ object_key: item.listing_photo_object_key }),
+    otherUserId: item.other_user_id,
+    otherDisplayName: item.other_display_name,
+    lastMessage: item.last_message_body || "Диалог создан",
+    lastMessageAt: item.last_message_at,
+    unreadCount: Number(item.unread_count || 0),
+  }));
+}
+
+export async function fetchConversationMessages(conversationId) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_conversation_messages", {
+    p_conversation_id: conversationId,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function sendConversationMessage(conversationId, body) {
+  if (!supabase) throw new Error("Supabase не настроен.");
+  const { data, error } = await supabase.rpc("send_conversation_message", {
+    p_conversation_id: conversationId,
+    p_body: body,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function markConversationRead(conversationId) {
+  if (!supabase) return;
+  const { error } = await supabase.rpc("mark_conversation_read", {
+    p_conversation_id: conversationId,
+  });
+  if (error) throw error;
 }
 
 export async function createListing(listing) {

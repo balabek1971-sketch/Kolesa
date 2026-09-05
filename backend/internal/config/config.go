@@ -9,52 +9,58 @@ import (
 )
 
 type Config struct {
-	Environment            string
-	Port                   string
-	WebOrigin              string
-	SupabaseURL            string
-	SupabaseAnonKey        string
-	SupabaseServiceRoleKey string
-	SupabaseJWTAudience    string
-	SupabaseAuthHookSecret string
-	SMSProvider            string
-	MobizonAPIBaseURL      string
-	MobizonAPIKey          string
-	MobizonSender          string
-	CookieDomain           string
-	R2AccountID            string
-	R2AccessKeyID          string
-	R2SecretAccessKey      string
-	R2PublicBucket         string
-	R2PublicBaseURL        string
-	ReadTimeout            time.Duration
-	WriteTimeout           time.Duration
-	IdleTimeout            time.Duration
+	Environment                   string
+	Port                          string
+	WebOrigin                     string
+	SupabaseURL                   string
+	SupabaseAnonKey               string
+	SupabaseServiceRoleKey        string
+	SupabaseJWTAudience           string
+	SupabaseAuthHookSecret        string
+	SMSProvider                   string
+	MobizonAPIBaseURL             string
+	MobizonAPIKey                 string
+	MobizonSender                 string
+	CookieDomain                  string
+	R2AccountID                   string
+	R2AccessKeyID                 string
+	R2SecretAccessKey             string
+	R2PublicBucket                string
+	R2PublicBaseURL               string
+	CloudflareStreamAccountID     string
+	CloudflareStreamAPIToken      string
+	CloudflareStreamWebhookSecret string
+	ReadTimeout                   time.Duration
+	WriteTimeout                  time.Duration
+	IdleTimeout                   time.Duration
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		Environment:            valueOrDefault("APP_ENV", "development"),
-		Port:                   valueOrDefault("PORT", "8080"),
-		WebOrigin:              strings.TrimRight(os.Getenv("WEB_ORIGIN"), "/"),
-		SupabaseURL:            strings.TrimRight(os.Getenv("SUPABASE_URL"), "/"),
-		SupabaseAnonKey:        os.Getenv("SUPABASE_ANON_KEY"),
-		SupabaseServiceRoleKey: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
-		SupabaseJWTAudience:    valueOrDefault("SUPABASE_JWT_AUDIENCE", "authenticated"),
-		SupabaseAuthHookSecret: os.Getenv("SUPABASE_AUTH_HOOK_SECRET"),
-		SMSProvider:            strings.ToLower(valueOrDefault("SMS_PROVIDER", "mobizon")),
-		MobizonAPIBaseURL:      strings.TrimRight(valueOrDefault("MOBIZON_API_BASE_URL", "https://api.mobizon.kz"), "/"),
-		MobizonAPIKey:          os.Getenv("MOBIZON_API_KEY"),
-		MobizonSender:          os.Getenv("MOBIZON_SENDER"),
-		CookieDomain:           os.Getenv("COOKIE_DOMAIN"),
-		R2AccountID:            os.Getenv("R2_ACCOUNT_ID"),
-		R2AccessKeyID:          os.Getenv("R2_ACCESS_KEY_ID"),
-		R2SecretAccessKey:      os.Getenv("R2_SECRET_ACCESS_KEY"),
-		R2PublicBucket:         os.Getenv("R2_PUBLIC_BUCKET"),
-		R2PublicBaseURL:        strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
-		ReadTimeout:            10 * time.Second,
-		WriteTimeout:           15 * time.Second,
-		IdleTimeout:            60 * time.Second,
+		Environment:                   valueOrDefault("APP_ENV", "development"),
+		Port:                          valueOrDefault("PORT", "8080"),
+		WebOrigin:                     strings.TrimRight(os.Getenv("WEB_ORIGIN"), "/"),
+		SupabaseURL:                   strings.TrimRight(os.Getenv("SUPABASE_URL"), "/"),
+		SupabaseAnonKey:               os.Getenv("SUPABASE_ANON_KEY"),
+		SupabaseServiceRoleKey:        os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
+		SupabaseJWTAudience:           valueOrDefault("SUPABASE_JWT_AUDIENCE", "authenticated"),
+		SupabaseAuthHookSecret:        os.Getenv("SUPABASE_AUTH_HOOK_SECRET"),
+		SMSProvider:                   strings.ToLower(valueOrDefault("SMS_PROVIDER", "mobizon")),
+		MobizonAPIBaseURL:             strings.TrimRight(valueOrDefault("MOBIZON_API_BASE_URL", "https://api.mobizon.kz"), "/"),
+		MobizonAPIKey:                 os.Getenv("MOBIZON_API_KEY"),
+		MobizonSender:                 os.Getenv("MOBIZON_SENDER"),
+		CookieDomain:                  os.Getenv("COOKIE_DOMAIN"),
+		R2AccountID:                   os.Getenv("R2_ACCOUNT_ID"),
+		R2AccessKeyID:                 os.Getenv("R2_ACCESS_KEY_ID"),
+		R2SecretAccessKey:             os.Getenv("R2_SECRET_ACCESS_KEY"),
+		R2PublicBucket:                os.Getenv("R2_PUBLIC_BUCKET"),
+		R2PublicBaseURL:               strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
+		CloudflareStreamAccountID:     os.Getenv("CLOUDFLARE_STREAM_ACCOUNT_ID"),
+		CloudflareStreamAPIToken:      os.Getenv("CLOUDFLARE_STREAM_API_TOKEN"),
+		CloudflareStreamWebhookSecret: os.Getenv("CLOUDFLARE_STREAM_WEBHOOK_SECRET"),
+		ReadTimeout:                   10 * time.Second,
+		WriteTimeout:                  15 * time.Second,
+		IdleTimeout:                   60 * time.Second,
 	}
 
 	var missing []string

@@ -1,5 +1,14 @@
 # QazAuto API
 
+
+## Cloudflare Stream
+
+New videos use Cloudflare Stream when `CLOUDFLARE_STREAM_ACCOUNT_ID` and
+`CLOUDFLARE_STREAM_API_TOKEN` are set. The browser receives a one-time direct
+upload URL; the API token never reaches Vercel or the browser. Register
+`POST /v1/hooks/cloudflare/stream` as the Stream webhook and store its signing
+secret in `CLOUDFLARE_STREAM_WEBHOOK_SECRET`. Until Stream is configured, the
+existing R2 video path remains available for previously deployed environments.
 Go API for server-controlled marketplace operations. The browser must never receive the
 Supabase `service_role` key, R2 secret keys, or webhook secrets.
 
