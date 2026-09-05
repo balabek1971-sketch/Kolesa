@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -80,12 +81,20 @@ func TestMobizonRejectsInvalidInput(t *testing.T) {
 func TestMobizonHandlesProviderError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"code":1,"message":"invalid parameters","data":{}}`))
+		_, _ = w.Write([]byte(`{"code":1,"message":"invalid +77001234567, OTP 123456","data":{"recipient":["invalid value"],"params[validity]":["invalid value"],"unsafe field\nname":["ignored"]}}`))
 	}))
 	defer server.Close()
 
 	sender := NewMobizon(server.URL, "test-api-key", "", server.Client())
-	if _, err := sender.SendOTP(context.Background(), "+77001234567", "123456"); err == nil {
+	_, err := sender.SendOTP(context.Background(), "+77001234567", "123456")
+	if err == nil {
 		t.Fatal("expected provider rejection to be returned")
+	}
+	errorText := err.Error()
+	if !strings.Contains(errorText, "fields: params[validity], recipient") {
+		t.Fatalf("expected safe validation field names, got %q", errorText)
+	}
+	if strings.Contains(errorText, "+77001234567") || strings.Contains(errorText, "123456") || strings.Contains(errorText, "unsafe field") {
+		t.Fatalf("provider error leaked sensitive or unsafe details: %q", errorText)
 	}
 }

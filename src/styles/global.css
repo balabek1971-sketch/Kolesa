@@ -733,7 +733,11 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .autofeed-shade { position: absolute; z-index: 2; inset: 35% 0 0; background: linear-gradient(180deg, transparent, rgba(5, 7, 6, 0.2) 24%, rgba(5, 7, 6, 0.9) 100%); pointer-events: none; }
 .autofeed-copy { position: absolute; z-index: 5; right: 78px; bottom: 26px; left: 20px; display: grid; justify-items: start; pointer-events: none; }
 .autofeed-copy > * { pointer-events: auto; }
-.autofeed-availability { margin-bottom: 10px; background: var(--lime); color: #10120f; padding: 7px 12px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
+.autofeed-copy.is-collapsed { right: auto; }
+.autofeed-copy-controls { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.autofeed-copy.is-collapsed .autofeed-copy-controls { margin-bottom: 0; }
+.autofeed-availability { background: var(--lime); color: #10120f; padding: 7px 12px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
+.autofeed-copy-toggle { display: inline-flex; align-items: center; gap: 3px; min-height: 28px; border: 1px solid rgba(255, 255, 255, 0.5); background: rgba(7, 9, 8, 0.48); color: #fff; padding: 4px 8px; font-size: 0.67rem; font-weight: 750; backdrop-filter: blur(5px); }
 .autofeed-copy h2 { max-width: 100%; margin: 0; font-size: clamp(1.45rem, 5vw, 2.25rem); line-height: 1.06; letter-spacing: 0; overflow-wrap: anywhere; }
 .autofeed-copy p { margin: 9px 0 0; color: rgba(255, 255, 255, 0.82); font-size: 0.94rem; font-weight: 650; }
 .autofeed-copy > strong { margin-top: 10px; font-size: 1.65rem; line-height: 1; }

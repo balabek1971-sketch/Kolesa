@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ChevronDown,
   ChevronRight,
+  ChevronUp,
   Heart,
   LoaderCircle,
   MessageCircle,
@@ -199,6 +201,7 @@ function MediaRail({ active, initialIndex, listing, muted, onIndexChange }) {
 }
 
 function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavoriteToggle, onMediaIndexChange, onMessage, onMutedChange, position }) {
+  const [detailsVisible, setDetailsVisible] = useState(true);
   const [shareNotice, setShareNotice] = useState("");
   const shareTimerRef = useRef(0);
 
@@ -251,15 +254,30 @@ function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavorite
         onIndexChange={onMediaIndexChange}
       />
       <div className="autofeed-shade" />
-      <div className="autofeed-copy">
-        <span className="autofeed-availability">В наличии</span>
-        <h2>{listing.title}</h2>
-        <p>{listing.year} · {listing.engineVolume ? `${listing.engineVolume} л · ` : ""}{listing.gearbox}</p>
-        <strong>{formatPrice(listing.price)}</strong>
-        <small>{listing.city} · {listing.seller}</small>
-        <a href={`#/cars/${listing.id}`} onClick={() => trackBehavior("open", { listingId: listing.id, position, metadata: { source: "autofeed_button" } })}>
-          Открыть объявление <ChevronRight aria-hidden="true" size={21} />
-        </a>
+      <div className={`autofeed-copy${detailsVisible ? "" : " is-collapsed"}`}>
+        <div className="autofeed-copy-controls">
+          {detailsVisible && <span className="autofeed-availability">В наличии</span>}
+          <button
+            className="autofeed-copy-toggle"
+            type="button"
+            aria-expanded={detailsVisible}
+            onClick={() => setDetailsVisible((current) => !current)}
+          >
+            {detailsVisible ? "Скрыть" : "Развернуть"}
+            {detailsVisible ? <ChevronDown aria-hidden="true" size={15} /> : <ChevronUp aria-hidden="true" size={15} />}
+          </button>
+        </div>
+        {detailsVisible && (
+          <>
+            <h2>{listing.title}</h2>
+            <p>{listing.year} · {listing.engineVolume ? `${listing.engineVolume} л · ` : ""}{listing.gearbox}</p>
+            <strong>{formatPrice(listing.price)}</strong>
+            <small>{listing.city} · {listing.seller}</small>
+            <a href={`#/cars/${listing.id}`} onClick={() => trackBehavior("open", { listingId: listing.id, position, metadata: { source: "autofeed_button" } })}>
+              Открыть объявление <ChevronRight aria-hidden="true" size={21} />
+            </a>
+          </>
+        )}
       </div>
       <div className="autofeed-actions">
         <button
