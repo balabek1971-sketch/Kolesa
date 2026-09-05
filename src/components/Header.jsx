@@ -1,4 +1,5 @@
 import { ChevronDown, Heart, UserRound } from "lucide-react";
+import { requestAutofeedRefresh } from "../lib/autofeedState.js";
 
 export function Header({ favoriteCount }) {
   return (
@@ -10,7 +11,7 @@ export function Header({ favoriteCount }) {
 
         <nav className="nav" aria-label="Основная навигация">
 		  <a href="#/">Купить машину</a>
-		  <a href="#/autofeed">Автолента</a>
+		  <a href="#/autofeed" onClick={requestAutofeedRefresh}>Автолента</a>
 		  <a href="#/messages">Сообщения</a>
           <a href="#/sell">Продать машину</a>
         </nav>

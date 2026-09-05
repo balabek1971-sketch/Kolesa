@@ -721,13 +721,13 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .autofeed-media-track { position: absolute; z-index: 0; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
 .autofeed-media-slide, .autofeed-open-sentinel { flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; }
 .autofeed-media-slide > img, .autofeed-video, .autofeed-video > video { display: block; width: 100%; height: 100%; }
-.autofeed-media-slide > img, .autofeed-video > video { object-fit: cover; background: #101111; }
+.autofeed-media-slide > img { object-fit: contain; object-position: center; background: #101111; }
+.autofeed-video > video { object-fit: cover; background: #101111; }
 .autofeed-video { position: relative; }
 .autofeed-center-play { position: absolute; top: 50%; left: 50%; display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 50%; background: rgba(0, 0, 0, 0.28); color: #fff; opacity: 0; padding: 0; transform: translate(-50%, -50%); transition: opacity 140ms ease; backdrop-filter: blur(4px); }
 .autofeed-video:hover .autofeed-center-play, .autofeed-center-play:focus-visible { opacity: 1; }
-.autofeed-sound { position: absolute; top: 88px; right: 17px; display: grid; width: 40px; height: 40px; place-items: center; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.42); color: #fff; padding: 0; backdrop-filter: blur(5px); }
 .autofeed-open-sentinel { display: grid; place-content: center; justify-items: center; gap: 9px; background: #171918; color: #fff; font-size: 0.86rem; font-weight: 800; }
-.autofeed-progress { position: absolute; z-index: 14; top: 10px; right: 76px; left: 155px; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; pointer-events: none; }
+.autofeed-progress { position: absolute; z-index: 14; top: 10px; left: 50%; display: grid; width: min(240px, 44%); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; pointer-events: none; transform: translateX(-50%); }
 .autofeed-progress i { height: 3px; overflow: hidden; border-radius: 3px; background: rgba(255, 255, 255, 0.34); }
 .autofeed-progress i.active { background: #fff; }
 .autofeed-shade { position: absolute; z-index: 2; inset: 35% 0 0; background: linear-gradient(180deg, transparent, rgba(5, 7, 6, 0.2) 24%, rgba(5, 7, 6, 0.9) 100%); pointer-events: none; }
@@ -740,12 +740,13 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .autofeed-copy small { margin-top: 8px; color: rgba(255, 255, 255, 0.7); font-size: 0.78rem; }
 .autofeed-copy > a { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: min(100%, 350px); min-height: 48px; margin-top: 16px; background: var(--red); color: #fff; padding: 0 18px; font-size: 0.9rem; font-weight: 850; }
 .autofeed-copy > a:hover { background: var(--red-dark); }
-.autofeed-actions { position: absolute; z-index: 6; right: 14px; bottom: 90px; display: grid; gap: 14px; }
+.autofeed-actions { position: absolute; z-index: 6; right: 14px; bottom: 88px; display: grid; gap: 11px; }
 .autofeed-actions button { display: grid; width: 48px; height: 48px; place-items: center; border: 0; border-radius: 50%; background: rgba(7, 9, 8, 0.48); color: #fff; padding: 0; backdrop-filter: blur(5px); }
 .autofeed-actions button.active { color: #ff2731; }
-.autofeed-media-hint, .autofeed-mileage { position: absolute; z-index: 6; top: 82px; min-height: 26px; background: rgba(7, 9, 8, 0.48); color: rgba(255, 255, 255, 0.9); padding: 6px 8px; font-size: 0.67rem; font-weight: 720; backdrop-filter: blur(5px); }
+.autofeed-actions button.autofeed-action-hidden { visibility: hidden; pointer-events: none; }
+.autofeed-media-hint { position: absolute; z-index: 6; top: 82px; min-height: 26px; background: rgba(7, 9, 8, 0.48); color: rgba(255, 255, 255, 0.9); padding: 6px 8px; font-size: 0.67rem; font-weight: 720; backdrop-filter: blur(5px); }
 .autofeed-media-hint { left: 15px; }
-.autofeed-mileage { right: 66px; }
+.autofeed-share-notice { position: absolute; z-index: 9; right: 72px; bottom: 90px; border-radius: 4px; background: rgba(8, 10, 9, 0.82); color: #fff; padding: 8px 10px; font-size: 0.68rem; font-weight: 750; backdrop-filter: blur(5px); }
 .autofeed-state { display: grid; justify-items: center; place-content: center; gap: 10px; width: min(100%, 620px); height: 100%; margin: 0 auto; padding: 30px; background: #f5f6f5; color: #555e5b; text-align: center; }
 .autofeed-state strong { color: #151817; font-size: 1.15rem; }
 .autofeed-state button { min-height: 42px; margin-top: 6px; border: 0; background: var(--red); color: #fff; padding: 0 16px; font-weight: 800; }
@@ -873,7 +874,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 @media (max-width: 430px) {
 	.autofeed-header .autofeed-brand { font-size: 1.28rem; }
   .autofeed-header strong { font-size: 0.9rem; }
-  .autofeed-progress { right: 70px; left: 128px; }
+  .autofeed-progress { width: min(210px, 46%); }
   .autofeed-copy { right: 70px; left: 15px; }
   .autofeed-copy h2 { font-size: 1.42rem; }
   .autofeed-copy > strong { font-size: 1.42rem; }

@@ -7,6 +7,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  Share2,
   SlidersHorizontal,
   Volume2,
   VolumeX,
@@ -15,7 +16,15 @@ import {
 import { bodyTypes } from "../data/filterOptions.js";
 import { brands as vehicleBrands } from "../data/brands.js";
 import { getAnalyticsContext, trackBehavior } from "../lib/analytics.js";
-import { formatMileage, formatPrice } from "../lib/format.js";
+import {
+  autofeedRefreshEvent,
+  clearAutofeedRefreshRequest,
+  clearAutofeedState,
+  hasAutofeedRefreshRequest,
+  readAutofeedState,
+  writeAutofeedState,
+} from "../lib/autofeedState.js";
+import { formatPrice } from "../lib/format.js";
 import { fetchPersonalizedAutofeed, startListingConversation } from "../lib/supabase.js";
 
 const pageSize = 5;
@@ -30,10 +39,9 @@ const emptyFilters = {
   priceTo: "",
 };
 
-function AutofeedVideo({ active, item, onStarted }) {
+function AutofeedVideo({ active, item, muted, onStarted }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
-  const [muted, setMuted] = useState(true);
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
@@ -88,18 +96,15 @@ function AutofeedVideo({ active, item, onStarted }) {
     }
   }, [active]);
 
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
+
   async function togglePlaying() {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) await video.play().catch(() => undefined);
     else video.pause();
-  }
-
-  function toggleMuted() {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = !video.muted;
-    setMuted(video.muted);
   }
 
   return (
@@ -120,30 +125,37 @@ function AutofeedVideo({ active, item, onStarted }) {
       <button className="autofeed-center-play" type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={togglePlaying}>
         {playing ? <Pause aria-hidden="true" size={25} fill="currentColor" /> : <Play aria-hidden="true" size={28} fill="currentColor" />}
       </button>
-      <button className="autofeed-sound" type="button" aria-label={muted ? "Включить звук" : "Выключить звук"} onClick={toggleMuted}>
-        {muted ? <VolumeX aria-hidden="true" size={21} /> : <Volume2 aria-hidden="true" size={21} />}
-      </button>
     </div>
   );
 }
 
-function MediaRail({ active, listing }) {
+function MediaRail({ active, initialIndex, listing, muted, onIndexChange }) {
   const trackRef = useRef(null);
-  const [index, setIndex] = useState(0);
-  const openingRef = useRef(false);
   const slides = useMemo(() => [listing.video, ...listing.photos.slice(0, 3)].filter(Boolean), [listing]);
+  const [index, setIndex] = useState(() => Math.min(initialIndex || 0, Math.max(0, slides.length - 1)));
+  const openingRef = useRef(false);
 
   useEffect(() => {
-    setIndex(0);
+    const restoredIndex = Math.min(initialIndex || 0, Math.max(0, slides.length - 1));
+    setIndex(restoredIndex);
     openingRef.current = false;
-    trackRef.current?.scrollTo({ left: 0, behavior: "auto" });
+    window.requestAnimationFrame(() => {
+      const track = trackRef.current;
+      if (track) track.scrollTo({ left: restoredIndex * track.clientWidth, behavior: "auto" });
+    });
+    // The initial index is read only when this listing is mounted again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listing.id]);
 
   function handleScroll() {
     const track = trackRef.current;
     if (!track?.clientWidth) return;
     const next = Math.round(track.scrollLeft / track.clientWidth);
-    setIndex(Math.min(next, slides.length));
+    const visibleIndex = Math.min(next, Math.max(0, slides.length - 1));
+    if (visibleIndex !== index) {
+      setIndex(visibleIndex);
+      onIndexChange(visibleIndex);
+    }
     if (next >= slides.length && !openingRef.current) {
       openingRef.current = true;
       trackBehavior("open", { listingId: listing.id, metadata: { source: "autofeed_swipe" } });
@@ -167,6 +179,7 @@ function MediaRail({ active, listing }) {
               <AutofeedVideo
                 active={active && index === itemIndex}
                 item={item}
+                muted={muted}
                 onStarted={() => trackBehavior("active_view", {
                   listingId: listing.id,
                   metadata: { source: "autofeed", media: "video", action: "play" },
@@ -186,7 +199,10 @@ function MediaRail({ active, listing }) {
   );
 }
 
-function AutofeedCard({ active, favorite, listing, onFavoriteToggle, onMessage, position }) {
+function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavoriteToggle, onMediaIndexChange, onMessage, onMutedChange, position }) {
+  const [shareNotice, setShareNotice] = useState("");
+  const shareTimerRef = useRef(0);
+
   useEffect(() => {
     if (!active) return undefined;
     const started = performance.now();
@@ -205,9 +221,36 @@ function AutofeedCard({ active, favorite, listing, onFavoriteToggle, onMessage, 
     };
   }, [active, listing.id, position]);
 
+  useEffect(() => () => window.clearTimeout(shareTimerRef.current), []);
+
+  async function shareListing() {
+    const url = `${window.location.origin}${window.location.pathname}#/cars/${listing.id}`;
+    const shareData = { title: listing.title, text: `${listing.title} · ${formatPrice(listing.price)}`, url };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareNotice("Ссылка скопирована");
+      window.clearTimeout(shareTimerRef.current);
+      shareTimerRef.current = window.setTimeout(() => setShareNotice(""), 1800);
+    } catch (shareError) {
+      if (shareError?.name !== "AbortError") {
+        setShareNotice("Не удалось поделиться");
+      }
+    }
+  }
+
   return (
     <article className="autofeed-card">
-      <MediaRail active={active} listing={listing} />
+      <MediaRail
+        active={active}
+        initialIndex={mediaIndex}
+        listing={listing}
+        muted={muted}
+        onIndexChange={onMediaIndexChange}
+      />
       <div className="autofeed-shade" />
       <div className="autofeed-copy">
         <span className="autofeed-availability">В наличии</span>
@@ -220,15 +263,28 @@ function AutofeedCard({ active, favorite, listing, onFavoriteToggle, onMessage, 
         </a>
       </div>
       <div className="autofeed-actions">
+        <button
+          className={mediaIndex === 0 ? "" : "autofeed-action-hidden"}
+          type="button"
+          aria-label={muted ? "Включить звук" : "Выключить звук"}
+          aria-hidden={mediaIndex === 0 ? undefined : "true"}
+          disabled={mediaIndex !== 0}
+          onClick={() => onMutedChange(!muted)}
+        >
+          {muted ? <VolumeX aria-hidden="true" size={25} /> : <Volume2 aria-hidden="true" size={25} />}
+        </button>
         <button className={favorite ? "active" : ""} type="button" aria-label={favorite ? "Убрать из избранного" : "Добавить в избранное"} onClick={() => onFavoriteToggle(listing.id)}>
           <Heart aria-hidden="true" size={29} fill={favorite ? "currentColor" : "none"} />
         </button>
         <button type="button" aria-label="Написать продавцу" onClick={() => onMessage(listing.id)}>
           <MessageCircle aria-hidden="true" size={29} />
         </button>
+        <button type="button" aria-label="Поделиться объявлением" onClick={shareListing}>
+          <Share2 aria-hidden="true" size={28} />
+        </button>
       </div>
+      {shareNotice && <span className="autofeed-share-notice" role="status">{shareNotice}</span>}
       <span className="autofeed-media-hint">Видео · {Math.min(listing.photos.length, 3)} фото</span>
-      <span className="autofeed-mileage">{formatMileage(listing.mileage)}</span>
     </article>
   );
 }
@@ -286,17 +342,23 @@ function FeedFilters({ draft, onApply, onChange, onClose, onReset }) {
 }
 
 export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
+  const [restoredState] = useState(readAutofeedState);
+  const [refreshOnMount] = useState(hasAutofeedRefreshRequest);
   const [analytics, setAnalytics] = useState(getAnalyticsContext);
-  const [listings, setListings] = useState([]);
-  const [filters, setFilters] = useState(emptyFilters);
-  const [draftFilters, setDraftFilters] = useState(emptyFilters);
+  const [listings, setListings] = useState(() => restoredState?.listings || []);
+  const [filters, setFilters] = useState(() => restoredState?.filters || emptyFilters);
+  const [draftFilters, setDraftFilters] = useState(() => restoredState?.filters || emptyFilters);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(() => restoredState?.activeIndex || 0);
+  const [mediaIndexes, setMediaIndexes] = useState(() => restoredState?.mediaIndexes || {});
+  const [muted, setMuted] = useState(true);
+  const [loading, setLoading] = useState(() => !restoredState?.listings?.length);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(() => restoredState?.hasMore ?? true);
   const [error, setError] = useState("");
   const feedRef = useRef(null);
+  const initialFeedHandledRef = useRef(false);
+  const loadedIdentityRef = useRef(analytics.anonymousId);
 
   const load = useCallback(async (nextFilters, reset = false) => {
     const offset = reset ? 0 : listings.length;
@@ -313,6 +375,7 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
       setHasMore(page.length === pageSize);
       if (reset) {
         setActiveIndex(0);
+        setMediaIndexes({});
         feedRef.current?.scrollTo({ top: 0, behavior: "auto" });
       }
     } catch (loadError) {
@@ -324,16 +387,56 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
   }, [analytics, listings.length]);
 
   useEffect(() => {
+    if (loading || !listings.length) return;
+    writeAutofeedState({ activeIndex, filters, hasMore, listings, mediaIndexes });
+  }, [activeIndex, filters, hasMore, listings, loading, mediaIndexes]);
+
+  useEffect(() => {
+    if (loading || !listings.length || !feedRef.current) return;
+    window.requestAnimationFrame(() => {
+      const feed = feedRef.current;
+      if (feed) feed.scrollTo({ top: activeIndex * feed.clientHeight, behavior: "auto" });
+    });
+  }, [loading, listings.length]);
+
+  useEffect(() => {
     const handleConsent = () => setAnalytics(getAnalyticsContext());
     window.addEventListener("qazauto-consent-changed", handleConsent);
     return () => window.removeEventListener("qazauto-consent-changed", handleConsent);
   }, []);
 
   useEffect(() => {
-    load(filters, true);
+    if (!initialFeedHandledRef.current) {
+      initialFeedHandledRef.current = true;
+      clearAutofeedRefreshRequest();
+      if (!refreshOnMount && restoredState?.listings?.length) return;
+    } else if (loadedIdentityRef.current === analytics.anonymousId) {
+      return;
+    }
+
+    loadedIdentityRef.current = analytics.anonymousId;
+    const nextFilters = refreshOnMount ? emptyFilters : filters;
+    clearAutofeedState();
+    if (nextFilters === emptyFilters) {
+      setFilters(emptyFilters);
+      setDraftFilters(emptyFilters);
+    }
+    load(nextFilters, true);
     // Filters are applied explicitly from the sheet; consent changes create a new feed identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analytics.anonymousId]);
+
+  useEffect(() => {
+    const refreshFeed = () => {
+      clearAutofeedState();
+      setFilters(emptyFilters);
+      setDraftFilters(emptyFilters);
+      setFilterOpen(false);
+      load(emptyFilters, true);
+    };
+    window.addEventListener(autofeedRefreshEvent, refreshFeed);
+    return () => window.removeEventListener(autofeedRefreshEvent, refreshFeed);
+  }, [load]);
 
   useEffect(() => {
     if (hasMore && !loading && !loadingMore && activeIndex >= listings.length - 2) {
@@ -344,7 +447,19 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
   function handleVerticalScroll() {
     const feed = feedRef.current;
     if (!feed?.clientHeight) return;
-    setActiveIndex(Math.min(Math.round(feed.scrollTop / feed.clientHeight), Math.max(0, listings.length - 1)));
+    const nextIndex = Math.min(Math.round(feed.scrollTop / feed.clientHeight), Math.max(0, listings.length - 1));
+    if (nextIndex === activeIndex) return;
+    setActiveIndex(nextIndex);
+    writeAutofeedState({ activeIndex: nextIndex, filters, hasMore, listings, mediaIndexes });
+  }
+
+  function handleMediaIndexChange(listingId, nextIndex) {
+    setMediaIndexes((current) => {
+      if (current[listingId] === nextIndex) return current;
+      const nextMediaIndexes = { ...current, [listingId]: nextIndex };
+      writeAutofeedState({ activeIndex, filters, hasMore, listings, mediaIndexes: nextMediaIndexes });
+      return nextMediaIndexes;
+    });
   }
 
   function applyFilters() {
@@ -400,8 +515,12 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
               favorite={favorites.has(listing.id)}
               key={listing.id}
               listing={listing}
+              mediaIndex={mediaIndexes[listing.id] || 0}
+              muted={muted}
               onFavoriteToggle={onFavoriteToggle}
+              onMediaIndexChange={(nextIndex) => handleMediaIndexChange(listing.id, nextIndex)}
               onMessage={openConversation}
+              onMutedChange={setMuted}
               position={index}
             />
           ))}
