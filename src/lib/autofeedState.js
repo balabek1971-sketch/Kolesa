@@ -1,9 +1,7 @@
 export const autofeedRefreshEvent = "qazauto-autofeed-refresh";
 
 const snapshotKey = "qazauto_autofeed_snapshot_v2";
-const refreshKey = "qazauto_autofeed_refresh_v1";
 let snapshot = null;
-let refreshOnNextMount = false;
 
 export function readAutofeedState() {
   if (snapshot) return snapshot;
@@ -34,35 +32,8 @@ export function clearAutofeedState() {
   }
 }
 
-export function hasAutofeedRefreshRequest() {
-  try {
-    return refreshOnNextMount || sessionStorage.getItem(refreshKey) === "1";
-  } catch {
-    return refreshOnNextMount;
-  }
-}
-
-export function clearAutofeedRefreshRequest() {
-  refreshOnNextMount = false;
-  try {
-    sessionStorage.removeItem(refreshKey);
-  } catch {
-    // Storage can be disabled in strict privacy modes.
-  }
-}
-
 export function requestAutofeedRefresh(event) {
+  if (!window.location.hash.startsWith("#/autofeed")) return;
   event?.preventDefault();
-  if (window.location.hash.startsWith("#/autofeed")) {
-    window.dispatchEvent(new Event(autofeedRefreshEvent));
-    return;
-  }
-
-  refreshOnNextMount = true;
-  try {
-    sessionStorage.setItem(refreshKey, "1");
-  } catch {
-    // The module flag is enough for normal single-page navigation.
-  }
-  window.location.hash = "/autofeed";
+  window.dispatchEvent(new Event(autofeedRefreshEvent));
 }

@@ -18,10 +18,9 @@ import { brands as vehicleBrands } from "../data/brands.js";
 import { getAnalyticsContext, trackBehavior } from "../lib/analytics.js";
 import {
   autofeedRefreshEvent,
-  clearAutofeedRefreshRequest,
   clearAutofeedState,
-  hasAutofeedRefreshRequest,
   readAutofeedState,
+  requestAutofeedRefresh,
   writeAutofeedState,
 } from "../lib/autofeedState.js";
 import { formatPrice } from "../lib/format.js";
@@ -343,7 +342,6 @@ function FeedFilters({ draft, onApply, onChange, onClose, onReset }) {
 
 export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
   const [restoredState] = useState(readAutofeedState);
-  const [refreshOnMount] = useState(hasAutofeedRefreshRequest);
   const [analytics, setAnalytics] = useState(getAnalyticsContext);
   const [listings, setListings] = useState(() => restoredState?.listings || []);
   const [filters, setFilters] = useState(() => restoredState?.filters || emptyFilters);
@@ -408,20 +406,14 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
   useEffect(() => {
     if (!initialFeedHandledRef.current) {
       initialFeedHandledRef.current = true;
-      clearAutofeedRefreshRequest();
-      if (!refreshOnMount && restoredState?.listings?.length) return;
+      if (restoredState?.listings?.length) return;
     } else if (loadedIdentityRef.current === analytics.anonymousId) {
       return;
     }
 
     loadedIdentityRef.current = analytics.anonymousId;
-    const nextFilters = refreshOnMount ? emptyFilters : filters;
     clearAutofeedState();
-    if (nextFilters === emptyFilters) {
-      setFilters(emptyFilters);
-      setDraftFilters(emptyFilters);
-    }
-    load(nextFilters, true);
+    load(filters, true);
     // Filters are applied explicitly from the sheet; consent changes create a new feed identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analytics.anonymousId]);
@@ -494,7 +486,7 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
     <main className="autofeed-page">
       <header className="autofeed-header">
         <a className="autofeed-brand" href="#/" aria-label="QazAuto"><b>Qaz</b>Auto</a>
-        <strong>Автолента</strong>
+        <a className="autofeed-title-refresh" href="#/autofeed" aria-label="Обновить Автоленту" onClick={requestAutofeedRefresh}>Автолента</a>
         <button type="button" aria-label="Фильтр Автоленты" onClick={() => {
           setDraftFilters(filters);
           setFilterOpen(true);

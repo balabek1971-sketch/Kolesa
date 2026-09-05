@@ -713,7 +713,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .autofeed-header > * { pointer-events: auto; }
 .autofeed-header .autofeed-brand { display: block; width: max-content; color: #fff; font-size: 1.45rem; font-style: italic; font-weight: 900; letter-spacing: 0; }
 .autofeed-brand b { color: #ff1e2f; font-weight: 950; }
-.autofeed-header strong { align-self: center; border-bottom: 3px solid var(--red); padding: 8px 5px 10px; font-size: 1rem; letter-spacing: 0; }
+.autofeed-header .autofeed-title-refresh { align-self: center; border-bottom: 3px solid var(--red); color: #fff; padding: 8px 5px 10px; font-size: 1rem; font-weight: 800; letter-spacing: 0; }
 .autofeed-header button { justify-self: end; display: grid; width: 42px; height: 42px; place-items: center; border: 0; border-radius: 50%; background: rgba(10, 12, 11, 0.38); color: #fff; padding: 0; backdrop-filter: blur(7px); }
 .autofeed-stack { width: min(100%, 620px); height: 100%; overflow-y: auto; margin: 0 auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior-y: contain; background: #121313; }
 .autofeed-stack::-webkit-scrollbar, .autofeed-media-track::-webkit-scrollbar { display: none; }
@@ -873,7 +873,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 
 @media (max-width: 430px) {
 	.autofeed-header .autofeed-brand { font-size: 1.28rem; }
-  .autofeed-header strong { font-size: 0.9rem; }
+  .autofeed-header .autofeed-title-refresh { font-size: 0.9rem; }
   .autofeed-progress { width: min(210px, 46%); }
   .autofeed-copy { right: 70px; left: 15px; }
   .autofeed-copy h2 { font-size: 1.42rem; }
