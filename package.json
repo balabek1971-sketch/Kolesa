@@ -7,6 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "test:phone": "node --test src/lib/phone.test.js",
     "test:search": "node --test src/lib/search.test.js"
   },
   "dependencies": {

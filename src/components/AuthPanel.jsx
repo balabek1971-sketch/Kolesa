@@ -1,28 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase.js";
-
-function normalizeKazakhstanPhone(value) {
-  const digits = value.replace(/\D/g, "");
-  return digits.length === 10 ? `+7${digits}` : "";
-}
-
-function getLocalPhoneDigits(value) {
-  let digits = value.replace(/\D/g, "");
-  if (digits.length > 10 && (digits.startsWith("7") || digits.startsWith("8"))) {
-    digits = digits.slice(1);
-  }
-  return digits.slice(0, 10);
-}
-
-function formatLocalPhone(value) {
-  const digits = getLocalPhoneDigits(value);
-  return [
-    digits.slice(0, 3),
-    digits.slice(3, 6),
-    digits.slice(6, 8),
-    digits.slice(8, 10)
-  ].filter(Boolean).join(" ");
-}
+import { formatLocalPhone, getLocalPhoneDigits, normalizeKazakhstanPhone } from "../lib/phone.js";
 
 export function AuthPanel({ configured, title = "Войдите в аккаунт" }) {
   const [step, setStep] = useState("phone");
@@ -48,7 +26,7 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
 
     if (error) {
       if (error.status >= 500) {
-        setMessage("SMS-провайдер отклонил номер. Проверьте 10 цифр после +7 и убедитесь, что это действующий мобильный номер Казахстана.");
+        setMessage("Не удалось отправить SMS. Введите 10 цифр после +7 или полный казахстанский номер, начиная с 7 или 8.");
       } else {
         setMessage(error.message);
       }
@@ -110,7 +88,7 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
                 value={formatLocalPhone(phone)}
                 onChange={(event) => setPhone(getLocalPhoneDigits(event.target.value))}
                 required
-                maxLength="13"
+                maxLength="16"
                 placeholder="700 000 00 00"
               />
             </span>
