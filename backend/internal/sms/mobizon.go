@@ -8,18 +8,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-)
-
-const otpMessageTemplate = "QazAuto: kod vhoda %s. Nikomu ne soobshchaite ego."
-
-var (
-	kazakhstanPhonePattern = regexp.MustCompile(`^7\d{10}$`)
-	otpPattern             = regexp.MustCompile(`^\d{4,8}$`)
 )
 
 type Mobizon struct {
@@ -166,14 +158,6 @@ func safeProviderFieldName(field string) bool {
 		return false
 	}
 	return true
-}
-
-func normalizeKazakhstanPhone(phone string) (string, bool) {
-	digits := strings.TrimPrefix(strings.TrimSpace(phone), "+")
-	if !kazakhstanPhonePattern.MatchString(digits) {
-		return "", false
-	}
-	return "+" + digits, true
 }
 
 func scalarString(value any) string {

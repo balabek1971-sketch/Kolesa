@@ -21,6 +21,8 @@ type Config struct {
 	MobizonAPIBaseURL             string
 	MobizonAPIKey                 string
 	MobizonSender                 string
+	AutoCallAPIBaseURL            string
+	AutoCallAPIToken              string
 	CookieDomain                  string
 	R2AccountID                   string
 	R2AccessKeyID                 string
@@ -49,6 +51,8 @@ func Load() (Config, error) {
 		MobizonAPIBaseURL:             strings.TrimRight(valueOrDefault("MOBIZON_API_BASE_URL", "https://api.mobizon.kz"), "/"),
 		MobizonAPIKey:                 os.Getenv("MOBIZON_API_KEY"),
 		MobizonSender:                 os.Getenv("MOBIZON_SENDER"),
+		AutoCallAPIBaseURL:            strings.TrimRight(valueOrDefault("AUTOCALL_API_BASE_URL", "https://autocall.kz/api/v1"), "/"),
+		AutoCallAPIToken:              os.Getenv("AUTOCALL_API_TOKEN"),
 		CookieDomain:                  os.Getenv("COOKIE_DOMAIN"),
 		R2AccountID:                   os.Getenv("R2_ACCOUNT_ID"),
 		R2AccessKeyID:                 os.Getenv("R2_ACCESS_KEY_ID"),
@@ -76,13 +80,18 @@ func Load() (Config, error) {
 	if cfg.Environment == "production" && cfg.SupabaseServiceRoleKey == "" {
 		missing = append(missing, "SUPABASE_SERVICE_ROLE_KEY")
 	}
+	if cfg.Environment == "production" && cfg.SupabaseAuthHookSecret == "" {
+		missing = append(missing, "SUPABASE_AUTH_HOOK_SECRET")
+	}
 	if cfg.Environment == "production" {
-		for name, value := range map[string]string{
-			"SUPABASE_AUTH_HOOK_SECRET": cfg.SupabaseAuthHookSecret,
-			"MOBIZON_API_KEY":           cfg.MobizonAPIKey,
-		} {
-			if value == "" {
-				missing = append(missing, name)
+		switch cfg.SMSProvider {
+		case "mobizon":
+			if cfg.MobizonAPIKey == "" {
+				missing = append(missing, "MOBIZON_API_KEY")
+			}
+		case "autocall":
+			if cfg.AutoCallAPIToken == "" {
+				missing = append(missing, "AUTOCALL_API_TOKEN")
 			}
 		}
 	}
@@ -99,12 +108,17 @@ func Load() (Config, error) {
 		return Config{}, errors.New("SUPABASE_URL must use HTTPS")
 	}
 
-	if cfg.SMSProvider != "mobizon" {
+	if cfg.SMSProvider != "mobizon" && cfg.SMSProvider != "autocall" {
 		return Config{}, fmt.Errorf("unsupported SMS_PROVIDER %q", cfg.SMSProvider)
 	}
 
-	if cfg.Environment == "production" && !strings.HasPrefix(cfg.MobizonAPIBaseURL, "https://") {
-		return Config{}, errors.New("MOBIZON_API_BASE_URL must use HTTPS in production")
+	if cfg.Environment == "production" {
+		if cfg.SMSProvider == "mobizon" && !strings.HasPrefix(cfg.MobizonAPIBaseURL, "https://") {
+			return Config{}, errors.New("MOBIZON_API_BASE_URL must use HTTPS in production")
+		}
+		if cfg.SMSProvider == "autocall" && !strings.HasPrefix(cfg.AutoCallAPIBaseURL, "https://") {
+			return Config{}, errors.New("AUTOCALL_API_BASE_URL must use HTTPS in production")
+		}
 	}
 
 	return cfg, nil

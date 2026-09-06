@@ -58,8 +58,15 @@ func New(cfg config.Config, logger *slog.Logger) (http.Handler, error) {
 	}
 
 	var smsSender sms.Sender
-	if cfg.MobizonAPIKey != "" {
-		smsSender = sms.NewMobizon(cfg.MobizonAPIBaseURL, cfg.MobizonAPIKey, cfg.MobizonSender, nil)
+	switch cfg.SMSProvider {
+	case "mobizon":
+		if cfg.MobizonAPIKey != "" {
+			smsSender = sms.NewMobizon(cfg.MobizonAPIBaseURL, cfg.MobizonAPIKey, cfg.MobizonSender, nil)
+		}
+	case "autocall":
+		if cfg.AutoCallAPIToken != "" {
+			smsSender = sms.NewAutoCall(cfg.AutoCallAPIBaseURL, cfg.AutoCallAPIToken, nil)
+		}
 	}
 
 	return newHandler(cfg, logger, hookVerifier, smsSender), nil
