@@ -9,6 +9,7 @@ import { SellPage } from "./pages/SellPage.jsx";
 import { FavoritesPage } from "./pages/FavoritesPage.jsx";
 import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
+import { useUnreadMessages } from "./hooks/useUnreadMessages.js";
 import { mediaApiConfigured, uploadListingMedia } from "./lib/mediaApi.js";
 import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
 import { trackBehavior } from "./lib/analytics.js";
@@ -44,6 +45,7 @@ export function App() {
   const [listings, setListings] = useState(initialListings);
   const [favorites, setFavorites] = useState(() => new Set());
   const auth = useAuth();
+  const unreadMessageCount = useUnreadMessages(auth.session);
 
   useEffect(() => {
     const handleRouteChange = () => setRoute(getRoute());
@@ -192,9 +194,13 @@ export function App() {
 
   return (
     <>
-      <Header favoriteCount={favorites.size} />
+      <Header favoriteCount={favorites.size} unreadMessageCount={unreadMessageCount} />
 	  <Suspense fallback={<main className="route-loading">Загружаем...</main>}>{page}</Suspense>
-	  <MobileNavigation activeRoute={route.name === "listing" || route.name === "sell" ? "home" : route.name} favoriteCount={favorites.size} />
+	  <MobileNavigation
+		activeRoute={route.name === "listing" || route.name === "sell" ? "home" : route.name}
+		favoriteCount={favorites.size}
+		unreadMessageCount={unreadMessageCount}
+	  />
 	  <CookieConsent />
     </>
   );

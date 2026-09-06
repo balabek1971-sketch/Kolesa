@@ -15,6 +15,14 @@ export const supabase =
       })
     : null;
 
+export const UNREAD_MESSAGES_CHANGED_EVENT = "qazauto:unread-messages-changed";
+
+function notifyUnreadMessagesChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(UNREAD_MESSAGES_CHANGED_EVENT));
+  }
+}
+
 export function getPublicPhotoUrl(media) {
   if (!media) return "";
 
@@ -325,6 +333,18 @@ export async function fetchConversations() {
   }));
 }
 
+export async function fetchUnreadMessageCount(userId) {
+  if (!supabase || !userId) return 0;
+  const { count, error } = await supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .neq("sender_id", userId)
+    .is("read_at", null)
+    .is("deleted_at", null);
+  if (error) throw error;
+  return Number(count || 0);
+}
+
 export async function fetchConversationMessages(conversationId) {
   if (!supabase) return [];
   const { data, error } = await supabase.rpc("get_conversation_messages", {
@@ -350,6 +370,7 @@ export async function markConversationRead(conversationId) {
     p_conversation_id: conversationId,
   });
   if (error) throw error;
+  notifyUnreadMessagesChanged();
 }
 
 export async function createListing(listing) {
