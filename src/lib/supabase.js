@@ -294,17 +294,21 @@ export async function fetchFavoriteIds() {
   return (data || []).map((item) => item.listing_id);
 }
 
-export async function setFavorite(listingId, favorite) {
+export async function setFavorite(listingId, favorite, userId) {
   if (!supabase) return;
+  if (!userId) throw new Error("Войдите, чтобы сохранять объявления.");
   if (favorite) {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) throw new Error("Войдите, чтобы сохранять объявления.");
-    const { error } = await supabase.from("favorites").upsert({ user_id: userId, listing_id: listingId });
-    if (error) throw error;
+    const { error } = await supabase
+      .from("favorites")
+      .insert({ user_id: userId, listing_id: listingId });
+    if (error && error.code !== "23505") throw error;
     return;
   }
-  const { error } = await supabase.from("favorites").delete().eq("listing_id", listingId);
+  const { error } = await supabase
+    .from("favorites")
+    .delete()
+    .eq("user_id", userId)
+    .eq("listing_id", listingId);
   if (error) throw error;
 }
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "./components/Header.jsx";
 import { MobileNavigation } from "./components/MobileNavigation.jsx";
 import { CookieConsent } from "./components/CookieConsent.jsx";
@@ -45,6 +45,9 @@ export function App() {
   const [listings, setListings] = useState(initialListings);
   const [favorites, setFavorites] = useState(() => new Set());
   const auth = useAuth();
+  const authenticatedUserId = auth.session?.user?.id || "";
+  const favoriteLoadRevisionRef = useRef(0);
+  const pendingFavoritesRef = useRef(new Set());
   const unreadMessageCount = useUnreadMessages(auth.session);
 
   useEffect(() => {
@@ -65,18 +68,20 @@ export function App() {
 	}, [route]);
 
 	useEffect(() => {
-		if (!auth.session) {
+		const loadRevision = ++favoriteLoadRevisionRef.current;
+		pendingFavoritesRef.current.clear();
+		if (!authenticatedUserId) {
 			setFavorites(new Set());
 			return undefined;
 		}
 		let active = true;
 		fetchFavoriteIds()
 			.then((ids) => {
-				if (active) setFavorites(new Set(ids));
+				if (active && favoriteLoadRevisionRef.current === loadRevision) setFavorites(new Set(ids));
 			})
 			.catch((error) => console.error("Не удалось загрузить избранное", error));
 		return () => { active = false; };
-	}, [auth.session]);
+	}, [authenticatedUserId]);
 
   useEffect(() => {
     if (!supabase) return undefined;
@@ -107,10 +112,13 @@ export function App() {
   }
 
 	async function toggleFavorite(id) {
-		if (!auth.session) {
+		if (!authenticatedUserId) {
 			window.location.hash = "/account";
 			return;
 		}
+		if (pendingFavoritesRef.current.has(id)) return;
+		pendingFavoritesRef.current.add(id);
+		favoriteLoadRevisionRef.current += 1;
 		const nextFavorite = !favorites.has(id);
     setFavorites((current) => {
       const next = new Set(current);
@@ -118,7 +126,7 @@ export function App() {
       return next;
     });
 		try {
-			await setFavorite(id, nextFavorite);
+			await setFavorite(id, nextFavorite, authenticatedUserId);
 			trackBehavior(nextFavorite ? "favorite" : "unfavorite", { listingId: id });
 		} catch (error) {
 			setFavorites((current) => {
@@ -127,6 +135,8 @@ export function App() {
 				return next;
 			});
 			console.error("Не удалось обновить избранное", error);
+		} finally {
+			pendingFavoritesRef.current.delete(id);
 		}
   }
 
