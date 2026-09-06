@@ -31,10 +31,15 @@ export function useUnreadMessages(session) {
       window.clearTimeout(refreshTimer);
       refreshTimer = window.setTimeout(refreshUnreadCount, REFRESH_DELAY_MS);
     };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") scheduleRefresh();
+    };
 
     setUnreadCount(0);
     refreshUnreadCount();
     window.addEventListener(UNREAD_MESSAGES_CHANGED_EVENT, scheduleRefresh);
+    window.addEventListener("online", scheduleRefresh);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
 
     const channel = supabase
       .channel(`unread-message-count-${userId}`)
@@ -49,6 +54,8 @@ export function useUnreadMessages(session) {
       active = false;
       window.clearTimeout(refreshTimer);
       window.removeEventListener(UNREAD_MESSAGES_CHANGED_EVENT, scheduleRefresh);
+      window.removeEventListener("online", scheduleRefresh);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
       supabase.removeChannel(channel);
     };
   }, [userId]);
