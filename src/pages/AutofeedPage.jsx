@@ -273,11 +273,11 @@ function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavorite
             <p>{listing.year} · {listing.engineVolume ? `${listing.engineVolume} л · ` : ""}{listing.gearbox}</p>
             <strong>{formatPrice(listing.price)}</strong>
             <small>{listing.city} · {listing.seller}</small>
-            <a href={`#/cars/${listing.id}`} onClick={() => trackBehavior("open", { listingId: listing.id, position, metadata: { source: "autofeed_button" } })}>
-              Открыть объявление <ChevronRight aria-hidden="true" size={21} />
-            </a>
           </>
         )}
+        <a href={`#/cars/${listing.id}`} onClick={() => trackBehavior("open", { listingId: listing.id, position, metadata: { source: "autofeed_button" } })}>
+          Перейти к объявлению <ChevronRight aria-hidden="true" size={21} />
+        </a>
       </div>
       <div className="autofeed-actions">
         <button

@@ -47,7 +47,11 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
     setSubmitting(false);
 
     if (error) {
-      setMessage(error.message);
+      if (error.status >= 500) {
+        setMessage("SMS-провайдер отклонил номер. Проверьте 10 цифр после +7 и убедитесь, что это действующий мобильный номер Казахстана.");
+      } else {
+        setMessage(error.message);
+      }
       return;
     }
 
