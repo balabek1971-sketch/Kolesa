@@ -457,7 +457,6 @@ as $$
     where id = p_listing_id
       and status = 'active'
       and deleted_at is null
-      and owner_id <> (select auth.uid())
   );
 $$;
 
@@ -635,6 +634,12 @@ set search_path = public
 as $$
 begin
   if tg_op = 'INSERT' then
+    if exists (
+      select 1 from public.listings l
+      where l.id = new.listing_id and l.owner_id = new.user_id
+    ) then
+      return new;
+    end if;
     update public.listing_stats
     set favorites_count = favorites_count + 1,
         updated_at = now()
@@ -642,6 +647,12 @@ begin
     return new;
   end if;
 
+  if exists (
+    select 1 from public.listings l
+    where l.id = old.listing_id and l.owner_id = old.user_id
+  ) then
+    return old;
+  end if;
   update public.listing_stats
   set favorites_count = greatest(favorites_count - 1, 0),
       updated_at = now()

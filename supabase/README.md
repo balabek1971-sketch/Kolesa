@@ -21,3 +21,7 @@ It adds participant-only conversations, Realtime messages, consent-aware behavio
 events, and a five-item personalized Autolenta RPC. The RPC contract is stable;
 when traffic grows, a queue worker can materialize the same scores into
 `user_preference_features` without changing the frontend.
+
+Apply `hotfix-20260906-owner-favorites-autofeed.sql` afterward. It lets owners
+save and view their own active listings in Autolenta while keeping owner events
+and owner favorites out of public ranking counters.

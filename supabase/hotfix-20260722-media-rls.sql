@@ -46,7 +46,6 @@ as $$
     where id = p_listing_id
       and status = 'active'
       and deleted_at is null
-      and owner_id <> (select auth.uid())
   );
 $$;
 
@@ -95,4 +94,3 @@ revoke all on function public.can_favorite_listing(uuid) from public, anon, auth
 grant execute on function public.is_listing_public(uuid) to anon, authenticated, service_role;
 grant execute on function public.owns_listing(uuid) to authenticated, service_role;
 grant execute on function public.can_favorite_listing(uuid) to authenticated, service_role;
-

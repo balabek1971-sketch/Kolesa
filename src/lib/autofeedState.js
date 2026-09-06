@@ -1,6 +1,6 @@
 export const autofeedRefreshEvent = "qazauto-autofeed-refresh";
 
-const snapshotKey = "qazauto_autofeed_snapshot_v2";
+const snapshotKey = "qazauto_autofeed_snapshot_v3";
 let snapshot = null;
 
 export function readAutofeedState() {

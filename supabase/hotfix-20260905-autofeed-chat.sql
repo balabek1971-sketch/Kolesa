@@ -394,7 +394,6 @@ as $$
     left join public.listing_stats s on s.listing_id = l.id
     where l.status = 'active'
       and l.deleted_at is null
-      and ((select auth.uid()) is null or l.owner_id <> (select auth.uid()))
       and exists (
         select 1 from public.listing_media v
         where v.listing_id = l.id
