@@ -25,6 +25,29 @@ import {
 const AutofeedPage = lazy(() => import("./pages/AutofeedPage.jsx").then((module) => ({ default: module.AutofeedPage })));
 const MessagesPage = lazy(() => import("./pages/MessagesPage.jsx").then((module) => ({ default: module.MessagesPage })));
 
+function unseenFavoritesKey(userId) {
+  return `qazauto:unseen-favorites:${userId}`;
+}
+
+function readUnseenFavorites(userId) {
+  if (!userId) return new Set();
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(unseenFavoritesKey(userId)) || "[]");
+    return new Set(Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeUnseenFavorites(userId, ids) {
+  if (!userId) return;
+  try {
+    sessionStorage.setItem(unseenFavoritesKey(userId), JSON.stringify([...ids]));
+  } catch {
+    // The in-memory counter still works when browser storage is unavailable.
+  }
+}
+
 function getRoute() {
   const hash = window.location.hash;
   const listingMatch = hash.match(/^#\/cars\/([^/?#]+)/);
@@ -44,6 +67,7 @@ export function App() {
   const [sort, setSort] = useState("recommended");
   const [listings, setListings] = useState(initialListings);
   const [favorites, setFavorites] = useState(() => new Set());
+  const [unseenFavorites, setUnseenFavorites] = useState(() => new Set());
   const auth = useAuth();
   const authenticatedUserId = auth.session?.user?.id || "";
   const favoriteLoadRevisionRef = useRef(0);
@@ -83,6 +107,19 @@ export function App() {
 		return () => { active = false; };
 	}, [authenticatedUserId]);
 
+	useEffect(() => {
+		if (!authenticatedUserId) {
+			setUnseenFavorites(new Set());
+			return;
+		}
+		if (route.name === "favorites") {
+			writeUnseenFavorites(authenticatedUserId, new Set());
+			setUnseenFavorites(new Set());
+			return;
+		}
+		setUnseenFavorites(readUnseenFavorites(authenticatedUserId));
+	}, [authenticatedUserId, route.name]);
+
   useEffect(() => {
     if (!supabase) return undefined;
 
@@ -120,11 +157,18 @@ export function App() {
 		pendingFavoritesRef.current.add(id);
 		favoriteLoadRevisionRef.current += 1;
 		const nextFavorite = !favorites.has(id);
+		const wasUnseen = unseenFavorites.has(id);
     setFavorites((current) => {
       const next = new Set(current);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+		setUnseenFavorites((current) => {
+			const next = new Set(current);
+			nextFavorite ? next.add(id) : next.delete(id);
+			writeUnseenFavorites(authenticatedUserId, next);
+			return next;
+		});
 		try {
 			await setFavorite(id, nextFavorite, authenticatedUserId);
 			trackBehavior(nextFavorite ? "favorite" : "unfavorite", { listingId: id });
@@ -134,11 +178,22 @@ export function App() {
 				nextFavorite ? next.delete(id) : next.add(id);
 				return next;
 			});
+			setUnseenFavorites((current) => {
+				const next = new Set(current);
+				wasUnseen ? next.add(id) : next.delete(id);
+				writeUnseenFavorites(authenticatedUserId, next);
+				return next;
+			});
 			console.error("Не удалось обновить избранное", error);
 		} finally {
 			pendingFavoritesRef.current.delete(id);
 		}
   }
+
+	function clearUnseenFavorites() {
+		setUnseenFavorites(new Set());
+		writeUnseenFavorites(authenticatedUserId, new Set());
+	}
 
   async function addListing(listing, onMediaProgress, options = {}) {
     if (!supabase || !auth.session) {
@@ -204,11 +259,12 @@ export function App() {
 
   return (
     <>
-      <Header favoriteCount={favorites.size} unreadMessageCount={unreadMessageCount} />
+      <Header favoriteCount={favorites.size} onFavoritesOpen={clearUnseenFavorites} unreadMessageCount={unreadMessageCount} />
 	  <Suspense fallback={<main className="route-loading">Загружаем...</main>}>{page}</Suspense>
 	  <MobileNavigation
 		activeRoute={route.name === "listing" || route.name === "sell" ? "home" : route.name}
-		favoriteCount={favorites.size}
+		favoriteNotificationCount={unseenFavorites.size}
+		onFavoritesOpen={clearUnseenFavorites}
 		unreadMessageCount={unreadMessageCount}
 	  />
 	  <CookieConsent />

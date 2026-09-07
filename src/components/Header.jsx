@@ -5,7 +5,7 @@ function formatBadgeCount(count) {
   return count > 99 ? "99+" : count;
 }
 
-export function Header({ favoriteCount, unreadMessageCount }) {
+export function Header({ favoriteCount, onFavoritesOpen, unreadMessageCount }) {
   return (
     <header className="site-header">
       <div className="header-inner">
@@ -28,7 +28,7 @@ export function Header({ favoriteCount, unreadMessageCount }) {
         </nav>
 
         <div className="header-actions">
-		  <a className="header-icon favorite-summary" href="#/favorites" aria-label={`Избранное: ${favoriteCount}`}>
+		  <a className="header-icon favorite-summary" href="#/favorites" aria-label={`Избранное: ${favoriteCount}`} onClick={onFavoritesOpen}>
             <Heart aria-hidden="true" size={20} strokeWidth={1.7} />
 		  </a>
           <a className="header-icon profile-button" href="#/account" aria-label="Личный кабинет">

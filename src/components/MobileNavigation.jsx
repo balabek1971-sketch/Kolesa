@@ -13,7 +13,7 @@ function formatBadgeCount(count) {
   return count > 99 ? "99+" : count;
 }
 
-export function MobileNavigation({ activeRoute, favoriteCount, unreadMessageCount }) {
+export function MobileNavigation({ activeRoute, favoriteNotificationCount, onFavoritesOpen, unreadMessageCount }) {
   return (
     <nav className="mobile-navigation" aria-label="Мобильная навигация">
       {items.map((item) => {
@@ -26,11 +26,11 @@ export function MobileNavigation({ activeRoute, favoriteCount, unreadMessageCoun
             key={item.id}
             aria-current={active ? "page" : undefined}
             aria-label={item.id === "messages" ? `Сообщения: ${unreadMessageCount} непрочитанных` : undefined}
-            onClick={item.id === "autofeed" ? requestAutofeedRefresh : undefined}
+            onClick={item.id === "autofeed" ? requestAutofeedRefresh : item.id === "favorites" ? onFavoritesOpen : undefined}
           >
             <span>
               <Icon aria-hidden="true" size={item.id === "autofeed" ? 25 : 22} strokeWidth={active ? 2.4 : 1.8} />
-              {item.id === "favorites" && favoriteCount > 0 && <i>{Math.min(favoriteCount, 99)}</i>}
+              {item.id === "favorites" && favoriteNotificationCount > 0 && <i>{formatBadgeCount(favoriteNotificationCount)}</i>}
               {item.id === "messages" && unreadMessageCount > 0 && <i>{formatBadgeCount(unreadMessageCount)}</i>}
             </span>
             <small>{item.label}</small>
