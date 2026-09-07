@@ -864,7 +864,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .autofeed-copy p { margin-top: 6px; font-size: 0.73rem; font-weight: 620; }
   .autofeed-copy > strong { margin-top: 8px; font-size: 1.38rem; line-height: 1; }
   .autofeed-copy small { margin-top: 6px; font-size: 0.67rem; }
-  .autofeed-copy > a { width: min(100%, 320px); min-height: 43px; margin-top: 11px; border-radius: 7px; padding-inline: 14px; font-size: 0.78rem; }
+  .autofeed-copy > a { width: min(100%, 230px); min-height: 43px; margin-top: 11px; border-radius: 7px; padding-inline: 14px; font-size: 0.78rem; }
   .autofeed-actions { bottom: 82px; }
   .feed-filter-overlay { align-items: end; justify-items: stretch; }
   .feed-filter-sheet { width: 100%; height: min(86dvh, 720px); border-radius: 8px 8px 0 0; box-shadow: 0 -16px 42px rgba(0, 0, 0, 0.28); }
