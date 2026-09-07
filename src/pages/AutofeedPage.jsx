@@ -138,9 +138,11 @@ function AutofeedVideo({ active, item, muted, onStarted }) {
         aria-label={playing ? "Пауза" : "Воспроизвести"}
         onClick={togglePlaying}
       >
-        {playbackIndicator === "pause"
-          ? <Pause aria-hidden="true" size={25} fill="currentColor" />
-          : <Play aria-hidden="true" size={28} fill="currentColor" />}
+        <span>
+          {playbackIndicator === "pause"
+            ? <Pause aria-hidden="true" size={25} fill="currentColor" />
+            : <Play aria-hidden="true" size={28} fill="currentColor" />}
+        </span>
       </button>
     </div>
   );
