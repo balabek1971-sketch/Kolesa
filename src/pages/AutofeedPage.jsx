@@ -43,7 +43,11 @@ const emptyFilters = {
 function AutofeedVideo({ active, item, muted, onStarted }) {
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const indicatorTimerRef = useRef(0);
   const [playing, setPlaying] = useState(false);
+  const [playbackIndicator, setPlaybackIndicator] = useState(null);
+
+  useEffect(() => () => window.clearTimeout(indicatorTimerRef.current), []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -104,8 +108,13 @@ function AutofeedVideo({ active, item, muted, onStarted }) {
   async function togglePlaying() {
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) await video.play().catch(() => undefined);
+    const action = video.paused ? "play" : "pause";
+    if (action === "play") await video.play().catch(() => undefined);
     else video.pause();
+
+    setPlaybackIndicator(action);
+    window.clearTimeout(indicatorTimerRef.current);
+    indicatorTimerRef.current = window.setTimeout(() => setPlaybackIndicator(null), 650);
   }
 
   return (
@@ -123,8 +132,15 @@ function AutofeedVideo({ active, item, muted, onStarted }) {
           onStarted?.();
         }}
       />
-      <button className="autofeed-center-play" type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={togglePlaying}>
-        {playing ? <Pause aria-hidden="true" size={25} fill="currentColor" /> : <Play aria-hidden="true" size={28} fill="currentColor" />}
+      <button
+        className={`autofeed-center-play${playbackIndicator ? " is-visible" : ""}`}
+        type="button"
+        aria-label={playing ? "Пауза" : "Воспроизвести"}
+        onClick={togglePlaying}
+      >
+        {playbackIndicator === "pause"
+          ? <Pause aria-hidden="true" size={25} fill="currentColor" />
+          : <Play aria-hidden="true" size={28} fill="currentColor" />}
       </button>
     </div>
   );

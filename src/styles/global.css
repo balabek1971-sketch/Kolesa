@@ -726,8 +726,8 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .autofeed-media-slide > img { object-fit: contain; object-position: center; background: #101111; }
 .autofeed-video > video { object-fit: cover; background: #101111; }
 .autofeed-video { position: relative; }
-.autofeed-center-play { position: absolute; top: 50%; left: 50%; display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 50%; background: rgba(0, 0, 0, 0.28); color: #fff; opacity: 0; padding: 0; transform: translate(-50%, -50%); transition: opacity 140ms ease; backdrop-filter: blur(4px); }
-.autofeed-video:hover .autofeed-center-play, .autofeed-center-play:focus-visible { opacity: 1; }
+.autofeed-center-play { position: absolute; top: 50%; left: 50%; display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 50%; background: rgba(0, 0, 0, 0.28); color: #fff; opacity: 0; padding: 0; transform: translate(-50%, -50%) scale(0.92); transition: opacity 140ms ease, transform 140ms ease; backdrop-filter: blur(4px); }
+.autofeed-center-play.is-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .autofeed-open-sentinel { display: grid; place-content: center; justify-items: center; gap: 9px; background: #171918; color: #fff; font-size: 0.86rem; font-weight: 800; }
 .autofeed-progress { position: absolute; z-index: 14; top: 10px; left: 50%; display: grid; width: min(240px, 44%); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; pointer-events: none; transform: translateX(-50%); }
 .autofeed-progress i { height: 3px; overflow: hidden; border-radius: 3px; background: rgba(255, 255, 255, 0.34); }
