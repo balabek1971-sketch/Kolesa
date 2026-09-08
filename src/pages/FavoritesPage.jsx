@@ -1,7 +1,7 @@
 import { Heart } from "lucide-react";
 import { Catalog } from "../components/Catalog.jsx";
 
-export function FavoritesPage({ favorites, listings, onFavoriteToggle }) {
+export function FavoritesPage({ authenticated, favorites, listings, onFavoriteToggle }) {
   const favoriteListings = listings.filter((listing) => favorites.has(listing.id));
 
   return (
@@ -12,6 +12,7 @@ export function FavoritesPage({ favorites, listings, onFavoriteToggle }) {
       </header>
       {favoriteListings.length ? (
         <Catalog
+          authenticated={authenticated}
           favorites={favorites}
           listings={favoriteListings}
           onFavoriteToggle={onFavoriteToggle}

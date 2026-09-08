@@ -15,6 +15,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
+import { ListingReportDialog } from "../components/ListingReportDialog.jsx";
 import { bodyTypes } from "../data/filterOptions.js";
 import { brands as vehicleBrands } from "../data/brands.js";
 import { getAnalyticsContext, trackBehavior } from "../lib/analytics.js";
@@ -29,6 +30,8 @@ import { formatPrice } from "../lib/format.js";
 import { fetchPersonalizedAutofeed, startListingConversation } from "../lib/supabase.js";
 
 const pageSize = 5;
+const reportHoldMilliseconds = 600;
+const reportHoldMovement = 12;
 const emptyFilters = {
   brand: "",
   model: "",
@@ -218,10 +221,14 @@ function MediaRail({ active, initialIndex, listing, muted, onIndexChange }) {
   );
 }
 
-function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavoriteToggle, onMediaIndexChange, onMessage, onMutedChange, position }) {
+function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavoriteToggle, onMediaIndexChange, onMessage, onMutedChange, onReport, position }) {
   const [detailsVisible, setDetailsVisible] = useState(true);
+  const [holding, setHolding] = useState(false);
   const [shareNotice, setShareNotice] = useState("");
+  const holdRef = useRef(null);
   const shareTimerRef = useRef(0);
+  const suppressClickRef = useRef(false);
+  const suppressTimerRef = useRef(0);
 
   useEffect(() => {
     if (!active) return undefined;
@@ -241,7 +248,70 @@ function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavorite
     };
   }, [active, listing.id, position]);
 
-  useEffect(() => () => window.clearTimeout(shareTimerRef.current), []);
+  useEffect(() => () => {
+    window.clearTimeout(holdRef.current?.timer);
+    window.clearTimeout(shareTimerRef.current);
+    window.clearTimeout(suppressTimerRef.current);
+  }, []);
+
+  function cancelReportHold() {
+    window.clearTimeout(holdRef.current?.timer);
+    holdRef.current = null;
+    setHolding(false);
+  }
+
+  function openReport() {
+    suppressClickRef.current = true;
+    window.clearTimeout(suppressTimerRef.current);
+    suppressTimerRef.current = window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 900);
+    setHolding(false);
+    navigator.vibrate?.(20);
+    onReport(listing);
+  }
+
+  function isReportHoldControl(target) {
+    const control = target.closest("a, button, input, select, textarea");
+    return control && !control.classList.contains("autofeed-center-play");
+  }
+
+  function handlePointerDown(event) {
+    if (event.button !== 0 || isReportHoldControl(event.target)) return;
+    cancelReportHold();
+    setHolding(true);
+    holdRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      timer: window.setTimeout(() => {
+        holdRef.current = null;
+        openReport();
+      }, reportHoldMilliseconds),
+    };
+  }
+
+  function handlePointerMove(event) {
+    const hold = holdRef.current;
+    if (!hold || hold.pointerId !== event.pointerId) return;
+    if (Math.hypot(event.clientX - hold.startX, event.clientY - hold.startY) > reportHoldMovement) {
+      cancelReportHold();
+    }
+  }
+
+  function handleClickCapture(event) {
+    if (!suppressClickRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClickRef.current = false;
+  }
+
+  function handleContextMenu(event) {
+    if (isReportHoldControl(event.target)) return;
+    event.preventDefault();
+    cancelReportHold();
+    openReport();
+  }
 
   async function shareListing() {
     const url = `${window.location.origin}${window.location.pathname}#/cars/${listing.id}`;
@@ -263,7 +333,16 @@ function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavorite
   }
 
   return (
-    <article className="autofeed-card">
+    <article
+      className={`autofeed-card${holding ? " report-hold-active" : ""}`}
+      onClickCapture={handleClickCapture}
+      onContextMenu={handleContextMenu}
+      onPointerCancel={cancelReportHold}
+      onPointerDown={handlePointerDown}
+      onPointerLeave={cancelReportHold}
+      onPointerMove={handlePointerMove}
+      onPointerUp={cancelReportHold}
+    >
       <MediaRail
         active={active}
         initialIndex={mediaIndex}
@@ -390,9 +469,12 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(() => restoredState?.hasMore ?? true);
   const [error, setError] = useState("");
+  const [reportListing, setReportListing] = useState(null);
+  const [reportFeedback, setReportFeedback] = useState("");
   const feedRef = useRef(null);
   const initialFeedHandledRef = useRef(false);
   const loadedIdentityRef = useRef(analytics.anonymousId);
+  const reportFeedbackTimerRef = useRef(0);
 
   const load = useCallback(async (nextFilters, reset = false) => {
     const offset = reset ? 0 : listings.length;
@@ -438,6 +520,8 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
     window.addEventListener("qazauto-consent-changed", handleConsent);
     return () => window.removeEventListener("qazauto-consent-changed", handleConsent);
   }, []);
+
+  useEffect(() => () => window.clearTimeout(reportFeedbackTimerRef.current), []);
 
   useEffect(() => {
     if (!initialFeedHandledRef.current) {
@@ -518,6 +602,20 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
     }
   }
 
+  function openListingReport(listing) {
+    if (!auth.session) {
+      window.location.hash = "/account";
+      return;
+    }
+    setReportListing(listing);
+  }
+
+  function showReportFeedback() {
+    setReportFeedback("Жалоба отправлена администратору");
+    window.clearTimeout(reportFeedbackTimerRef.current);
+    reportFeedbackTimerRef.current = window.setTimeout(() => setReportFeedback(""), 2400);
+  }
+
   return (
     <main className="autofeed-page">
       <header className="autofeed-header">
@@ -549,6 +647,7 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
               onMediaIndexChange={(nextIndex) => handleMediaIndexChange(listing.id, nextIndex)}
               onMessage={openConversation}
               onMutedChange={setMuted}
+              onReport={openListingReport}
               position={index}
             />
           ))}
@@ -566,6 +665,14 @@ export function AutofeedPage({ auth, favorites, onFavoriteToggle }) {
           onReset={resetFilters}
         />
       )}
+      <ListingReportDialog
+        listingId={reportListing?.id}
+        listingTitle={reportListing?.title}
+        open={Boolean(reportListing)}
+        onClose={() => setReportListing(null)}
+        onSubmitted={showReportFeedback}
+      />
+      {reportFeedback && <p className="catalog-report-toast" role="status">{reportFeedback}</p>}
     </main>
   );
 }

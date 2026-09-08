@@ -19,19 +19,11 @@ import {
   ShieldCheck,
   Video,
   Volume2,
-  VolumeX,
-	X,
+	VolumeX,
 } from "lucide-react";
+import { ListingReportDialog } from "../components/ListingReportDialog.jsx";
 import { formatMileage, formatPrice } from "../lib/format.js";
-import { fetchListingById, startListingConversation, submitListingReport } from "../lib/supabase.js";
-
-const reportReasons = [
-	{ id: "not_vehicle", label: "Объявление не об автомобиле" },
-	{ id: "fraud", label: "Подозрение на мошенничество" },
-	{ id: "wrong_information", label: "Неверные данные объявления" },
-	{ id: "duplicate", label: "Дубликат объявления" },
-	{ id: "other", label: "Другая причина" },
-];
+import { fetchListingById, startListingConversation } from "../lib/supabase.js";
 
 function readablePhone(phone) {
   if (!phone) return "";
@@ -180,10 +172,6 @@ export function ListingPage({ auth, fallbackListing, favorite, listingId, onFavo
 	const [contactError, setContactError] = useState("");
 	const [openingChat, setOpeningChat] = useState(false);
 	const [reportOpen, setReportOpen] = useState(false);
-	const [reportReason, setReportReason] = useState("not_vehicle");
-	const [reportDetails, setReportDetails] = useState("");
-	const [reportBusy, setReportBusy] = useState(false);
-	const [reportError, setReportError] = useState("");
 	const [reportFeedback, setReportFeedback] = useState("");
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const mediaTrackRef = useRef(null);
@@ -375,24 +363,7 @@ export function ListingPage({ auth, fallbackListing, favorite, listingId, onFavo
 			window.location.hash = "/account";
 			return;
 		}
-		setReportError("");
 		setReportOpen(true);
-	}
-
-	async function handleReportSubmit(event) {
-		event.preventDefault();
-		setReportBusy(true);
-		setReportError("");
-		try {
-			await submitListingReport(listingId, reportReason, reportReason === "other" ? reportDetails : "");
-			setReportOpen(false);
-			setReportFeedback("Жалоба отправлена администратору.");
-			setReportDetails("");
-		} catch (submitError) {
-			setReportError(submitError.message || "Не удалось отправить жалобу.");
-		} finally {
-			setReportBusy(false);
-		}
 	}
   const facts = [
     ["Год выпуска", listing.year],
@@ -591,64 +562,13 @@ export function ListingPage({ auth, fallbackListing, favorite, listingId, onFavo
         </section>
       </div>
 
-	  {reportOpen && (
-		<div className="listing-report-overlay" role="presentation" onMouseDown={(event) => {
-			if (event.target === event.currentTarget && !reportBusy) setReportOpen(false);
-		}}>
-			<section className="listing-report-dialog" role="dialog" aria-modal="true" aria-labelledby="listing-report-title">
-				<header>
-					<div>
-						<p className="eyebrow">Жалоба</p>
-						<h2 id="listing-report-title">Что не так с объявлением?</h2>
-					</div>
-					<button type="button" aria-label="Закрыть" disabled={reportBusy} onClick={() => setReportOpen(false)}>
-						<X aria-hidden="true" size={20} />
-					</button>
-				</header>
-
-				<form onSubmit={handleReportSubmit}>
-					<fieldset>
-						<legend>Выберите причину</legend>
-						{reportReasons.map((reason) => (
-							<label key={reason.id}>
-								<input
-									type="radio"
-									name="report-reason"
-									value={reason.id}
-									checked={reportReason === reason.id}
-									onChange={() => setReportReason(reason.id)}
-								/>
-								<span>{reason.label}</span>
-							</label>
-						))}
-					</fieldset>
-
-					{reportReason === "other" && (
-						<label className="listing-report-details">
-							<span>Опишите проблему</span>
-							<textarea
-								value={reportDetails}
-								minLength={10}
-								maxLength={1000}
-								required
-								placeholder="Не менее 10 символов"
-								onChange={(event) => setReportDetails(event.target.value)}
-							/>
-						</label>
-					)}
-
-					<p className="listing-report-note">Жалоба попадёт администратору. Объявление не будет скрыто автоматически.</p>
-					{reportError && <p className="listing-report-error" role="alert">{reportError}</p>}
-					<footer>
-						<button type="button" disabled={reportBusy} onClick={() => setReportOpen(false)}>Отмена</button>
-						<button className="primary" type="submit" disabled={reportBusy}>
-							{reportBusy ? "Отправляем..." : "Отправить жалобу"}
-						</button>
-					</footer>
-				</form>
-			</section>
-		</div>
-	  )}
+      <ListingReportDialog
+        listingId={listingId}
+        listingTitle={listing.title}
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        onSubmitted={() => setReportFeedback("Жалоба отправлена администратору.")}
+      />
     </main>
   );
 }

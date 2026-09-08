@@ -265,12 +265,13 @@ export function App() {
 	} else if (route.name === "autofeed") {
 		page = <AutofeedPage auth={auth} favorites={favorites} onFavoriteToggle={toggleFavorite} />;
 	} else if (route.name === "favorites") {
-		page = <FavoritesPage favorites={favorites} listings={listings} onFavoriteToggle={toggleFavorite} />;
+		page = <FavoritesPage authenticated={Boolean(auth.session)} favorites={favorites} listings={listings} onFavoriteToggle={toggleFavorite} />;
 	} else if (route.name === "messages") {
 		page = <MessagesPage auth={auth} conversationId={route.conversationId} />;
   } else {
     page = (
       <HomePage
+        authenticated={Boolean(auth.session)}
         favorites={favorites}
         filters={filters}
         listings={visibleListings}

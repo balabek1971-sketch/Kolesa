@@ -4,6 +4,7 @@ import { PopularModels } from "../components/PopularModels.jsx";
 import { SearchBoard } from "../components/SearchBoard.jsx";
 
 export function HomePage({
+  authenticated,
   favorites,
   filters,
   listings,
@@ -29,6 +30,7 @@ export function HomePage({
       <PopularModels onChange={onFiltersChange} />
 
       <Catalog
+        authenticated={authenticated}
         listings={listings}
         favorites={favorites}
         sort={sort}
