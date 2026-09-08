@@ -6,6 +6,16 @@ import { BrandPicker } from "./BrandPicker.jsx";
 import { CityPicker } from "./CityPicker.jsx";
 import { OptionPicker } from "./OptionPicker.jsx";
 
+function SearchResultsLink({ resultCount }) {
+  return (
+    <a className="show-results" href="#catalog">
+      <span>Искать</span>
+      <i aria-hidden="true">›</i>
+      <small>{resultCount.toLocaleString("ru-KZ")} авто</small>
+    </a>
+  );
+}
+
 export function SearchBoard({ filters, onChange, resultCount }) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [catalogState, setCatalogState] = useState({
@@ -79,11 +89,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           <CityPicker value={filters.city} onChange={(city) => onChange({ city })} />
         </div>
 
-        <a className="show-results" href="#catalog">
-          <span>Искать</span>
-          <i aria-hidden="true">›</i>
-          <small>{resultCount.toLocaleString("ru-KZ")} авто</small>
-        </a>
+        <SearchResultsLink resultCount={resultCount} />
       </div>
 
       <button
@@ -99,7 +105,14 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           : <ChevronDown aria-hidden="true" size={16} />}
       </button>
 
-      {advancedOpen && <AdvancedFilters filters={filters} onChange={onChange} />}
+      {advancedOpen && (
+        <>
+          <AdvancedFilters filters={filters} onChange={onChange} />
+          <div className="advanced-results-row">
+            <SearchResultsLink resultCount={resultCount} />
+          </div>
+        </>
+      )}
     </section>
   );
 }
