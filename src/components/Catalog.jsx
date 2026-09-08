@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
+import { CatalogFiltersDialog } from "./CatalogFiltersDialog.jsx";
 import { ListingReportDialog } from "./ListingReportDialog.jsx";
 import { formatMileage, formatPrice } from "../lib/format.js";
 
@@ -127,7 +129,18 @@ function CatalogCard({ favorite, index, listing, onFavoriteToggle, onReport }) {
   );
 }
 
-export function Catalog({ authenticated = false, listings, favorites, sort, onSortChange, onFavoriteToggle }) {
+export function Catalog({
+  allListings,
+  authenticated = false,
+  favorites,
+  filters,
+  listings,
+  onFavoriteToggle,
+  onFiltersChange,
+  onSortChange,
+  sort,
+}) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [reportListing, setReportListing] = useState(null);
   const [reportFeedback, setReportFeedback] = useState("");
   const feedbackTimerRef = useRef(0);
@@ -155,12 +168,20 @@ export function Catalog({ authenticated = false, listings, favorites, sort, onSo
           <p className="eyebrow">Каталог</p>
           <h2>Авто в продаже</h2>
         </div>
-        <select value={sort} onChange={(event) => onSortChange(event.target.value)} aria-label="Сортировка">
-          <option value="recommended">Рекомендованные</option>
-          <option value="priceAsc">Цена по возрастанию</option>
-          <option value="priceDesc">Цена по убыванию</option>
-          <option value="yearDesc">Сначала новые</option>
-        </select>
+        <div className="catalog-head-actions">
+          {filters && onFiltersChange && (
+            <button className="catalog-filter-open" type="button" onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontal aria-hidden="true" size={18} />
+              <span>Фильтр</span>
+            </button>
+          )}
+          <select value={sort} onChange={(event) => onSortChange(event.target.value)} aria-label="Сортировка">
+            <option value="recommended">Рекомендованные</option>
+            <option value="priceAsc">Цена по возрастанию</option>
+            <option value="priceDesc">Цена по убыванию</option>
+            <option value="yearDesc">Сначала новые</option>
+          </select>
+        </div>
       </div>
 
       {listings.length === 0 ? (
@@ -187,6 +208,14 @@ export function Catalog({ authenticated = false, listings, favorites, sort, onSo
         onClose={() => setReportListing(null)}
         onSubmitted={showReportFeedback}
       />
+      {filtersOpen && filters && onFiltersChange && (
+        <CatalogFiltersDialog
+          filters={filters}
+          listings={allListings || listings}
+          onApply={onFiltersChange}
+          onClose={() => setFiltersOpen(false)}
+        />
+      )}
       {reportFeedback && <p className="catalog-report-toast" role="status">{reportFeedback}</p>}
     </section>
   );

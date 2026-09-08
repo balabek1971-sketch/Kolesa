@@ -108,7 +108,7 @@ img, video { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-
 .advanced-results-row { display: flex; justify-content: center; width: min(100%, 820px); margin: 20px auto 0; border-top: 1px solid rgba(86, 95, 94, 0.22); padding-top: 18px; }
 .advanced-results-row .show-results { width: 190px; margin: 0; min-height: 48px; }
 
-.brand-picker-overlay { position: fixed; z-index: 1000; inset: 0; isolation: isolate; display: grid; place-items: center; overflow: hidden; background: rgba(15, 18, 17, 0.66); padding: 24px; }
+.brand-picker-overlay { position: fixed; z-index: 1500; inset: 0; isolation: isolate; display: grid; place-items: center; overflow: hidden; background: rgba(15, 18, 17, 0.66); padding: 24px; }
 .brand-picker-dialog { display: grid; grid-template-rows: auto auto auto auto minmax(0, 1fr); width: min(960px, calc(100vw - 48px)); height: min(760px, calc(100dvh - 48px)); overflow: hidden; overscroll-behavior: contain; border: 1px solid #bcc2c0; border-radius: 6px; background: #fff; color: #171717; box-shadow: 0 28px 64px rgba(0, 0, 0, 0.34); }
 .brand-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 22px 12px; }
 .brand-picker-head h2 { margin: 0; font-size: 1.55rem; letter-spacing: 0; }
@@ -132,7 +132,7 @@ img, video { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-
 .brand-group:only-child > div { grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 22px; }
 .brand-empty { grid-column: 1 / -1; margin: 24px 0; color: var(--muted); text-align: center; }
 
-.option-picker-overlay { position: fixed; z-index: 1010; inset: 0; isolation: isolate; display: grid; place-items: center; overflow: hidden; background: rgba(15, 18, 17, 0.66); padding: 24px; }
+.option-picker-overlay { position: fixed; z-index: 1510; inset: 0; isolation: isolate; display: grid; place-items: center; overflow: hidden; background: rgba(15, 18, 17, 0.66); padding: 24px; }
 .option-picker-dialog { display: grid; grid-template-rows: auto auto minmax(0, 1fr); width: min(760px, calc(100vw - 48px)); height: min(720px, calc(100dvh - 48px)); overflow: hidden; overscroll-behavior: contain; border: 1px solid #bcc2c0; border-radius: 6px; background: #fff; color: #171717; box-shadow: 0 28px 64px rgba(0, 0, 0, 0.34); }
 .option-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 22px 14px; }
 .option-picker-head h2 { margin: 0; font-size: 1.45rem; letter-spacing: 0; }
@@ -167,7 +167,7 @@ img, video { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-
 .option-picker-group .option-picker-item span { overflow: visible; font-weight: 650; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
 .option-picker-group .option-picker-item small { overflow: visible; text-overflow: clip; white-space: normal; }
 
-.city-picker-overlay { position: fixed; z-index: 1020; inset: 0; isolation: isolate; display: grid; place-items: center; overflow: hidden; background: rgba(15, 18, 17, 0.66); padding: 24px; }
+.city-picker-overlay { position: fixed; z-index: 1520; inset: 0; isolation: isolate; display: grid; place-items: center; overflow: hidden; background: rgba(15, 18, 17, 0.66); padding: 24px; }
 .city-picker-dialog { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); width: min(920px, calc(100vw - 48px)); height: min(720px, calc(100dvh - 48px)); overflow: hidden; border: 1px solid #bcc2c0; border-radius: 6px; background: #fff; color: #171717; box-shadow: 0 28px 64px rgba(0, 0, 0, 0.34); }
 .city-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 22px 12px; }
 .city-picker-head h2 { margin: 0; font-size: 1.5rem; letter-spacing: 0; }
@@ -235,7 +235,29 @@ img, video { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-
 .sectionHead { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .eyebrow { margin: 0 0 8px; color: var(--red); font-size: 0.76rem; font-weight: 860; letter-spacing: 0; text-transform: uppercase; }
 .sectionHead h2 { margin: 0; font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: 0; }
+.catalog-head-actions { display: flex; align-items: center; gap: 8px; }
+.catalog-filter-open { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; border: 1px solid #bbc2bf; border-radius: 4px; background: #fff; color: #202422; padding: 0 13px; font-size: 0.78rem; font-weight: 800; }
+.catalog-filter-open:hover, .catalog-filter-open:focus-visible { border-color: var(--red); color: var(--red); outline: 0; }
 select, input { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 10px 11px; outline: 0; }
+
+.catalog-filter-overlay { position: fixed; z-index: 1400; inset: 0; overflow: hidden; background: #f4f5f3; }
+.catalog-filter-dialog { display: grid; grid-template-rows: auto minmax(0, 1fr); width: 100%; height: 100dvh; overflow: hidden; background: #f4f5f3; color: var(--ink); }
+.catalog-filter-header { border-bottom: 1px solid var(--line); background: #fff; padding: max(12px, env(safe-area-inset-top)) 20px 12px; }
+.catalog-filter-header > div { display: flex; width: min(100%, 960px); align-items: center; gap: 13px; margin: 0 auto; }
+.catalog-filter-header button { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border: 1px solid #c8cecc; border-radius: 50%; background: #fff; color: #222725; padding: 0; }
+.catalog-filter-header button:hover, .catalog-filter-header button:focus-visible { border-color: var(--red); color: var(--red); outline: 0; }
+.catalog-filter-header span { display: grid; gap: 2px; }
+.catalog-filter-header small { color: var(--red); font-size: 0.62rem; font-weight: 850; text-transform: uppercase; }
+.catalog-filter-header h2 { margin: 0; font-size: 1.35rem; letter-spacing: 0; }
+.catalog-filter-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 24px 22px max(34px, env(safe-area-inset-bottom)); }
+.catalog-filter-scroll > * { width: min(100%, 820px); margin-inline: auto; }
+.catalog-filter-primary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.catalog-filter-field { min-height: 58px; border: 1px solid #cbd0ce; }
+.catalog-filter-field .brand-trigger, .catalog-filter-field .catalog-trigger { min-height: 28px; }
+.catalog-filter-scroll .advanced-filters { margin-top: 22px; }
+.catalog-filter-submit { display: grid; grid-template-columns: auto auto; place-content: center; align-items: center; gap: 0 9px; min-height: 54px; margin-top: 24px; border: 0; border-radius: 5px; background: var(--red); color: #fff; padding: 8px 24px; font-size: 0.9rem; font-weight: 900; text-transform: uppercase; }
+.catalog-filter-submit:hover, .catalog-filter-submit:focus-visible { background: var(--red-dark); outline: 0; }
+.catalog-filter-submit small { grid-column: 1 / -1; margin-top: 2px; font-size: 0.62rem; font-weight: 650; opacity: 0.78; text-transform: none; }
 
 .listingGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .carCard { position: relative; overflow: hidden; border: 1px solid var(--line); background: #fff; }
@@ -692,6 +714,9 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .select-field, .location-field { min-height: 57px; padding: 8px 13px; }
   .show-results { grid-column: auto; width: 100%; min-height: 50px; }
   .advanced-results-row .show-results { width: 100%; }
+  .catalog-filter-primary { grid-template-columns: 1fr; }
+  .catalog-filter-scroll { padding-inline: 16px; }
+  .catalog-filter-submit { width: 100%; }
   .popular-browse { width: calc(100% - 32px); padding-top: 22px; }
   .popular-buttons { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 7px; }
   .popular-buttons a { flex: 0 0 auto; }
@@ -790,6 +815,9 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .option-picker-list.grouped { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
   .popular-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
   .catalog { width: calc(100% - 24px); margin: 22px 12px; padding: 16px; }
+  .catalog-head-actions { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); width: 100%; }
+  .catalog-head-actions select { width: 100%; min-width: 0; }
+  .catalog-filter-open { min-width: 0; }
   .standalone-page { padding: 28px 12px; }
   .auth-panel, .account-panel { padding: 22px; }
   .account-actions { align-items: stretch; flex-direction: column; }

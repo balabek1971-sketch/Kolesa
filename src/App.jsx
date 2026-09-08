@@ -271,6 +271,7 @@ export function App() {
   } else {
     page = (
       <HomePage
+        allListings={listings}
         authenticated={Boolean(auth.session)}
         favorites={favorites}
         filters={filters}
