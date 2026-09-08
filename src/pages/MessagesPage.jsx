@@ -93,6 +93,31 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);
 
+  useEffect(() => {
+    if (!conversation?.id) return undefined;
+    const viewport = window.visualViewport;
+    let scrollFrame = 0;
+
+    function updateViewport() {
+      const height = Math.round(viewport?.height || window.innerHeight);
+      document.documentElement.style.setProperty("--messages-viewport-height", `${height}px`);
+      window.cancelAnimationFrame(scrollFrame);
+      scrollFrame = window.requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ block: "end" });
+      });
+    }
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    viewport?.addEventListener("resize", updateViewport);
+    return () => {
+      window.cancelAnimationFrame(scrollFrame);
+      window.removeEventListener("resize", updateViewport);
+      viewport?.removeEventListener("resize", updateViewport);
+      document.documentElement.style.removeProperty("--messages-viewport-height");
+    };
+  }, [conversation?.id]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     const messageBody = body.trim();
