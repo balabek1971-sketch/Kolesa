@@ -125,7 +125,6 @@ export function OptionPicker({
             <label className="option-search">
               <Search aria-hidden="true" size={19} />
               <input
-                autoFocus
                 type="search"
                 aria-label={`Поиск: ${label}`}
                 placeholder="Начните вводить название"

@@ -97,7 +97,6 @@ export function BrandPicker({ value, onChange }) {
             <label className="brand-search">
               <Search aria-hidden="true" size={19} />
               <input
-                autoFocus
                 type="search"
                 aria-label="Поиск марки"
                 placeholder="Начните вводить название"

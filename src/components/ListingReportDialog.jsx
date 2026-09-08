@@ -134,7 +134,6 @@ export function ListingReportDialog({ listingId, listingTitle = "", onClose, onS
                   minLength={10}
                   maxLength={1000}
                   required
-                  autoFocus
                   placeholder="Не менее 10 символов"
                   onChange={(event) => setDetails(event.target.value)}
                 />

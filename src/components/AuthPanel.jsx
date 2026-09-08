@@ -145,7 +145,6 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
               pattern="[0-9]{6}"
               maxLength="6"
               required
-              autoFocus
               placeholder="000000"
             />
           </label>
@@ -169,7 +168,6 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
               type="password"
               autoComplete="current-password"
               required
-              autoFocus
               placeholder="Введите пароль"
             />
           </label>

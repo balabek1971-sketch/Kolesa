@@ -111,7 +111,6 @@ export function CityPicker({ onChange, value }) {
             <label className="city-picker-search">
               <Search aria-hidden="true" size={19} />
               <input
-                autoFocus
                 type="search"
                 aria-label="Поиск города или области"
                 placeholder="Найти город или область"
