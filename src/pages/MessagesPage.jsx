@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, CarFront, Check, CheckCheck, LoaderCircle, MessageCircle, Send } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
 import { PushNotificationPrompt } from "../components/PushNotificationPrompt.jsx";
@@ -123,28 +123,93 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
     scrollHistoryToBottom();
   }, [messages]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!conversation?.id) return undefined;
     const viewport = window.visualViewport;
+    const page = document.querySelector(".messages-page.thread-open");
     let scrollFrame = 0;
+    let viewportFrame = 0;
+    let topCorrection = 0;
+    let restingHeight = Math.round(viewport?.height || window.innerHeight);
+    let orientation = window.screen?.orientation?.angle ?? window.orientation ?? 0;
+    const settleTimers = new Set();
 
     function updateViewport() {
-      const height = Math.round(viewport?.height || window.innerHeight);
-      document.documentElement.style.setProperty("--messages-viewport-height", `${height}px`);
+      window.cancelAnimationFrame(viewportFrame);
+      viewportFrame = window.requestAnimationFrame(() => {
+        const height = Math.round(viewport?.height || window.innerHeight);
+        const width = Math.round(viewport?.width || window.innerWidth);
+        const offsetTop = Math.round(viewport?.offsetTop || 0);
+        const offsetLeft = Math.round(viewport?.offsetLeft || 0);
+        const root = document.documentElement;
+        const nextOrientation = window.screen?.orientation?.angle ?? window.orientation ?? 0;
+
+        if (nextOrientation !== orientation) {
+          orientation = nextOrientation;
+          restingHeight = height;
+          topCorrection = 0;
+        } else if (height > restingHeight) {
+          restingHeight = height;
+        }
+
+        root.style.setProperty("--messages-viewport-height", `${height}px`);
+        root.style.setProperty("--messages-viewport-width", `${width}px`);
+        root.style.setProperty("--messages-viewport-top", `${offsetTop + topCorrection}px`);
+        root.style.setProperty("--messages-viewport-left", `${offsetLeft}px`);
+
+        // Some iOS versions pan the layout viewport without updating scrollY.
+        // Correct against the rendered position so the chat stays device-fixed.
+        if (page) {
+          const renderedTop = page.getBoundingClientRect().top;
+          const delta = offsetTop - renderedTop;
+          if (Math.abs(delta) > 0.5) {
+            topCorrection += delta;
+            root.style.setProperty("--messages-viewport-top", `${offsetTop + topCorrection}px`);
+          }
+        }
+
+        const keyboardOpen = height < restingHeight - 80;
+        root.classList.toggle("message-keyboard-open", keyboardOpen);
+      });
+
       window.cancelAnimationFrame(scrollFrame);
       scrollFrame = window.requestAnimationFrame(() => {
         scrollHistoryToBottom();
       });
     }
 
+    function settleViewport() {
+      [0, 60, 180, 360, 600].forEach((delay) => {
+        const timer = window.setTimeout(() => {
+          settleTimers.delete(timer);
+          updateViewport();
+        }, delay);
+        settleTimers.add(timer);
+      });
+    }
+
     updateViewport();
     window.addEventListener("resize", updateViewport);
+    window.addEventListener("orientationchange", settleViewport);
     viewport?.addEventListener("resize", updateViewport);
+    viewport?.addEventListener("scroll", updateViewport);
+    document.addEventListener("focusin", settleViewport);
+    document.addEventListener("focusout", settleViewport);
     return () => {
+      settleTimers.forEach((timer) => window.clearTimeout(timer));
+      window.cancelAnimationFrame(viewportFrame);
       window.cancelAnimationFrame(scrollFrame);
       window.removeEventListener("resize", updateViewport);
+      window.removeEventListener("orientationchange", settleViewport);
       viewport?.removeEventListener("resize", updateViewport);
+      viewport?.removeEventListener("scroll", updateViewport);
+      document.removeEventListener("focusin", settleViewport);
+      document.removeEventListener("focusout", settleViewport);
       document.documentElement.style.removeProperty("--messages-viewport-height");
+      document.documentElement.style.removeProperty("--messages-viewport-width");
+      document.documentElement.style.removeProperty("--messages-viewport-top");
+      document.documentElement.style.removeProperty("--messages-viewport-left");
+      document.documentElement.classList.remove("message-keyboard-open");
     };
   }, [conversation?.id]);
 
@@ -235,6 +300,17 @@ export function MessagesPage({ auth, conversationId }) {
   useEffect(() => {
     navigator.clearAppBadge?.().catch(() => undefined);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!conversationId) return undefined;
+    window.scrollTo(0, 0);
+    document.documentElement.classList.add("message-thread-active");
+    document.body.classList.add("message-thread-active");
+    return () => {
+      document.documentElement.classList.remove("message-thread-active", "message-keyboard-open");
+      document.body.classList.remove("message-thread-active");
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     if (!auth.session) return;
