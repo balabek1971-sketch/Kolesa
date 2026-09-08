@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, ChevronUp, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { createDefaultFilters } from "../lib/search.js";
 import { loadVehicleCatalog } from "../lib/vehicleCatalog.js";
 import { AdvancedFilters } from "./AdvancedFilters.jsx";
 import { BrandPicker } from "./BrandPicker.jsx";
@@ -92,18 +93,26 @@ export function SearchBoard({ filters, onChange, resultCount }) {
         <SearchResultsLink resultCount={resultCount} />
       </div>
 
-      <button
-        className="advanced-toggle"
-        type="button"
-        aria-expanded={advancedOpen}
-        onClick={() => setAdvancedOpen((current) => !current)}
-      >
-        <SlidersHorizontal aria-hidden="true" size={19} strokeWidth={1.6} />
-        <span>Расширенный поиск</span>
-        {advancedOpen
-          ? <ChevronUp aria-hidden="true" size={16} />
-          : <ChevronDown aria-hidden="true" size={16} />}
-      </button>
+      <div className="advanced-toolbar">
+        <button
+          className="advanced-toggle"
+          type="button"
+          aria-expanded={advancedOpen}
+          onClick={() => setAdvancedOpen((current) => !current)}
+        >
+          <SlidersHorizontal aria-hidden="true" size={19} strokeWidth={1.6} />
+          <span>Расширенный поиск</span>
+          {advancedOpen
+            ? <ChevronUp aria-hidden="true" size={16} />
+            : <ChevronDown aria-hidden="true" size={16} />}
+        </button>
+        {advancedOpen && (
+          <button className="search-filter-reset" type="button" onClick={() => onChange(createDefaultFilters())}>
+            <RotateCcw aria-hidden="true" size={15} />
+            <span>Сбросить</span>
+          </button>
+        )}
+      </div>
 
       {advancedOpen && (
         <>

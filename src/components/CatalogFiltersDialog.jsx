@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { filterListings } from "../lib/search.js";
+import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
+import { createDefaultFilters, filterListings } from "../lib/search.js";
 import { loadVehicleCatalog } from "../lib/vehicleCatalog.js";
 import { AdvancedFilters } from "./AdvancedFilters.jsx";
 import { BrandPicker } from "./BrandPicker.jsx";
@@ -78,14 +78,24 @@ export function CatalogFiltersDialog({ filters, listings, onApply, onClose }) {
     <div className="catalog-filter-overlay">
       <section className="catalog-filter-dialog" role="dialog" aria-modal="true" aria-labelledby="catalog-filter-title">
         <header className="catalog-filter-header">
-          <div>
-            <button type="button" aria-label="Назад к объявлениям" onClick={onClose}>
-              <ArrowLeft aria-hidden="true" size={22} />
+          <div className="catalog-filter-header-inner">
+            <div className="catalog-filter-heading">
+              <button className="catalog-filter-back" type="button" aria-label="Назад к объявлениям" onClick={onClose}>
+                <ArrowLeft aria-hidden="true" size={22} />
+              </button>
+              <span>
+                <small>Каталог</small>
+                <h2 id="catalog-filter-title">Фильтр</h2>
+              </span>
+            </div>
+            <button
+              className="catalog-filter-reset"
+              type="button"
+              onClick={() => setDraftFilters(createDefaultFilters())}
+            >
+              <RotateCcw aria-hidden="true" size={16} />
+              <span>Сбросить</span>
             </button>
-            <span>
-              <small>Каталог</small>
-              <h2 id="catalog-filter-title">Фильтр</h2>
-            </span>
           </div>
         </header>
 
