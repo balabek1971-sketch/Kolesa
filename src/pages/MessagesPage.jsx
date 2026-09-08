@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CarFront, LoaderCircle, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, CarFront, Check, CheckCheck, LoaderCircle, MessageCircle, Send } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
 import { PushNotificationPrompt } from "../components/PushNotificationPrompt.jsx";
 import { formatPrice } from "../lib/format.js";
@@ -51,7 +51,17 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const bottomRef = useRef(null);
+  const historyRef = useRef(null);
+
+  function scrollHistoryToBottom() {
+    const history = historyRef.current;
+    if (history) history.scrollTop = history.scrollHeight;
+  }
+
+  const markReadIfVisible = useCallback(async () => {
+    if (!conversation?.id || document.visibilityState !== "visible") return;
+    await markConversationRead(conversation.id);
+  }, [conversation?.id]);
 
   const loadMessages = useCallback(async () => {
     if (!conversation?.id) return;
@@ -59,13 +69,13 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
     setError("");
     try {
       setMessages(await fetchConversationMessages(conversation.id));
-      await markConversationRead(conversation.id);
+      await markReadIfVisible();
     } catch (loadError) {
       setError(loadError.message || "Не удалось загрузить сообщения.");
     } finally {
       setLoading(false);
     }
-  }, [conversation?.id]);
+  }, [conversation?.id, markReadIfVisible]);
 
   useEffect(() => {
     loadMessages();
@@ -80,17 +90,37 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversation.id}` },
         ({ new: message }) => {
           setMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
-          if (message.sender_id !== currentUserId) markConversationRead(conversation.id).catch(() => undefined);
+          if (message.sender_id !== currentUserId) markReadIfVisible().catch(() => undefined);
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversation.id}` },
+        ({ new: message }) => {
+          setMessages((current) => current.map((item) => item.id === message.id ? { ...item, ...message } : item));
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversation?.id, currentUserId]);
+  }, [conversation?.id, currentUserId, markReadIfVisible]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" });
+    if (!conversation?.id) return undefined;
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") markReadIfVisible().catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
+  }, [conversation?.id, markReadIfVisible]);
+
+  useEffect(() => {
+    scrollHistoryToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -103,7 +133,7 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
       document.documentElement.style.setProperty("--messages-viewport-height", `${height}px`);
       window.cancelAnimationFrame(scrollFrame);
       scrollFrame = window.requestAnimationFrame(() => {
-        bottomRef.current?.scrollIntoView({ block: "end" });
+        scrollHistoryToBottom();
       });
     }
 
@@ -151,18 +181,27 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
           <a href={`#/cars/${conversation.listingId}`}>{conversation.listingTitle} · {formatPrice(conversation.listingPrice)}</a>
         </div>
       </header>
-      <div className="message-history">
+      <div className="message-history" ref={historyRef}>
         {loading ? (
           <div className="messages-empty"><LoaderCircle className="loading-icon" size={24} />Загружаем сообщения</div>
         ) : messages.length ? messages.map((message) => (
           <div className={message.sender_id === currentUserId ? "message-bubble mine" : "message-bubble"} key={message.id}>
             <p>{message.body}</p>
-            <time>{shortTime(message.created_at)}</time>
+            <div className="message-bubble-meta">
+              <time>{shortTime(message.created_at)}</time>
+              {message.sender_id === currentUserId && (
+                <span className={message.read_at ? "message-read-state read" : "message-read-state"}>
+                  {message.read_at
+                    ? <CheckCheck aria-hidden="true" size={13} />
+                    : <Check aria-hidden="true" size={13} />}
+                  {message.read_at ? "Прочитано" : "Отправлено"}
+                </span>
+              )}
+            </div>
           </div>
         )) : (
           <div className="messages-empty"><strong>Начните разговор</strong><span>Спросите о состоянии, истории или просмотре автомобиля.</span></div>
         )}
-        <div ref={bottomRef} />
       </div>
       {error && <p className="message-error" role="alert">{error}</p>}
       <form className="message-composer" onSubmit={handleSubmit}>
