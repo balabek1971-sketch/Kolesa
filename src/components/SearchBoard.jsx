@@ -7,9 +7,9 @@ import { BrandPicker } from "./BrandPicker.jsx";
 import { CityPicker } from "./CityPicker.jsx";
 import { OptionPicker } from "./OptionPicker.jsx";
 
-function SearchResultsLink({ resultCount }) {
+function SearchResultsLink({ onClick, resultCount }) {
   return (
-    <a className="show-results" href="#catalog">
+    <a className="show-results" href="#catalog" onClick={onClick}>
       <span>Искать</span>
       <i aria-hidden="true">›</i>
       <small>{resultCount.toLocaleString("ru-KZ")} авто</small>
@@ -90,7 +90,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
           <CityPicker value={filters.city} onChange={(city) => onChange({ city })} />
         </div>
 
-        <SearchResultsLink resultCount={resultCount} />
+        <SearchResultsLink resultCount={resultCount} onClick={() => setAdvancedOpen(false)} />
       </div>
 
       <div className="advanced-toolbar">
@@ -118,7 +118,7 @@ export function SearchBoard({ filters, onChange, resultCount }) {
         <>
           <AdvancedFilters filters={filters} onChange={onChange} />
           <div className="advanced-results-row">
-            <SearchResultsLink resultCount={resultCount} />
+            <SearchResultsLink resultCount={resultCount} onClick={() => setAdvancedOpen(false)} />
           </div>
         </>
       )}
