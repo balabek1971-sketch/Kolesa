@@ -467,3 +467,108 @@ export async function fetchOwnListings() {
     updatedAt: row.updated_at
   }));
 }
+
+export async function fetchAdminAccess() {
+  if (!supabase) return false;
+
+  const { data, error } = await supabase.rpc("is_admin");
+  if (error) throw error;
+  return Boolean(data);
+}
+
+export async function submitListingReport(listingId, reason, details = "") {
+  if (!supabase) throw new Error("Supabase не настроен.");
+
+  const { data, error } = await supabase.rpc("submit_listing_report", {
+    p_listing_id: listingId,
+    p_reason: reason,
+    p_details: details.trim() || null,
+  });
+
+  if (error?.message?.includes("authentication_required")) {
+    throw new Error("Сначала войдите в аккаунт.");
+  }
+  if (error?.message?.includes("listing_not_reportable")) {
+    throw new Error("На это объявление нельзя отправить жалобу.");
+  }
+  if (error?.message?.includes("report_details_required")) {
+    throw new Error("Опишите причину жалобы минимум десятью символами.");
+  }
+  if (error?.message?.includes("report_rate_limit")) {
+    throw new Error("Слишком много жалоб за сутки. Попробуйте позже.");
+  }
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchAdminDashboardStats() {
+  if (!supabase) return {};
+  const { data, error } = await supabase.rpc("get_admin_dashboard_stats");
+  if (error) throw error;
+  return data || {};
+}
+
+export async function fetchAdminActivity(days = 14) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_admin_activity", { p_days: days });
+  if (error) throw error;
+
+  return (data || []).map((row) => ({
+    date: row.activity_date,
+    registrations: Number(row.registrations || 0),
+    listings: Number(row.listings_created || 0),
+    reports: Number(row.reports_created || 0),
+    events: Number(row.behavior_events || 0),
+    messages: Number(row.messages_sent || 0),
+    favorites: Number(row.favorites_added || 0),
+  }));
+}
+
+export async function fetchAdminReports(status = "open", limit = 50, offset = 0) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc("get_admin_reports", {
+    p_status: status,
+    p_limit: limit,
+    p_offset: offset,
+  });
+  if (error) throw error;
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    listingId: row.listing_id,
+    listingTitle: row.listing_title,
+    listingStatus: row.listing_status,
+    listingAdminHidden: Boolean(row.listing_admin_hidden),
+    listingImageUrl: getPublicPhotoUrl({ object_key: row.listing_cover_object_key }),
+    reporterId: row.reporter_id,
+    reporterName: row.reporter_name,
+    reporterPhone: row.reporter_phone,
+    reason: row.reason,
+    details: row.details || "",
+    status: row.status,
+    adminNote: row.admin_note || "",
+    createdAt: row.created_at,
+    handledAt: row.handled_at,
+  }));
+}
+
+export async function reviewAdminReport(reportId, status, adminNote = "") {
+  if (!supabase) throw new Error("Supabase не настроен.");
+  const { error } = await supabase.rpc("admin_review_listing_report", {
+    p_report_id: reportId,
+    p_status: status,
+    p_admin_note: adminNote.trim() || null,
+  });
+  if (error) throw error;
+}
+
+export async function setAdminListingVisibility({ listingId, visible, reason = "", reportId = null }) {
+  if (!supabase) throw new Error("Supabase не настроен.");
+  const { error } = await supabase.rpc("admin_set_listing_visibility", {
+    p_listing_id: listingId,
+    p_visible: visible,
+    p_reason: reason.trim() || null,
+    p_report_id: reportId,
+  });
+  if (error) throw error;
+}

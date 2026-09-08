@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatLocalPhone, getLocalPhoneDigits, normalizeKazakhstanPhone } from "./phone.js";
+import { formatKazakhstanPhone, formatLocalPhone, getLocalPhoneDigits, isAdminPhone, normalizeKazakhstanPhone } from "./phone.js";
 
 test("accepts ten local Kazakhstan digits", () => {
   assert.equal(getLocalPhoneDigits("7029693963"), "7029693963");
@@ -15,5 +15,12 @@ test("accepts full numbers beginning with 7 or 8", () => {
 
 test("keeps the visible local format", () => {
   assert.equal(formatLocalPhone("77029693963"), "702 969 39 63");
+  assert.equal(formatKazakhstanPhone("+77029693963"), "+7 702 969 39 63");
   assert.equal(normalizeKazakhstanPhone("702969396"), "");
+});
+
+test("recognizes only the reserved administrator phone", () => {
+  assert.equal(isAdminPhone("700 000 00 00"), true);
+  assert.equal(isAdminPhone("+7 700 000 00 00"), true);
+  assert.equal(isAdminPhone("702 969 39 63"), false);
 });

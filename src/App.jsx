@@ -15,6 +15,7 @@ import { createDefaultFilters, filterListings, sortListings } from "./lib/search
 import { trackBehavior } from "./lib/analytics.js";
 import {
   createListing,
+	fetchAdminAccess,
   fetchListings,
 	  fetchFavoriteIds,
   publishListing,
@@ -24,6 +25,7 @@ import {
 
 const AutofeedPage = lazy(() => import("./pages/AutofeedPage.jsx").then((module) => ({ default: module.AutofeedPage })));
 const MessagesPage = lazy(() => import("./pages/MessagesPage.jsx").then((module) => ({ default: module.MessagesPage })));
+const AdminPage = lazy(() => import("./pages/AdminPage.jsx").then((module) => ({ default: module.AdminPage })));
 
 function unseenFavoritesKey(userId) {
   return `qazauto:unseen-favorites:${userId}`;
@@ -53,6 +55,7 @@ function getRoute() {
   const listingMatch = hash.match(/^#\/cars\/([^/?#]+)/);
   if (listingMatch) return { name: "listing", listingId: decodeURIComponent(listingMatch[1]) };
   if (hash.startsWith("#/sell")) return { name: "sell" };
+  if (hash.startsWith("#/admin")) return { name: "admin" };
   if (hash.startsWith("#/account")) return { name: "account" };
 	if (hash.startsWith("#/favorites")) return { name: "favorites" };
 	if (hash.startsWith("#/autofeed")) return { name: "autofeed" };
@@ -68,6 +71,7 @@ export function App() {
   const [listings, setListings] = useState(initialListings);
   const [favorites, setFavorites] = useState(() => new Set());
   const [unseenFavorites, setUnseenFavorites] = useState(() => new Set());
+	const [adminAccess, setAdminAccess] = useState({ allowed: false, loading: false });
   const auth = useAuth();
   const authenticatedUserId = auth.session?.user?.id || "";
   const favoriteLoadRevisionRef = useRef(0);
@@ -90,6 +94,25 @@ export function App() {
 			if (duration >= 3000) trackBehavior("qualified_view", { listingId: route.listingId, activeMilliseconds: duration });
 		};
 	}, [route]);
+
+	useEffect(() => {
+		if (!authenticatedUserId || !supabase) {
+			setAdminAccess({ allowed: false, loading: false });
+			return undefined;
+		}
+
+		let active = true;
+		setAdminAccess({ allowed: false, loading: true });
+		fetchAdminAccess()
+			.then((allowed) => {
+				if (active) setAdminAccess({ allowed, loading: false });
+			})
+			.catch((error) => {
+				console.error("Не удалось проверить права администратора", error);
+				if (active) setAdminAccess({ allowed: false, loading: false });
+			});
+		return () => { active = false; };
+	}, [authenticatedUserId]);
 
 	useEffect(() => {
 		const loadRevision = ++favoriteLoadRevisionRef.current;
@@ -224,8 +247,10 @@ export function App() {
   let page;
   if (route.name === "sell") {
     page = <SellPage auth={auth} onSubmit={addListing} />;
+	} else if (route.name === "admin") {
+		page = <AdminPage access={adminAccess} auth={auth} />;
   } else if (route.name === "account") {
-    page = <AccountPage auth={auth} />;
+    page = <AccountPage auth={auth} isAdmin={adminAccess.allowed} />;
   } else if (route.name === "listing") {
     const fallbackListing = listings.find((listing) => listing.id === route.listingId);
     page = (
@@ -262,7 +287,7 @@ export function App() {
       <Header favoriteCount={favorites.size} onFavoritesOpen={clearUnseenFavorites} unreadMessageCount={unreadMessageCount} />
 	  <Suspense fallback={<main className="route-loading">Загружаем...</main>}>{page}</Suspense>
 	  <MobileNavigation
-		activeRoute={route.name === "listing" || route.name === "sell" ? "home" : route.name}
+		activeRoute={route.name === "listing" || route.name === "sell" ? "home" : route.name === "admin" ? "account" : route.name}
 		favoriteNotificationCount={unseenFavorites.size}
 		onFavoritesOpen={clearUnseenFavorites}
 		unreadMessageCount={unreadMessageCount}

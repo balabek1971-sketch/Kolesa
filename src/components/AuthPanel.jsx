@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase.js";
-import { formatLocalPhone, getLocalPhoneDigits, normalizeKazakhstanPhone } from "../lib/phone.js";
+import { formatLocalPhone, getLocalPhoneDigits, isAdminPhone, normalizeKazakhstanPhone } from "../lib/phone.js";
 
 export function AuthPanel({ configured, title = "Войдите в аккаунт" }) {
   const [step, setStep] = useState("phone");
@@ -13,6 +13,12 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
     const normalizedPhone = normalizeKazakhstanPhone(phone);
     if (!normalizedPhone) {
       setMessage("Введите номер Казахстана в формате +7 700 000 00 00.");
+      return;
+    }
+
+    if (isAdminPhone(normalizedPhone)) {
+      setStep("password");
+      setMessage("");
       return;
     }
 
@@ -57,6 +63,36 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
     if (error) setMessage(error.message);
   }
 
+  async function signInAsAdmin(event) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const password = String(form.get("password") || "");
+    if (!password) {
+      setMessage("Введите пароль администратора.");
+      return;
+    }
+
+    setSubmitting(true);
+    setMessage("");
+    const { error } = await supabase.auth.signInWithPassword({
+      phone: normalizeKazakhstanPhone(phone),
+      password,
+    });
+    setSubmitting(false);
+
+    if (error) {
+      setMessage("Неверный номер или пароль.");
+      return;
+    }
+
+    window.location.hash = "/admin";
+  }
+
+  function returnToPhone() {
+    setStep("phone");
+    setMessage("");
+  }
+
   if (!configured) {
     return (
       <section className="auth-panel">
@@ -70,8 +106,8 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
   return (
     <section className="auth-panel">
       <p className="eyebrow">Аккаунт</p>
-      <h1>{title}</h1>
-      <p>Введите номер телефона — мы отправим код подтверждения по SMS.</p>
+      <h1>{step === "password" ? "Вход администратора" : title}</h1>
+      <p>{step === "password" ? "Введите пароль для защищённого аккаунта." : "Введите номер телефона — мы отправим код подтверждения по SMS."}</p>
 
       {step === "phone" ? (
         <form className="auth-form" onSubmit={requestCode}>
@@ -97,7 +133,7 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
             {submitting ? "Отправляем..." : "Получить код"}
           </button>
         </form>
-      ) : (
+      ) : step === "code" ? (
         <form className="auth-form" onSubmit={verifyCode}>
           <label>
             Код из SMS
@@ -116,7 +152,31 @@ export function AuthPanel({ configured, title = "Войдите в аккаун�
           <button type="submit" disabled={submitting}>
             {submitting ? "Проверяем..." : "Войти"}
           </button>
-          <button className="auth-secondary" type="button" onClick={() => setStep("phone")}>
+          <button className="auth-secondary" type="button" onClick={returnToPhone}>
+            Изменить номер
+          </button>
+        </form>
+      ) : (
+        <form className="auth-form" onSubmit={signInAsAdmin}>
+          <label>
+            Номер администратора
+            <span className="auth-admin-phone">+7 700 000 00 00</span>
+          </label>
+          <label>
+            Пароль
+            <input
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              autoFocus
+              placeholder="Введите пароль"
+            />
+          </label>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Проверяем..." : "Войти в админ-панель"}
+          </button>
+          <button className="auth-secondary" type="button" onClick={returnToPhone}>
             Изменить номер
           </button>
         </form>

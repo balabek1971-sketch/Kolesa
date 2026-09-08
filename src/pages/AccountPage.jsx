@@ -7,6 +7,7 @@ import {
   Plus,
   RefreshCw,
   Send,
+	ShieldCheck,
   Trash2,
 } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
@@ -103,7 +104,7 @@ function AccountListing({ listing, busy, onDelete, onPublish }) {
   );
 }
 
-export function AccountPage({ auth }) {
+export function AccountPage({ auth, isAdmin = false }) {
   const [activeTab, setActiveTab] = useState("all");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -193,6 +194,7 @@ export function AccountPage({ auth }) {
             <p>{auth.session.user.phone || "Пользователь QazAuto"}</p>
           </div>
           <div className="account-dashboard-actions">
+			{isAdmin && <a className="account-admin-link" href="#/admin"><ShieldCheck aria-hidden="true" size={17} />Админ-панель</a>}
             <a href="#/sell"><Plus aria-hidden="true" size={17} />Новое объявление</a>
             <button type="button" onClick={() => supabase.auth.signOut()}>
               <LogOut aria-hidden="true" size={17} />Выйти
