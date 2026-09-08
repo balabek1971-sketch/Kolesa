@@ -73,3 +73,43 @@ self.addEventListener("fetch", (event) => {
     }),
   );
 });
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data?.json() || {};
+  } catch {
+    payload = { body: event.data?.text() || "У вас новое сообщение." };
+  }
+
+  const title = String(payload.title || "Новое сообщение").slice(0, 120);
+  const body = String(payload.body || "Откройте QazAuto, чтобы прочитать.").slice(0, 240);
+  const url = String(payload.url || "/#/messages");
+  const safeUrl = url.startsWith("/#/messages") ? url : "/#/messages";
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(title, {
+      body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: String(payload.tag || "qazauto-message").slice(0, 120),
+      renotify: true,
+      data: { url: safeUrl },
+    }),
+    "setAppBadge" in navigator ? navigator.setAppBadge(Number(payload.badge) || 1) : Promise.resolve(),
+  ]));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/#/messages", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (windows) => {
+      const existing = windows.find((client) => new URL(client.url).origin === self.location.origin);
+      if (existing) {
+        await existing.navigate(target);
+        return existing.focus();
+      }
+      return self.clients.openWindow(target);
+    }),
+  );
+});

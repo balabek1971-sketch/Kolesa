@@ -85,6 +85,36 @@ func TestBearerToken(t *testing.T) {
 	}
 }
 
+func TestValidPushSubscription(t *testing.T) {
+	validHosts := []string{
+		"https://fcm.googleapis.com/fcm/send/example",
+		"https://updates.push.services.mozilla.com/wpush/v2/example",
+		"https://web.push.apple.com/example",
+		"https://wns2-par02p.notify.windows.com/w/example",
+	}
+	for _, endpoint := range validHosts {
+		payload := pushSubscriptionPayload{Endpoint: endpoint}
+		payload.Keys.P256DH = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		payload.Keys.Auth = "abcdefghijklmnop"
+		if !validPushSubscription(payload) {
+			t.Errorf("expected %q to be accepted", endpoint)
+		}
+	}
+
+	invalid := pushSubscriptionPayload{Endpoint: "https://attacker.example/push"}
+	invalid.Keys.P256DH = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	invalid.Keys.Auth = "abcdefghijklmnop"
+	if validPushSubscription(invalid) {
+		t.Fatal("expected an unknown push service to be rejected")
+	}
+}
+
+func TestTruncateRunes(t *testing.T) {
+	if actual := truncateRunes("Сообщение", 6); actual != "Сообщ…" {
+		t.Fatalf("unexpected truncation: %q", actual)
+	}
+}
+
 func TestSendSMSHook(t *testing.T) {
 	secret := []byte("01234567890123456789012345678901")
 	verifier, err := authhook.NewVerifier("v1,whsec_"+base64.StdEncoding.EncodeToString(secret), 5*time.Minute)

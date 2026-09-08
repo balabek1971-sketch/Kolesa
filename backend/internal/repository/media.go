@@ -254,6 +254,14 @@ func (c *Client) patch(ctx context.Context, path string, value map[string]any) e
 }
 
 func (c *Client) request(ctx context.Context, method, requestPath string, body any, target any, representation bool) error {
+	prefer := "return=minimal"
+	if representation {
+		prefer = "return=representation"
+	}
+	return c.requestWithPrefer(ctx, method, requestPath, body, target, prefer)
+}
+
+func (c *Client) requestWithPrefer(ctx context.Context, method, requestPath string, body any, target any, prefer string) error {
 	var reader io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -270,11 +278,7 @@ func (c *Client) request(ctx context.Context, method, requestPath string, body a
 	request.Header.Set("apikey", c.key)
 	request.Header.Set("Authorization", "Bearer "+c.key)
 	request.Header.Set("Content-Type", "application/json")
-	if representation {
-		request.Header.Set("Prefer", "return=representation")
-	} else {
-		request.Header.Set("Prefer", "return=minimal")
-	}
+	request.Header.Set("Prefer", prefer)
 
 	response, err := c.http.Do(request)
 	if err != nil {

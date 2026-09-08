@@ -9,13 +9,16 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/auth"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/authhook"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/config"
+	"github.com/balabek1971-sketch/Kolesa/backend/internal/push"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/r2"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/repository"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/sms"
@@ -36,6 +39,15 @@ type Server struct {
 	repository   *repository.Client
 	r2           *r2.Client
 	stream       *cloudflarestream.Client
+	pushSender   push.Sender
+}
+
+type pushSubscriptionPayload struct {
+	Endpoint string `json:"endpoint"`
+	Keys     struct {
+		P256DH string `json:"p256dh"`
+		Auth   string `json:"auth"`
+	} `json:"keys"`
 }
 
 type sendSMSHookPayload struct {
@@ -83,6 +95,7 @@ func newHandler(cfg config.Config, logger *slog.Logger, hookVerifier *authhook.V
 		repository:   repository.New(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, nil),
 		r2:           r2.New(cfg.R2AccountID, cfg.R2AccessKeyID, cfg.R2SecretAccessKey, cfg.R2PublicBucket, nil),
 		stream:       cloudflarestream.New(cfg.CloudflareStreamAccountID, cfg.CloudflareStreamAPIToken, cfg.CloudflareStreamWebhookSecret, nil),
+		pushSender:   push.New(cfg.WebPushVAPIDPublicKey, cfg.WebPushVAPIDPrivateKey, cfg.WebPushVAPIDSubject, &http.Client{Timeout: 8 * time.Second}),
 	}
 	mux := http.NewServeMux()
 
@@ -90,6 +103,10 @@ func newHandler(cfg config.Config, logger *slog.Logger, hookVerifier *authhook.V
 	mux.HandleFunc("GET /readyz", server.ready)
 	mux.HandleFunc("GET /v1/status", server.status)
 	mux.Handle("GET /v1/me", server.requireUser(http.HandlerFunc(server.me)))
+	mux.HandleFunc("GET /v1/push/public-key", server.pushPublicKey)
+	mux.Handle("POST /v1/push/subscriptions", server.requireUser(http.HandlerFunc(server.savePushSubscription)))
+	mux.Handle("DELETE /v1/push/subscriptions", server.requireUser(http.HandlerFunc(server.deletePushSubscription)))
+	mux.Handle("POST /v1/messages/{messageID}/push", server.requireUser(http.HandlerFunc(server.sendMessagePush)))
 	mux.Handle("POST /v1/listings/{listingID}/media/photos/upload-url", server.requireUser(http.HandlerFunc(server.createPhotoUpload)))
 	mux.Handle("POST /v1/listings/{listingID}/media/video/upload-url", server.requireUser(http.HandlerFunc(server.createVideoUpload)))
 	mux.Handle("POST /v1/listings/{listingID}/media/{mediaID}/complete", server.requireUser(http.HandlerFunc(server.completeMediaUpload)))
@@ -106,6 +123,136 @@ func newHandler(cfg config.Config, logger *slog.Logger, hookVerifier *authhook.V
 			),
 		),
 	)
+}
+
+func (s *Server) pushPublicKey(w http.ResponseWriter, _ *http.Request) {
+	enabled := s.config.WebPushVAPIDPublicKey != "" && s.config.WebPushVAPIDPrivateKey != ""
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	writeJSON(w, http.StatusOK, map[string]any{"enabled": enabled, "public_key": s.config.WebPushVAPIDPublicKey})
+}
+
+func (s *Server) savePushSubscription(w http.ResponseWriter, r *http.Request) {
+	claims, _ := claimsFromContext(r.Context())
+	var payload pushSubscriptionPayload
+	if err := decodeJSON(w, r, &payload); err != nil {
+		return
+	}
+	if !validPushSubscription(payload) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_push_subscription"})
+		return
+	}
+	if err := s.repository.UpsertPushSubscription(
+		r.Context(), claims.Subject, payload.Endpoint, payload.Keys.P256DH, payload.Keys.Auth, truncateRunes(r.UserAgent(), 512),
+	); err != nil {
+		s.logger.Error("push subscription save failed", "error", err, "user_id", claims.Subject)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "subscription_save_failed"})
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]bool{"subscribed": true})
+}
+
+func (s *Server) deletePushSubscription(w http.ResponseWriter, r *http.Request) {
+	claims, _ := claimsFromContext(r.Context())
+	var payload struct {
+		Endpoint string `json:"endpoint"`
+	}
+	if err := decodeJSON(w, r, &payload); err != nil {
+		return
+	}
+	if payload.Endpoint == "" || len(payload.Endpoint) > 2048 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_push_subscription"})
+		return
+	}
+	if err := s.repository.DeletePushSubscription(r.Context(), claims.Subject, payload.Endpoint); err != nil {
+		s.logger.Error("push subscription delete failed", "error", err, "user_id", claims.Subject)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "subscription_delete_failed"})
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) sendMessagePush(w http.ResponseWriter, r *http.Request) {
+	claims, _ := claimsFromContext(r.Context())
+	message, err := s.repository.GetMessageNotification(r.Context(), r.PathValue("messageID"))
+	if errors.Is(err, repository.ErrNotFound) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "message_not_found"})
+		return
+	}
+	if err != nil {
+		s.logger.Error("push message lookup failed", "error", err)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "message_lookup_failed"})
+		return
+	}
+	if message.SenderID != claims.Subject {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "message_sender_mismatch"})
+		return
+	}
+
+	subscriptions, err := s.repository.ListPushSubscriptions(r.Context(), message.RecipientID)
+	if err != nil {
+		s.logger.Error("push subscriptions lookup failed", "error", err, "recipient_id", message.RecipientID)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "subscription_lookup_failed"})
+		return
+	}
+
+	notification := push.Notification{
+		Title: "Новое сообщение · " + truncateRunes(message.ListingTitle, 60),
+		Body:  truncateRunes(message.Body, 160),
+		URL:   "/#/messages/" + message.ConversationID,
+		Tag:   "conversation-" + message.ConversationID,
+		Badge: 1,
+	}
+	sent, failed := 0, 0
+	for _, subscription := range subscriptions {
+		claimed, claimErr := s.repository.ClaimPushDelivery(r.Context(), message.MessageID, subscription.ID)
+		if claimErr != nil {
+			failed++
+			s.logger.Error("push delivery claim failed", "error", claimErr, "message_id", message.MessageID)
+			continue
+		}
+		if !claimed {
+			continue
+		}
+		result, sendErr := s.pushSender.Send(r.Context(), push.Subscription{
+			Endpoint: subscription.Endpoint, P256DH: subscription.P256DH, Auth: subscription.AuthSecret,
+		}, notification)
+		if sendErr != nil {
+			failed++
+			if result.StatusCode == http.StatusNotFound || result.StatusCode == http.StatusGone {
+				_ = s.repository.DeletePushSubscriptionByID(r.Context(), subscription.ID)
+			} else {
+				_ = s.repository.ReleasePushDelivery(r.Context(), message.MessageID, subscription.ID)
+			}
+			s.logger.Warn("push delivery failed", "error", sendErr, "status", result.StatusCode, "message_id", message.MessageID)
+			continue
+		}
+		sent++
+		if err := s.repository.CompletePushDelivery(r.Context(), message.MessageID, subscription.ID, result.StatusCode); err != nil {
+			s.logger.Warn("push delivery receipt update failed", "error", err, "message_id", message.MessageID)
+		}
+	}
+	writeJSON(w, http.StatusAccepted, map[string]int{"sent": sent, "failed": failed})
+}
+
+func validPushSubscription(value pushSubscriptionPayload) bool {
+	if len(value.Endpoint) < 20 || len(value.Endpoint) > 2048 || len(value.Keys.P256DH) < 40 || len(value.Keys.P256DH) > 256 || len(value.Keys.Auth) < 16 || len(value.Keys.Auth) > 128 {
+		return false
+	}
+	parsed, err := url.Parse(value.Endpoint)
+	if err != nil || parsed.Scheme != "https" || parsed.Hostname() == "" || parsed.User != nil {
+		return false
+	}
+	host := strings.ToLower(parsed.Hostname())
+	return host == "fcm.googleapis.com" || host == "updates.push.services.mozilla.com" || host == "web.push.apple.com" ||
+		strings.HasSuffix(host, ".push.apple.com") || strings.HasSuffix(host, ".notify.windows.com")
+}
+
+func truncateRunes(value string, maximum int) string {
+	if utf8.RuneCountInString(value) <= maximum {
+		return value
+	}
+	runes := []rune(value)
+	return string(runes[:maximum-1]) + "…"
 }
 
 func (s *Server) sendSMSHook(w http.ResponseWriter, r *http.Request) {

@@ -922,6 +922,11 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
 .messages-sidebar { min-width: 0; border-right: 1px solid var(--line); overflow-y: auto; }
 .messages-sidebar > header { position: sticky; z-index: 2; top: 0; border-bottom: 1px solid var(--line); background: #fff; padding: 20px; }
 .messages-sidebar h1 { margin: 4px 0 0; font-size: 1.45rem; letter-spacing: 0; }
+.push-notification-prompt { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 9px; border-bottom: 1px solid #e4e7e5; background: #f3f5f4; padding: 11px 14px; color: #3e4643; }
+.push-notification-prompt.blocked { color: #7b2929; }
+.push-notification-prompt span { font-size: 0.68rem; line-height: 1.35; }
+.push-notification-prompt button { display: grid; min-width: 78px; min-height: 34px; place-items: center; border: 0; border-radius: 5px; background: var(--red); color: #fff; padding: 0 10px; font-size: 0.65rem; font-weight: 800; }
+.push-notification-prompt button:disabled { opacity: 0.6; }
 .conversation-list > a { position: relative; display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 11px; min-height: 84px; border-bottom: 1px solid #e4e7e5; padding: 12px 14px; }
 .conversation-list > a:hover, .conversation-list > a.active { background: #f3f5f4; }
 .conversation-list > a.active { box-shadow: inset 3px 0 0 var(--red); }
@@ -1012,6 +1017,7 @@ select, input { border: 1px solid var(--line); background: #fff; color: var(--in
   .messages-page { min-height: calc(100dvh - 66px - env(safe-area-inset-bottom)); padding: 0; }
   .messages-shell { grid-template-columns: 1fr; width: 100%; height: calc(100dvh - 66px - env(safe-area-inset-bottom)); min-height: 0; border: 0; }
   .messages-sidebar { border: 0; }
+  .push-notification-prompt { position: sticky; z-index: 1; top: 85px; }
   .message-thread-placeholder { display: none; }
   .messages-page.thread-open .messages-sidebar { display: none; }
   .messages-page:not(.thread-open) .message-thread { display: none; }

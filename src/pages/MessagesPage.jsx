@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, CarFront, LoaderCircle, MessageCircle, Send } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
+import { PushNotificationPrompt } from "../components/PushNotificationPrompt.jsx";
 import { formatPrice } from "../lib/format.js";
+import { notifyMessagePush } from "../lib/pushNotifications.js";
 import {
   fetchConversationMessages,
   fetchConversations,
@@ -43,7 +45,7 @@ function ConversationList({ activeId, conversations, loading }) {
   );
 }
 
-function ConversationThread({ conversation, currentUserId }) {
+function ConversationThread({ accessToken, conversation, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
@@ -98,9 +100,12 @@ function ConversationThread({ conversation, currentUserId }) {
     setSending(true);
     setError("");
     try {
-      await sendConversationMessage(conversation.id, messageBody);
+      const messageId = await sendConversationMessage(conversation.id, messageBody);
       setBody("");
       window.setTimeout(loadMessages, 250);
+      notifyMessagePush(messageId, accessToken).catch((pushError) => {
+        console.error("Не удалось отправить push-уведомление", pushError);
+      });
     } catch (sendError) {
       setError(sendError.message || "Не удалось отправить сообщение.");
     } finally {
@@ -164,6 +169,10 @@ export function MessagesPage({ auth, conversationId }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    navigator.clearAppBadge?.().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     if (!auth.session) return;
     setLoading(true);
     fetchConversations()
@@ -185,10 +194,15 @@ export function MessagesPage({ auth, conversationId }) {
       <section className="messages-shell">
         <aside className="messages-sidebar">
           <header><p className="eyebrow">Общение</p><h1>Сообщения</h1></header>
+          <PushNotificationPrompt accessToken={auth.session.access_token} />
           {error && <p className="message-error" role="alert">{error}</p>}
           <ConversationList activeId={conversationId} conversations={conversations} loading={loading} />
         </aside>
-        <ConversationThread conversation={activeConversation} currentUserId={auth.session.user.id} />
+        <ConversationThread
+          accessToken={auth.session.access_token}
+          conversation={activeConversation}
+          currentUserId={auth.session.user.id}
+        />
       </section>
     </main>
   );

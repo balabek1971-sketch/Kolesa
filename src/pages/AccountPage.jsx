@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
+import { disablePushNotifications } from "../lib/pushNotifications.js";
 import {
   deleteOwnListing,
   fetchOwnListings,
@@ -109,6 +110,11 @@ export function AccountPage({ auth, isAdmin = false }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleSignOut() {
+    await disablePushNotifications(auth.session?.access_token).catch(() => undefined);
+    await supabase.auth.signOut();
+  }
   const [busyId, setBusyId] = useState("");
 
   const loadListings = useCallback(async () => {
@@ -196,7 +202,7 @@ export function AccountPage({ auth, isAdmin = false }) {
           <div className="account-dashboard-actions">
 			{isAdmin && <a className="account-admin-link" href="#/admin"><ShieldCheck aria-hidden="true" size={17} />Админ-панель</a>}
             <a href="#/sell"><Plus aria-hidden="true" size={17} />Новое объявление</a>
-            <button type="button" onClick={() => supabase.auth.signOut()}>
+            <button type="button" onClick={handleSignOut}>
               <LogOut aria-hidden="true" size={17} />Выйти
             </button>
           </div>

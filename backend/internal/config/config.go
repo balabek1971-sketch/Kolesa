@@ -32,6 +32,9 @@ type Config struct {
 	CloudflareStreamAccountID     string
 	CloudflareStreamAPIToken      string
 	CloudflareStreamWebhookSecret string
+	WebPushVAPIDPublicKey         string
+	WebPushVAPIDPrivateKey        string
+	WebPushVAPIDSubject           string
 	ReadTimeout                   time.Duration
 	WriteTimeout                  time.Duration
 	IdleTimeout                   time.Duration
@@ -62,6 +65,9 @@ func Load() (Config, error) {
 		CloudflareStreamAccountID:     os.Getenv("CLOUDFLARE_STREAM_ACCOUNT_ID"),
 		CloudflareStreamAPIToken:      os.Getenv("CLOUDFLARE_STREAM_API_TOKEN"),
 		CloudflareStreamWebhookSecret: os.Getenv("CLOUDFLARE_STREAM_WEBHOOK_SECRET"),
+		WebPushVAPIDPublicKey:         os.Getenv("WEB_PUSH_VAPID_PUBLIC_KEY"),
+		WebPushVAPIDPrivateKey:        os.Getenv("WEB_PUSH_VAPID_PRIVATE_KEY"),
+		WebPushVAPIDSubject:           valueOrDefault("WEB_PUSH_VAPID_SUBJECT", "https://kolesa-six.vercel.app"),
 		ReadTimeout:                   10 * time.Second,
 		WriteTimeout:                  15 * time.Second,
 		IdleTimeout:                   60 * time.Second,
