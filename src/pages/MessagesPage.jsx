@@ -126,10 +126,8 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
   useLayoutEffect(() => {
     if (!conversation?.id) return undefined;
     const viewport = window.visualViewport;
-    const page = document.querySelector(".messages-page.thread-open");
     let scrollFrame = 0;
     let viewportFrame = 0;
-    let topCorrection = 0;
     let restingHeight = Math.round(viewport?.height || window.innerHeight);
     let orientation = window.screen?.orientation?.angle ?? window.orientation ?? 0;
     const settleTimers = new Set();
@@ -147,26 +145,14 @@ function ConversationThread({ accessToken, conversation, currentUserId }) {
         if (nextOrientation !== orientation) {
           orientation = nextOrientation;
           restingHeight = height;
-          topCorrection = 0;
         } else if (height > restingHeight) {
           restingHeight = height;
         }
 
         root.style.setProperty("--messages-viewport-height", `${height}px`);
         root.style.setProperty("--messages-viewport-width", `${width}px`);
-        root.style.setProperty("--messages-viewport-top", `${offsetTop + topCorrection}px`);
+        root.style.setProperty("--messages-viewport-top", `${offsetTop}px`);
         root.style.setProperty("--messages-viewport-left", `${offsetLeft}px`);
-
-        // Some iOS versions pan the layout viewport without updating scrollY.
-        // Correct against the rendered position so the chat stays device-fixed.
-        if (page) {
-          const renderedTop = page.getBoundingClientRect().top;
-          const delta = offsetTop - renderedTop;
-          if (Math.abs(delta) > 0.5) {
-            topCorrection += delta;
-            root.style.setProperty("--messages-viewport-top", `${offsetTop + topCorrection}px`);
-          }
-        }
 
         const keyboardOpen = height < restingHeight - 80;
         root.classList.toggle("message-keyboard-open", keyboardOpen);
