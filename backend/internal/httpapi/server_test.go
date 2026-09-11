@@ -69,6 +69,27 @@ func TestMeRequiresAuthentication(t *testing.T) {
 	}
 }
 
+func TestInternalModerationRequiresWorkerSecret(t *testing.T) {
+	cfg := testConfig()
+	cfg.ModerationWorkerSecret = "worker-secret"
+	handler, err := New(cfg, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatalf("New() returned an error: %v", err)
+	}
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/v1/internal/moderation/3351059d-1218-4783-b998-de91d805b709/claim",
+		bytes.NewBufferString(`{"revision":1}`),
+	)
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", recorder.Code)
+	}
+}
+
 func TestBearerToken(t *testing.T) {
 	tests := map[string]string{
 		"Bearer token": "token",

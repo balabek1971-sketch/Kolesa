@@ -18,6 +18,7 @@ import (
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/auth"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/authhook"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/config"
+	"github.com/balabek1971-sketch/Kolesa/backend/internal/moderation"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/push"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/r2"
 	"github.com/balabek1971-sketch/Kolesa/backend/internal/repository"
@@ -40,6 +41,7 @@ type Server struct {
 	r2           *r2.Client
 	stream       *cloudflarestream.Client
 	pushSender   push.Sender
+	moderation   moderation.Dispatcher
 }
 
 type pushSubscriptionPayload struct {
@@ -96,6 +98,7 @@ func newHandler(cfg config.Config, logger *slog.Logger, hookVerifier *authhook.V
 		r2:           r2.New(cfg.R2AccountID, cfg.R2AccessKeyID, cfg.R2SecretAccessKey, cfg.R2PublicBucket, nil),
 		stream:       cloudflarestream.New(cfg.CloudflareStreamAccountID, cfg.CloudflareStreamAPIToken, cfg.CloudflareStreamWebhookSecret, nil),
 		pushSender:   push.New(cfg.WebPushVAPIDPublicKey, cfg.WebPushVAPIDPrivateKey, cfg.WebPushVAPIDSubject, &http.Client{Timeout: 8 * time.Second}),
+		moderation:   moderation.New(cfg.ModerationWorkerURL, cfg.ModerationWorkerSecret, nil),
 	}
 	mux := http.NewServeMux()
 
@@ -111,6 +114,12 @@ func newHandler(cfg config.Config, logger *slog.Logger, hookVerifier *authhook.V
 	mux.Handle("POST /v1/listings/{listingID}/media/video/upload-url", server.requireUser(http.HandlerFunc(server.createVideoUpload)))
 	mux.Handle("POST /v1/listings/{listingID}/media/{mediaID}/complete", server.requireUser(http.HandlerFunc(server.completeMediaUpload)))
 	mux.Handle("GET /v1/listings/{listingID}/media/{mediaID}/status", server.requireUser(http.HandlerFunc(server.getMediaStatus)))
+	mux.Handle("POST /v1/listings/{listingID}/publish", server.requireUser(http.HandlerFunc(server.publishListing)))
+	mux.HandleFunc("POST /v1/internal/moderation/{listingID}/claim", server.claimListingModeration)
+	mux.HandleFunc("GET /v1/internal/moderation/{listingID}/media", server.listListingModerationMedia)
+	mux.HandleFunc("POST /v1/internal/moderation/{listingID}/retry", server.retryListingModeration)
+	mux.HandleFunc("POST /v1/internal/moderation/{listingID}/complete", server.completeListingModeration)
+	mux.HandleFunc("POST /v1/internal/moderation/{listingID}/fail", server.failListingModeration)
 	mux.HandleFunc("POST /v1/hooks/supabase/send-sms", server.sendSMSHook)
 	mux.HandleFunc("POST /v1/hooks/cloudflare/stream", server.streamWebhook)
 

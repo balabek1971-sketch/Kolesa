@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { AuthPanel } from "../components/AuthPanel.jsx";
 import { disablePushNotifications } from "../lib/pushNotifications.js";
+import { publishListing } from "../lib/mediaApi.js";
 import {
   deleteOwnListing,
   fetchOwnListings,
-  publishListing,
   supabase,
 } from "../lib/supabase.js";
 
@@ -117,22 +117,30 @@ export function AccountPage({ auth, isAdmin = false }) {
   }
   const [busyId, setBusyId] = useState("");
 
-  const loadListings = useCallback(async () => {
+  const loadListings = useCallback(async ({ quiet = false } = {}) => {
     if (!auth.session) return;
-    setLoading(true);
-    setError("");
+    if (!quiet) {
+      setLoading(true);
+      setError("");
+    }
     try {
       setListings(await fetchOwnListings());
     } catch (loadError) {
       setError(loadError.message || "Не удалось загрузить объявления.");
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, [auth.session]);
 
   useEffect(() => {
     loadListings();
   }, [loadListings]);
+
+  useEffect(() => {
+    if (!listings.some((listing) => listing.status === "media_processing")) return undefined;
+    const timer = window.setInterval(() => loadListings({ quiet: true }), 5000);
+    return () => window.clearInterval(timer);
+  }, [listings, loadListings]);
 
   const visibleListings = useMemo(() => {
     const tab = tabs.find((item) => item.id === activeTab);
@@ -152,9 +160,9 @@ export function AccountPage({ auth, isAdmin = false }) {
     setBusyId(listingId);
     setError("");
     try {
-      await publishListing(listingId);
+      await publishListing(listingId, auth.session.access_token);
       await loadListings();
-      setActiveTab("active");
+      setActiveTab("moderation");
     } catch (submitError) {
       setError(submitError.message || "Не удалось опубликовать объявление.");
     } finally {

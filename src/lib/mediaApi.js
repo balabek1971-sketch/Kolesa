@@ -1,6 +1,18 @@
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+const maxUncompressedPhotoBytes = 2 * 1024 * 1024;
+const maxPhotoEdge = 1920;
 
 export const mediaApiConfigured = Boolean(apiBaseUrl);
+
+export async function publishListing(listingId, accessToken) {
+  if (!mediaApiConfigured) {
+    throw new Error("Сервис автоматической проверки ещё не подключён.");
+  }
+  return apiRequest(`/v1/listings/${listingId}/publish`, accessToken, {
+    method: "POST",
+    body: "{}",
+  });
+}
 
 async function apiRequest(path, accessToken, options = {}) {
   const response = await fetch(`${apiBaseUrl}${path}`, {
@@ -36,21 +48,61 @@ function uploadWithProgress(url, body, headers, onProgress, method = "PUT") {
   });
 }
 
+async function preparePhotoForUpload(file) {
+  if (file.size <= maxUncompressedPhotoBytes) return file;
+
+  let bitmap;
+  let objectUrl = "";
+  if (typeof createImageBitmap === "function") {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } else {
+    objectUrl = URL.createObjectURL(file);
+    bitmap = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Не удалось прочитать фотографию."));
+      image.src = objectUrl;
+    });
+  }
+  try {
+    const scale = Math.min(1, maxPhotoEdge / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d", { alpha: false }).drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (result) => (result ? resolve(result) : reject(new Error("Не удалось подготовить фотографию."))),
+        "image/jpeg",
+        0.88,
+      );
+    });
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "photo";
+    return new File([blob], `${baseName}.jpg`, { type: "image/jpeg", lastModified: file.lastModified });
+  } finally {
+    bitmap.close?.();
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+  }
+}
+
 async function uploadPhoto(listingId, file, sortOrder, accessToken, onProgress) {
+  const preparedFile = await preparePhotoForUpload(file);
   const intent = await apiRequest(`/v1/listings/${listingId}/media/photos/upload-url`, accessToken, {
     method: "POST",
     body: JSON.stringify({
-      content_type: file.type,
-      filename: file.name,
-      size_bytes: file.size,
+      content_type: preparedFile.type,
+      filename: preparedFile.name,
+      size_bytes: preparedFile.size,
       sort_order: sortOrder,
     }),
   });
 
   await uploadWithProgress(
     intent.upload_url,
-    file,
-    { "Content-Type": file.type },
+    preparedFile,
+    { "Content-Type": preparedFile.type },
     (progress) => onProgress?.({ kind: "photo", index: sortOrder, progress }),
   );
 

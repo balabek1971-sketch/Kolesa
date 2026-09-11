@@ -414,20 +414,6 @@ export async function createListing(listing) {
   return data;
 }
 
-export async function publishListing(listingId) {
-  if (!supabase) throw new Error("Supabase не настроен.");
-
-  const { error } = await supabase.rpc("publish_own_listing", {
-    p_listing_id: listingId
-  });
-
-  if (error?.code === "23505" || error?.message?.includes("listings_owner_active_duplicate_idx")) {
-    throw new Error("Этот автомобиль уже опубликован в вашем аккаунте. Измените существующее объявление или удалите его.");
-  }
-
-  if (error) throw error;
-}
-
 export async function deleteOwnListing(listingId) {
   if (!supabase) throw new Error("Supabase не настроен.");
 

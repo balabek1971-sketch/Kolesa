@@ -68,3 +68,10 @@ Configure R2 bucket CORS for the production Vercel origin and `PUT` requests wit
 `Content-Type` header. Add `VITE_API_BASE_URL` and `VITE_R2_PUBLIC_URL` to Vercel.
 Photos upload with concurrency 3; video uploads after them. Railway never receives
 the media bytes. The API verifies each object in R2 before marking it ready.
+
+## Automated media moderation
+
+Publishing is routed through `POST /v1/listings/{listingID}/publish`. Set
+`MODERATION_WORKER_URL` and `MODERATION_WORKER_SECRET` on Railway after deploying
+the Worker in `cloudflare/moderation-worker`. The API moves the listing to
+`media_processing` and dispatches a revisioned, idempotent queue job.

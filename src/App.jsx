@@ -10,7 +10,7 @@ import { FavoritesPage } from "./pages/FavoritesPage.jsx";
 import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useUnreadMessages } from "./hooks/useUnreadMessages.js";
-import { mediaApiConfigured, uploadListingMedia } from "./lib/mediaApi.js";
+import { mediaApiConfigured, publishListing, uploadListingMedia } from "./lib/mediaApi.js";
 import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
 import { trackBehavior } from "./lib/analytics.js";
 import {
@@ -18,7 +18,6 @@ import {
 	fetchAdminAccess,
   fetchListings,
 	  fetchFavoriteIds,
-  publishListing,
 	  setFavorite,
   supabase
 } from "./lib/supabase.js";
@@ -238,7 +237,7 @@ export function App() {
     }
 
     if (options.publish) {
-      await publishListing(listingId);
+      await publishListing(listingId, auth.session.access_token);
     }
 
     return listingId;

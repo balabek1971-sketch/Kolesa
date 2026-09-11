@@ -32,6 +32,8 @@ type Config struct {
 	CloudflareStreamAccountID     string
 	CloudflareStreamAPIToken      string
 	CloudflareStreamWebhookSecret string
+	ModerationWorkerURL           string
+	ModerationWorkerSecret        string
 	WebPushVAPIDPublicKey         string
 	WebPushVAPIDPrivateKey        string
 	WebPushVAPIDSubject           string
@@ -65,6 +67,8 @@ func Load() (Config, error) {
 		CloudflareStreamAccountID:     os.Getenv("CLOUDFLARE_STREAM_ACCOUNT_ID"),
 		CloudflareStreamAPIToken:      os.Getenv("CLOUDFLARE_STREAM_API_TOKEN"),
 		CloudflareStreamWebhookSecret: os.Getenv("CLOUDFLARE_STREAM_WEBHOOK_SECRET"),
+		ModerationWorkerURL:           strings.TrimRight(os.Getenv("MODERATION_WORKER_URL"), "/"),
+		ModerationWorkerSecret:        os.Getenv("MODERATION_WORKER_SECRET"),
 		WebPushVAPIDPublicKey:         os.Getenv("WEB_PUSH_VAPID_PUBLIC_KEY"),
 		WebPushVAPIDPrivateKey:        os.Getenv("WEB_PUSH_VAPID_PRIVATE_KEY"),
 		WebPushVAPIDSubject:           valueOrDefault("WEB_PUSH_VAPID_SUBJECT", "https://kolesa-six.vercel.app"),
@@ -125,6 +129,12 @@ func Load() (Config, error) {
 		if cfg.SMSProvider == "autocall" && !strings.HasPrefix(cfg.AutoCallAPIBaseURL, "https://") {
 			return Config{}, errors.New("AUTOCALL_API_BASE_URL must use HTTPS in production")
 		}
+	}
+	if cfg.ModerationWorkerURL != "" && !strings.HasPrefix(cfg.ModerationWorkerURL, "https://") {
+		return Config{}, errors.New("MODERATION_WORKER_URL must use HTTPS")
+	}
+	if (cfg.ModerationWorkerURL == "") != (cfg.ModerationWorkerSecret == "") {
+		return Config{}, errors.New("MODERATION_WORKER_URL and MODERATION_WORKER_SECRET must be configured together")
 	}
 
 	return cfg, nil

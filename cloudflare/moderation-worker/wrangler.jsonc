@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../node_modules/wrangler/config-schema.json",
+  "name": "qazauto-media-moderation",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-09",
+  "workers_dev": true,
+  "ai": {
+    "binding": "AI"
+  },
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "qazauto-media"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "MODERATION_QUEUE",
+        "queue": "qazauto-media-moderation"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "qazauto-media-moderation",
+        "dead_letter_queue": "qazauto-media-moderation-dlq",
+        "max_batch_size": 5,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "retry_delay": 30
+      }
+    ]
+  },
+  "vars": {
+    "API_BASE_URL": "https://kolesa-production.up.railway.app",
+    "VEHICLE_CONFIDENCE": "0.55",
+    "VIDEO_REQUIRED_FRAMES": "2"
+  }
+}

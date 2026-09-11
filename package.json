@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test:phone": "node --test src/lib/phone.test.js",
-    "test:search": "node --test src/lib/search.test.js"
+    "test:search": "node --test src/lib/search.test.js",
+    "test:moderation-worker": "node --test cloudflare/moderation-worker/src/index.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

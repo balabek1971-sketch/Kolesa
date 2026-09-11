@@ -69,3 +69,17 @@ func TestLoadRejectsMissingAutoCallToken(t *testing.T) {
 		t.Fatal("expected missing AutoCall token to be rejected")
 	}
 }
+
+func TestLoadRequiresCompleteModerationWorkerConfig(t *testing.T) {
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("WEB_ORIGIN", "https://qazauto.example")
+	t.Setenv("SUPABASE_URL", "https://project.supabase.co")
+	t.Setenv("SUPABASE_ANON_KEY", "test-anon-key")
+	t.Setenv("SUPABASE_SERVICE_ROLE_KEY", "test-service-key")
+	t.Setenv("MODERATION_WORKER_URL", "https://moderation.example.workers.dev")
+	t.Setenv("MODERATION_WORKER_SECRET", "")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected incomplete moderation worker config to be rejected")
+	}
+}

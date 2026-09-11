@@ -49,6 +49,19 @@ type UploadIntent struct {
 	MediaID string
 }
 
+type ModerationMedia struct {
+	ID              string            `json:"id"`
+	Kind            string            `json:"kind"`
+	Provider        string            `json:"provider"`
+	ObjectKey       string            `json:"object_key"`
+	ProviderAssetID string            `json:"provider_asset_id"`
+	Variants        map[string]string `json:"variants"`
+	Status          string            `json:"status"`
+	SortOrder       int               `json:"sort_order"`
+	MimeType        string            `json:"mime_type"`
+	DurationSeconds float64           `json:"duration_seconds"`
+}
+
 func New(baseURL, serviceRoleKey string, httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 15 * time.Second}
@@ -219,6 +232,78 @@ func (c *Client) CompleteR2Media(ctx context.Context, mediaID, uploadID string, 
 	return c.patch(ctx, "/media_uploads?id=eq."+url.QueryEscape(uploadID), map[string]any{
 		"completed_at": time.Now().UTC().Format(time.RFC3339),
 	})
+}
+
+func (c *Client) QueueListingModeration(ctx context.Context, listingID, ownerID string) (int, error) {
+	var revision int
+	err := c.requestWithPrefer(ctx, http.MethodPost, "/rpc/queue_listing_for_automated_moderation", map[string]any{
+		"p_listing_id": listingID,
+		"p_owner_id":   ownerID,
+	}, &revision, "return=representation")
+	return revision, err
+}
+
+func (c *Client) MarkModerationDispatchFailed(ctx context.Context, listingID string, revision int) error {
+	return c.request(ctx, http.MethodPost, "/rpc/fail_listing_moderation_dispatch", map[string]any{
+		"p_listing_id": listingID,
+		"p_revision":   revision,
+	}, nil, false)
+}
+
+func (c *Client) ClaimListingModeration(ctx context.Context, listingID string, revision int) (bool, error) {
+	var claimed bool
+	err := c.requestWithPrefer(ctx, http.MethodPost, "/rpc/claim_listing_automated_moderation", map[string]any{
+		"p_listing_id": listingID,
+		"p_revision":   revision,
+	}, &claimed, "return=representation")
+	return claimed, err
+}
+
+func (c *Client) ListListingModerationMedia(ctx context.Context, listingID string) ([]ModerationMedia, error) {
+	query := url.Values{}
+	query.Set("listing_id", "eq."+listingID)
+	query.Set("deleted_at", "is.null")
+	query.Set("select", "id,kind,provider,object_key,provider_asset_id,variants,status,sort_order,mime_type,duration_seconds")
+	query.Set("order", "sort_order.asc")
+	var media []ModerationMedia
+	err := c.get(ctx, "/listing_media?"+query.Encode(), &media)
+	return media, err
+}
+
+func (c *Client) RetryListingModeration(ctx context.Context, listingID string, revision int, errorCode string) error {
+	return c.request(ctx, http.MethodPost, "/rpc/retry_listing_automated_moderation", map[string]any{
+		"p_listing_id": listingID,
+		"p_revision":   revision,
+		"p_error_code": errorCode,
+	}, nil, false)
+}
+
+func (c *Client) CompleteListingModeration(
+	ctx context.Context,
+	listingID string,
+	revision int,
+	approved, photoPassed bool,
+	videoPassed *bool,
+	reason string,
+	result map[string]any,
+) error {
+	return c.request(ctx, http.MethodPost, "/rpc/complete_listing_automated_moderation", map[string]any{
+		"p_listing_id":   listingID,
+		"p_revision":     revision,
+		"p_approved":     approved,
+		"p_photo_passed": photoPassed,
+		"p_video_passed": videoPassed,
+		"p_reason":       reason,
+		"p_result":       result,
+	}, nil, false)
+}
+
+func (c *Client) FailListingModeration(ctx context.Context, listingID string, revision int, errorCode string) error {
+	return c.request(ctx, http.MethodPost, "/rpc/fail_listing_automated_moderation", map[string]any{
+		"p_listing_id": listingID,
+		"p_revision":   revision,
+		"p_error_code": errorCode,
+	}, nil, false)
 }
 
 func (c *Client) insertMedia(ctx context.Context, value map[string]any) (Media, error) {
