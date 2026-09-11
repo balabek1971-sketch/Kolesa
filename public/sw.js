@@ -1,4 +1,4 @@
-const buildId = new URL(self.location.href).searchParams.get("v") || "unknown";
+const buildId = "__QAZAUTO_SW_BUILD_ID__";
 const cacheName = `qazauto-${buildId}`;
 const cachePrefix = "qazauto-";
 const appShell = [

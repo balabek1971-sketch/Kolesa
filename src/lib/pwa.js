@@ -1,5 +1,3 @@
-const buildId = __QAZAUTO_BUILD_ID__;
-
 export function registerPwa() {
   if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
 
@@ -15,7 +13,7 @@ export function registerPwa() {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        `/sw.js?v=${encodeURIComponent(buildId)}`,
+        "/sw.js",
         { scope: "/", updateViaCache: "none" },
       );
 

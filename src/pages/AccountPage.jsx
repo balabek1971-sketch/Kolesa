@@ -13,6 +13,7 @@ import {
 import { AuthPanel } from "../components/AuthPanel.jsx";
 import { disablePushNotifications } from "../lib/pushNotifications.js";
 import { publishListing } from "../lib/mediaApi.js";
+import { listingSubmissionEvent } from "../lib/listingSubmissionQueue.js";
 import {
   deleteOwnListing,
   fetchOwnListings,
@@ -141,6 +142,16 @@ export function AccountPage({ auth, isAdmin = false }) {
     const timer = window.setInterval(() => loadListings({ quiet: true }), 5000);
     return () => window.clearInterval(timer);
   }, [listings, loadListings]);
+
+  useEffect(() => {
+    const handleSubmission = (event) => {
+      if (["moderating", "complete"].includes(event.detail?.state)) {
+        void loadListings({ quiet: true });
+      }
+    };
+    window.addEventListener(listingSubmissionEvent, handleSubmission);
+    return () => window.removeEventListener(listingSubmissionEvent, handleSubmission);
+  }, [loadListings]);
 
   const visibleListings = useMemo(() => {
     const tab = tabs.find((item) => item.id === activeTab);

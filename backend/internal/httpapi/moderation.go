@@ -53,6 +53,19 @@ func (s *Server) publishListing(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	status, err := s.repository.GetOwnedListingStatus(r.Context(), listingID, claims.Subject)
+	if err != nil {
+		s.logger.Warn("listing status lookup failed", "error", err, "listing_id", listingID, "owner_id", claims.Subject)
+		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{
+			"error":   "listing_not_ready",
+			"message": "Объявление не найдено или недоступно для публикации.",
+		})
+		return
+	}
+	if status == "media_processing" || status == "active" {
+		writeJSON(w, http.StatusAccepted, map[string]any{"status": status})
+		return
+	}
 
 	revision, err := s.repository.QueueListingModeration(r.Context(), listingID, claims.Subject)
 	if err != nil {

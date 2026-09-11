@@ -243,6 +243,26 @@ func (c *Client) QueueListingModeration(ctx context.Context, listingID, ownerID 
 	return revision, err
 }
 
+func (c *Client) GetOwnedListingStatus(ctx context.Context, listingID, ownerID string) (string, error) {
+	query := url.Values{}
+	query.Set("id", "eq."+listingID)
+	query.Set("owner_id", "eq."+ownerID)
+	query.Set("deleted_at", "is.null")
+	query.Set("select", "status")
+	query.Set("limit", "1")
+
+	var rows []struct {
+		Status string `json:"status"`
+	}
+	if err := c.get(ctx, "/listings?"+query.Encode(), &rows); err != nil {
+		return "", err
+	}
+	if len(rows) != 1 {
+		return "", ErrNotFound
+	}
+	return rows[0].Status, nil
+}
+
 func (c *Client) MarkModerationDispatchFailed(ctx context.Context, listingID string, revision int) error {
 	return c.request(ctx, http.MethodPost, "/rpc/fail_listing_moderation_dispatch", map[string]any{
 		"p_listing_id": listingID,

@@ -87,7 +87,7 @@ async function preparePhotoForUpload(file) {
   }
 }
 
-async function uploadPhoto(listingId, file, sortOrder, accessToken, onProgress) {
+export async function uploadListingPhoto(listingId, file, sortOrder, accessToken, onProgress) {
   const preparedFile = await preparePhotoForUpload(file);
   const intent = await apiRequest(`/v1/listings/${listingId}/media/photos/upload-url`, accessToken, {
     method: "POST",
@@ -112,7 +112,7 @@ async function uploadPhoto(listingId, file, sortOrder, accessToken, onProgress) 
   });
 }
 
-async function uploadVideo(listingId, file, accessToken, onProgress) {
+export async function uploadListingVideo(listingId, file, accessToken, onProgress) {
   const intent = await apiRequest(`/v1/listings/${listingId}/media/video/upload-url`, accessToken, {
     method: "POST",
     body: JSON.stringify({
@@ -168,9 +168,9 @@ export async function uploadListingMedia({
   }
 
   await runWithConcurrency(photos, 3, (file, index) =>
-    uploadPhoto(listingId, file, index, accessToken, onProgress));
+    uploadListingPhoto(listingId, file, index, accessToken, onProgress));
 
   if (video) {
-    await uploadVideo(listingId, video, accessToken, onProgress);
+    await uploadListingVideo(listingId, video, accessToken, onProgress);
   }
 }

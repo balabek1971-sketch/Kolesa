@@ -11,6 +11,7 @@ import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useUnreadMessages } from "./hooks/useUnreadMessages.js";
 import { mediaApiConfigured, publishListing, uploadListingMedia } from "./lib/mediaApi.js";
+import { enqueueListingSubmission, processListingSubmissions } from "./lib/listingSubmissionQueue.js";
 import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
 import { trackBehavior } from "./lib/analytics.js";
 import {
@@ -112,6 +113,24 @@ export function App() {
 			});
 		return () => { active = false; };
 	}, [authenticatedUserId]);
+
+  useEffect(() => {
+    if (!authenticatedUserId || !supabase) return undefined;
+    const context = {
+      ownerId: authenticatedUserId,
+      getAccessToken: async () => {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        return data.session?.user?.id === authenticatedUserId
+          ? data.session.access_token
+          : "";
+      },
+    };
+    const resumeUploads = () => void processListingSubmissions(context);
+    resumeUploads();
+    window.addEventListener("online", resumeUploads);
+    return () => window.removeEventListener("online", resumeUploads);
+  }, [authenticatedUserId]);
 
 	useEffect(() => {
 		const loadRevision = ++favoriteLoadRevisionRef.current;
@@ -225,18 +244,37 @@ export function App() {
       throw new Error("Сервис загрузки фото и видео ещё не подключён.");
     }
     const listingId = await createListing(listing);
+    const hasMedia = Boolean(listing.photos.length || listing.video);
 
-    if ((listing.photos.length || listing.video) && mediaApiConfigured) {
-      await uploadListingMedia({
-        accessToken: auth.session.access_token,
-        listingId,
-        photos: listing.photos,
-        video: listing.video,
-        onProgress: onMediaProgress,
-      });
-    }
-
-    if (options.publish) {
+    if (hasMedia && mediaApiConfigured) {
+      try {
+        await enqueueListingSubmission({
+          listingId,
+          ownerId: authenticatedUserId,
+          photos: listing.photos,
+          video: listing.video,
+          publish: options.publish,
+        });
+        void processListingSubmissions({
+          ownerId: authenticatedUserId,
+          getAccessToken: async () => {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) throw error;
+            return data.session?.access_token || "";
+          },
+        });
+      } catch (queueError) {
+        console.warn("Фоновая очередь недоступна, завершаем загрузку в текущем окне", queueError);
+        await uploadListingMedia({
+          accessToken: auth.session.access_token,
+          listingId,
+          photos: listing.photos,
+          video: listing.video,
+          onProgress: onMediaProgress,
+        });
+        if (options.publish) await publishListing(listingId, auth.session.access_token);
+      }
+    } else if (options.publish) {
       await publishListing(listingId, auth.session.access_token);
     }
 
