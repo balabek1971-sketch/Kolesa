@@ -128,57 +128,121 @@ export function mapListingRow(row) {
   };
 }
 
-export async function fetchListings() {
-  if (!supabase) return [];
+function applyPublicListingFilters(query, filters = {}) {
+  let filtered = query;
+  if (filters.category && filters.category !== "dealer") filtered = filtered.eq("category", filters.category);
+  if (filters.city) filtered = filtered.eq("city_name", filters.city);
+  if (filters.brand) filtered = filtered.eq("brand_name", filters.brand);
+  if (filters.model) {
+    const normalized = String(filters.model).toLocaleLowerCase("ru-KZ").replace(/ё/g, "е").trim();
+    const numberedSeries = normalized.match(/^([1-9])\s*серия$/);
+    const letterClass = normalized.match(/^([a-z]{1,3})\s*[- ]?класс$/i);
+    if (numberedSeries) filtered = filtered.like("model_name", `${numberedSeries[1]}__%`);
+    else if (letterClass) filtered = filtered.ilike("model_name", `${letterClass[1]}%`);
+    else filtered = filtered.eq("model_name", filters.model);
+  }
+  if (filters.body) filtered = filtered.eq("body_type", filters.body);
+  if (filters.condition) filtered = filtered.eq("condition", filters.condition);
+  if (filters.originCountry) filtered = filtered.eq("origin_country", filters.originCountry);
+  if (filters.engineType) filtered = filtered.eq("engine_type", filters.engineType);
+  if (filters.gearbox) filtered = filtered.eq("gearbox", filters.gearbox);
+  if (filters.steering) filtered = filtered.eq("steering", filters.steering);
+  if (filters.drivetrain) filtered = filtered.eq("drivetrain", filters.drivetrain);
+  if (filters.availability) filtered = filtered.eq("availability", filters.availability);
+  if (filters.colorName) filtered = filtered.eq("color_name", filters.colorName);
+  if (filters.yearFrom) filtered = filtered.gte("year", Number(filters.yearFrom));
+  if (filters.yearTo) filtered = filtered.lte("year", Number(filters.yearTo));
+  if (filters.priceFrom) filtered = filtered.gte("price_kzt", Number(filters.priceFrom));
+  if (filters.priceTo) filtered = filtered.lte("price_kzt", Number(filters.priceTo));
+  if (filters.mileageTo) filtered = filtered.lte("mileage_km", Number(filters.mileageTo));
+  if (filters.engineVolumeFrom) filtered = filtered.gte("engine_volume", Number(filters.engineVolumeFrom));
+  if (filters.engineVolumeTo) filtered = filtered.lte("engine_volume", Number(filters.engineVolumeTo));
+  if (filters.hasHistory) filtered = filtered.eq("has_vehicle_history", true);
+  if (filters.cleared) filtered = filtered.eq("cleared", true);
+  if (filters.damaged) filtered = filtered.eq("damaged", true);
+  if (filters.canFinance) filtered = filtered.eq("can_finance", true);
+  if (filters.metallic) filtered = filtered.eq("metallic", true);
+  if (filters.dealerOnly || filters.category === "dealer") filtered = filtered.not("dealer_id", "is", null);
+  if (filters.keyword?.trim()) filtered = filtered.ilike("title", `%${filters.keyword.trim()}%`);
+  return filtered;
+}
 
-  const { data, error } = await supabase
+function applyPublicListingSort(query, sort) {
+  if (sort === "priceAsc") return query.order("price_kzt", { ascending: true }).order("id", { ascending: true });
+  if (sort === "priceDesc") return query.order("price_kzt", { ascending: false }).order("id", { ascending: true });
+  if (sort === "yearDesc") return query.order("year", { ascending: false }).order("published_at", { ascending: false });
+  return query.order("published_at", { ascending: false, nullsFirst: false }).order("id", { ascending: true });
+}
+
+const publicListingSelect = `
+  id,
+  title,
+  brand_name,
+  model_name,
+  city_name,
+  category,
+  price_kzt,
+  year,
+  mileage_km,
+  condition,
+  body_type,
+  gearbox,
+  origin_country,
+  engine_type,
+  steering,
+  drivetrain,
+  availability,
+  engine_volume,
+  color_name,
+  metallic,
+  can_finance,
+  cleared,
+  damaged,
+  has_vehicle_history,
+  status,
+  published_at,
+  created_at,
+  listing_media(
+    id,
+    kind,
+    provider,
+    object_key,
+    provider_asset_id,
+    poster_object_key,
+    variants,
+    status,
+    sort_order
+  )
+`;
+
+export async function fetchListings({ filters = {}, sort = "recommended", offset = 0, limit = 20 } = {}) {
+  if (!supabase) return { items: [], total: 0 };
+
+  let query = supabase
     .from("listings")
-    .select(`
-      id,
-      title,
-      brand_name,
-      model_name,
-      city_name,
-      category,
-      price_kzt,
-      year,
-      mileage_km,
-      condition,
-      body_type,
-      gearbox,
-      origin_country,
-      engine_type,
-      steering,
-      drivetrain,
-      availability,
-      engine_volume,
-      color_name,
-      metallic,
-      can_finance,
-      cleared,
-      damaged,
-      has_vehicle_history,
-      status,
-      published_at,
-      created_at,
-      listing_media(
-		id,
-        kind,
-        provider,
-        object_key,
-		provider_asset_id,
-		poster_object_key,
-        variants,
-        status,
-        sort_order
-      )
-    `)
-    .eq("status", "active")
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(100);
+    .select(publicListingSelect, { count: "exact" })
+    .eq("status", "active");
+
+  query = applyPublicListingFilters(query, filters);
+  query = applyPublicListingSort(query, sort)
+    .range(offset, offset + Math.max(1, Math.min(50, limit)) - 1);
+
+  const { data, error, count } = await query;
 
   if (error) throw error;
-  return data.map(mapListingRow);
+  return { items: (data || []).map(mapListingRow), total: Number(count || 0) };
+}
+
+export async function fetchListingsByIds(listingIds) {
+  if (!supabase || !listingIds?.length) return [];
+  const { data, error } = await supabase
+    .from("listings")
+    .select(publicListingSelect)
+    .eq("status", "active")
+    .in("id", listingIds.slice(0, 500))
+    .order("published_at", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return (data || []).map(mapListingRow);
 }
 
 export async function fetchListingById(listingId) {
@@ -411,6 +475,12 @@ export async function createListing(listing) {
     });
 
   if (error) throw error;
+  const { error: manifestError } = await supabase.rpc("set_own_listing_media_manifest", {
+    p_listing_id: data,
+    p_expected_photo_count: listing.photos.length,
+    p_expects_video: Boolean(listing.video),
+  });
+  if (manifestError) throw manifestError;
   return data;
 }
 
@@ -446,6 +516,8 @@ export async function fetchOwnListings() {
     imageUrl: getPublicPhotoUrl({ object_key: row.cover_object_key }),
     photoCount: Number(row.photo_count || 0),
     videoCount: Number(row.video_count || 0),
+    expectedPhotoCount: Number(row.expected_photo_count || 0),
+    expectsVideo: Boolean(row.expects_video),
     publishedAt: row.published_at,
     expiresAt: row.expires_at,
     archivedAt: row.archived_at,

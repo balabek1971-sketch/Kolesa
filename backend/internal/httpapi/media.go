@@ -93,8 +93,15 @@ func (s *Server) createPhotoUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "photo_slot_unavailable"})
 		return
 	}
+	if intent.AlreadyComplete {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"media_id":         intent.MediaID,
+			"already_complete": true,
+		})
+		return
+	}
 
-	uploadURL, err := s.r2.PresignPut(objectKey, payload.ContentType, 15*time.Minute)
+	uploadURL, err := s.r2.PresignPut(intent.ObjectKey, payload.ContentType, 15*time.Minute)
 	if err != nil {
 		s.logger.Error("r2 presign failed", "error", err, "listing_id", listingID)
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "photo_upload_unavailable"})
@@ -140,6 +147,53 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.stream.Configured() {
+		existing, lookupErr := s.repository.GetMediaSlot(r.Context(), listingID, "video", 0)
+		if lookupErr == nil && existing.Provider == "cloudflare_stream" {
+			if existing.Status == "ready" || existing.Status == "processing" {
+				writeJSON(w, http.StatusOK, map[string]any{
+					"media_id":          existing.ID,
+					"provider":          "cloudflare_stream",
+					"provider_asset_id": existing.ProviderAssetID,
+					"already_complete":  true,
+				})
+				return
+			}
+
+			video, videoErr := s.stream.GetVideo(r.Context(), existing.ProviderAssetID)
+			if videoErr == nil {
+				_ = s.updateStreamMedia(r.Context(), video)
+				state := strings.ToLower(strings.TrimSpace(video.Status.State))
+				if video.ReadyToStream || (state != "pendingupload" && state != "error") {
+					writeJSON(w, http.StatusOK, map[string]any{
+						"media_id":          existing.ID,
+						"provider":          "cloudflare_stream",
+						"provider_asset_id": existing.ProviderAssetID,
+						"already_complete":  true,
+					})
+					return
+				}
+			}
+
+			createdAt, _ := time.Parse(time.RFC3339, existing.CreatedAt)
+			if !createdAt.IsZero() && time.Since(createdAt) < 20*time.Minute {
+				writeJSON(w, http.StatusConflict, map[string]string{
+					"error":   "video_upload_in_progress",
+					"message": "Видео уже загружается в другом окне.",
+				})
+				return
+			}
+			_ = s.stream.DeleteVideo(r.Context(), existing.ProviderAssetID)
+			if err := s.repository.SoftDeleteMedia(r.Context(), existing.ID); err != nil {
+				s.logger.Error("stale stream intent cleanup failed", "error", err, "listing_id", listingID)
+				writeJSON(w, http.StatusConflict, map[string]string{"error": "video_slot_unavailable"})
+				return
+			}
+		} else if lookupErr != nil && !errors.Is(lookupErr, repository.ErrNotFound) {
+			s.logger.Error("stream video slot lookup failed", "error", lookupErr, "listing_id", listingID)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "video_slot_lookup_failed"})
+			return
+		}
+
 		upload, err := s.stream.CreateDirectUpload(r.Context(), claims.Subject, map[string]string{
 			"listing_id": listingID,
 			"owner_id":   claims.Subject,
@@ -191,8 +245,16 @@ func (s *Server) createVideoUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "video_slot_unavailable"})
 		return
 	}
+	if intent.AlreadyComplete {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"media_id":         intent.MediaID,
+			"provider":         "cloudflare_r2",
+			"already_complete": true,
+		})
+		return
+	}
 
-	uploadURL, err := s.r2.PresignPut(objectKey, payload.ContentType, 15*time.Minute)
+	uploadURL, err := s.r2.PresignPut(intent.ObjectKey, payload.ContentType, 15*time.Minute)
 	if err != nil {
 		s.logger.Error("r2 video presign failed", "error", err, "listing_id", listingID)
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "video_upload_unavailable"})

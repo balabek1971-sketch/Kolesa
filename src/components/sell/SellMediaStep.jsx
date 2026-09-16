@@ -12,8 +12,12 @@ import {
 const PHOTO_LIMIT = 20;
 const PHOTO_SIZE_LIMIT = 15 * 1024 * 1024;
 const VIDEO_SIZE_LIMIT = 200 * 1024 * 1024;
-const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif"]);
 const VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/quicktime"]);
+
+function supportedPhoto(file) {
+  return PHOTO_TYPES.has(file.type.toLowerCase()) || /\.(heic|heif)$/i.test(file.name);
+}
 
 function fileId(file) {
   return `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
@@ -31,38 +35,56 @@ export function SellMediaStep({ photos, onPhotosChange, video, onVideoChange }) 
   const galleryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const videoInputRef = useRef(null);
+  const photosRef = useRef(photos);
+  const videoRef = useRef(video);
   const [message, setMessage] = useState("");
+
+  photosRef.current = photos;
+  videoRef.current = video;
+
+  function updatePhotos(nextPhotos) {
+    photosRef.current = nextPhotos;
+    onPhotosChange(nextPhotos);
+  }
+
+  function updateVideo(nextVideo) {
+    videoRef.current = nextVideo;
+    onVideoChange(nextVideo);
+  }
 
   function addPhotos(fileList) {
     const incoming = [...fileList];
-    const invalid = incoming.find((file) => !PHOTO_TYPES.has(file.type) || file.size > PHOTO_SIZE_LIMIT);
+    const invalid = incoming.find((file) => !supportedPhoto(file) || file.size > PHOTO_SIZE_LIMIT);
     if (invalid) {
-      setMessage("Фото должны быть JPG, PNG, WebP или AVIF размером до 15 МБ.");
+      setMessage("Фото должны быть JPG, PNG, WebP, AVIF или HEIC размером до 15 МБ.");
       return;
     }
 
-    const availableSlots = PHOTO_LIMIT - photos.length;
+    const currentPhotos = photosRef.current;
+    const availableSlots = PHOTO_LIMIT - currentPhotos.length;
     if (availableSlots <= 0) {
       setMessage("Можно добавить не более 20 фотографий.");
       return;
     }
 
     const accepted = incoming.slice(0, availableSlots).map(createPhoto);
-    onPhotosChange([...photos, ...accepted]);
+    updatePhotos([...currentPhotos, ...accepted]);
     setMessage(incoming.length > availableSlots ? "Добавлены первые 20 фотографий." : "");
   }
 
   function removePhoto(index) {
-    revokePreview(photos[index]);
-    onPhotosChange(photos.filter((_, itemIndex) => itemIndex !== index));
+    const currentPhotos = photosRef.current;
+    revokePreview(currentPhotos[index]);
+    updatePhotos(currentPhotos.filter((_, itemIndex) => itemIndex !== index));
   }
 
   function movePhoto(index, direction) {
+    const currentPhotos = photosRef.current;
     const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= photos.length) return;
-    const next = [...photos];
+    if (nextIndex < 0 || nextIndex >= currentPhotos.length) return;
+    const next = [...currentPhotos];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-    onPhotosChange(next);
+    updatePhotos(next);
   }
 
   function chooseVideo(file) {
@@ -73,34 +95,50 @@ export function SellMediaStep({ photos, onPhotosChange, video, onVideoChange }) 
     }
 
     const previewUrl = URL.createObjectURL(file);
+    const candidate = {
+      id: fileId(file),
+      file,
+      previewUrl,
+      duration: null,
+      validating: true,
+    };
+    revokePreview(videoRef.current);
+    updateVideo(candidate);
+    setMessage("");
+
     const probe = document.createElement("video");
     probe.preload = "metadata";
     probe.src = previewUrl;
     probe.onloadedmetadata = () => {
       if (probe.duration > 60.5) {
-        URL.revokeObjectURL(previewUrl);
+        if (videoRef.current?.id === candidate.id) {
+          revokePreview(candidate);
+          updateVideo(null);
+        }
         setMessage("Продолжительность видео не должна превышать 60 секунд.");
         return;
       }
 
-      revokePreview(video);
-      onVideoChange({
-        id: fileId(file),
-        file,
-        previewUrl,
+      if (videoRef.current?.id !== candidate.id) return;
+      updateVideo({
+        ...candidate,
         duration: Math.ceil(probe.duration),
+        validating: false,
       });
       setMessage("");
     };
     probe.onerror = () => {
-      URL.revokeObjectURL(previewUrl);
+      if (videoRef.current?.id === candidate.id) {
+        revokePreview(candidate);
+        updateVideo(null);
+      }
       setMessage("Не удалось прочитать видео. Выберите другой файл.");
     };
   }
 
   function removeVideo() {
-    revokePreview(video);
-    onVideoChange(null);
+    revokePreview(videoRef.current);
+    updateVideo(null);
   }
 
   return (
@@ -135,7 +173,7 @@ export function SellMediaStep({ photos, onPhotosChange, video, onVideoChange }) 
           ref={galleryInputRef}
           className="visually-hidden"
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif"
+          accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,.heic,.heif"
           multiple
           onChange={(event) => {
             addPhotos(event.target.files);
@@ -188,7 +226,7 @@ export function SellMediaStep({ photos, onPhotosChange, video, onVideoChange }) 
           <button className="media-dropzone" type="button" onClick={() => galleryInputRef.current?.click()}>
             <Upload aria-hidden="true" size={26} />
             <strong>Добавьте фотографии автомобиля</strong>
-            <span>JPG, PNG, WebP или AVIF до 15 МБ</span>
+            <span>JPG, PNG, WebP, AVIF или HEIC до 15 МБ</span>
           </button>
         )}
       </section>
@@ -218,7 +256,7 @@ export function SellMediaStep({ photos, onPhotosChange, video, onVideoChange }) 
             <video src={video.previewUrl} controls preload="metadata" />
             <div>
               <strong>{video.file.name}</strong>
-              <span>{video.duration} сек.</span>
+              <span>{video.validating ? "Проверяем длительность..." : `${video.duration} сек.`}</span>
               <button type="button" onClick={removeVideo}>
                 <Trash2 aria-hidden="true" size={17} />
                 Удалить видео

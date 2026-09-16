@@ -149,6 +149,15 @@ export function SellForm({ onSubmit, userPhone }) {
   }
 
   async function handleSubmit(mode) {
+    if (video?.validating) {
+      setMessage("Подождите секунду: проверяем длительность видео.");
+      return;
+    }
+    if (!photos.length) {
+      setMessage("Добавьте хотя бы одну фотографию.");
+      setActiveStep(3);
+      return;
+    }
     setSubmitting(true);
     setMessage("");
 

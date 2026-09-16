@@ -48,7 +48,9 @@ const formatDate = (value) => value
 
 function AccountListing({ listing, busy, onDelete, onPublish }) {
   const status = statusDetails[listing.status] || statusDetails.draft;
-  const canSubmit = ["draft", "rejected", "pending_moderation"].includes(listing.status);
+  const mediaUploading = listing.photoCount < listing.expectedPhotoCount
+    || (listing.expectsVideo && listing.videoCount < 1);
+  const canSubmit = ["draft", "rejected"].includes(listing.status) && !mediaUploading;
 
   return (
     <article className="account-listing">
@@ -82,7 +84,11 @@ function AccountListing({ listing, busy, onDelete, onPublish }) {
       </div>
 
       <div className="account-listing-actions">
-        <span>{listing.photoCount} фото{listing.videoCount ? ` · ${listing.videoCount} видео` : ""}</span>
+        <span>
+          {mediaUploading
+            ? `Загружено ${listing.photoCount} из ${listing.expectedPhotoCount} фото${listing.expectsVideo ? ` · видео ${listing.videoCount ? "готово" : "загружается"}` : ""}`
+            : `${listing.photoCount} фото${listing.videoCount ? ` · ${listing.videoCount} видео` : ""}`}
+        </span>
         <div>
           {canSubmit && (
             <button className="listing-publish" type="button" disabled={busy} onClick={() => onPublish(listing.id)}>

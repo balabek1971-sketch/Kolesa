@@ -1,7 +1,8 @@
 const MODEL = "@cf/facebook/detr-resnet-50";
 const VEHICLE_LABELS = new Set(["car", "truck", "bus", "motorcycle", "motorbike", "vehicle"]);
 const VIDEO_FRAME_POSITIONS = [0.1, 0.3, 0.5, 0.7, 0.9];
-const MAX_ATTEMPTS = 3;
+const DEFAULT_MAX_ATTEMPTS = 5;
+const DEFAULT_VIDEO_MAX_ATTEMPTS = 10;
 
 class RetryableError extends Error {
   constructor(code, message = code) {
@@ -236,7 +237,16 @@ async function handleQueueMessage(env, queueMessage) {
     queueMessage.ack();
   } catch (error) {
     const code = String(error?.code || "moderation_failed").slice(0, 200);
-    if (Number(queueMessage.attempts || 1) >= MAX_ATTEMPTS) {
+    const configuredAttempts = code === "video_not_ready"
+      ? Number(env.VIDEO_MAX_ATTEMPTS || DEFAULT_VIDEO_MAX_ATTEMPTS)
+      : Number(env.MODERATION_MAX_ATTEMPTS || DEFAULT_MAX_ATTEMPTS);
+    const fallbackAttempts = code === "video_not_ready"
+      ? DEFAULT_VIDEO_MAX_ATTEMPTS
+      : DEFAULT_MAX_ATTEMPTS;
+    const maxAttempts = Number.isFinite(configuredAttempts)
+      ? Math.max(1, Math.min(20, configuredAttempts))
+      : fallbackAttempts;
+    if (Number(queueMessage.attempts || 1) >= maxAttempts) {
       await moderationRequest(env, body.listing_id, "fail", {
         revision: Number(body.revision || 0),
         error_code: code,

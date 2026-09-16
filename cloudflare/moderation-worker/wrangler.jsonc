@@ -26,13 +26,15 @@
         "dead_letter_queue": "qazauto-media-moderation-dlq",
         "max_batch_size": 5,
         "max_batch_timeout": 5,
-        "max_retries": 3,
+        "max_retries": 10,
         "retry_delay": 30
       }
     ]
   },
   "vars": {
     "API_BASE_URL": "https://kolesa-production.up.railway.app",
+    "MODERATION_MAX_ATTEMPTS": "5",
+    "VIDEO_MAX_ATTEMPTS": "10",
     "VEHICLE_CONFIDENCE": "0.55",
     "VIDEO_REQUIRED_FRAMES": "2"
   }

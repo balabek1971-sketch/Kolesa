@@ -19,6 +19,7 @@ import { ListingReportDialog } from "../components/ListingReportDialog.jsx";
 import { bodyTypes } from "../data/filterOptions.js";
 import { brands as vehicleBrands } from "../data/brands.js";
 import { getAnalyticsContext, trackBehavior } from "../lib/analytics.js";
+import { startVisibleTimer } from "../lib/activeTime.js";
 import {
   autofeedRefreshEvent,
   clearAutofeedState,
@@ -232,10 +233,10 @@ function AutofeedCard({ active, favorite, listing, mediaIndex, muted, onFavorite
 
   useEffect(() => {
     if (!active) return undefined;
-    const started = performance.now();
+    const timer = startVisibleTimer();
     trackBehavior("impression", { listingId: listing.id, position, metadata: { source: "autofeed" } });
     return () => {
-      const duration = Math.round(performance.now() - started);
+      const duration = timer.stop();
       trackBehavior("active_view", {
         listingId: listing.id,
         position,

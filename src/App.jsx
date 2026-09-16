@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Header } from "./components/Header.jsx";
 import { MobileNavigation } from "./components/MobileNavigation.jsx";
 import { CookieConsent } from "./components/CookieConsent.jsx";
@@ -7,13 +7,13 @@ import { HomePage } from "./pages/HomePage.jsx";
 import { ListingPage } from "./pages/ListingPage.jsx";
 import { SellPage } from "./pages/SellPage.jsx";
 import { FavoritesPage } from "./pages/FavoritesPage.jsx";
-import { initialListings } from "./data/listings.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useUnreadMessages } from "./hooks/useUnreadMessages.js";
 import { mediaApiConfigured, publishListing, uploadListingMedia } from "./lib/mediaApi.js";
 import { enqueueListingSubmission, processListingSubmissions } from "./lib/listingSubmissionQueue.js";
-import { createDefaultFilters, filterListings, sortListings } from "./lib/search.js";
+import { createDefaultFilters } from "./lib/search.js";
 import { trackBehavior } from "./lib/analytics.js";
+import { startVisibleTimer } from "./lib/activeTime.js";
 import {
   createListing,
 	fetchAdminAccess,
@@ -26,6 +26,7 @@ import {
 const AutofeedPage = lazy(() => import("./pages/AutofeedPage.jsx").then((module) => ({ default: module.AutofeedPage })));
 const MessagesPage = lazy(() => import("./pages/MessagesPage.jsx").then((module) => ({ default: module.MessagesPage })));
 const AdminPage = lazy(() => import("./pages/AdminPage.jsx").then((module) => ({ default: module.AdminPage })));
+const catalogPageSize = 20;
 
 function unseenFavoritesKey(userId) {
   return `qazauto:unseen-favorites:${userId}`;
@@ -68,13 +69,17 @@ export function App() {
   const [route, setRoute] = useState(getRoute);
   const [filters, setFilters] = useState(createDefaultFilters);
   const [sort, setSort] = useState("recommended");
-  const [listings, setListings] = useState(initialListings);
+  const [listings, setListings] = useState([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [listingsLoadingMore, setListingsLoadingMore] = useState(false);
+  const [listingTotal, setListingTotal] = useState(0);
   const [favorites, setFavorites] = useState(() => new Set());
   const [unseenFavorites, setUnseenFavorites] = useState(() => new Set());
 	const [adminAccess, setAdminAccess] = useState({ allowed: false, loading: false });
   const auth = useAuth();
   const authenticatedUserId = auth.session?.user?.id || "";
   const favoriteLoadRevisionRef = useRef(0);
+  const catalogLoadRevisionRef = useRef(0);
   const pendingFavoritesRef = useRef(new Set());
   const unreadMessageCount = useUnreadMessages(auth.session);
 
@@ -86,10 +91,10 @@ export function App() {
 
 	useEffect(() => {
 		if (route.name !== "listing") return undefined;
-		const started = performance.now();
+		const timer = startVisibleTimer();
 		trackBehavior("open", { listingId: route.listingId, metadata: { source: "listing_page" } });
 		return () => {
-			const duration = Math.round(performance.now() - started);
+			const duration = timer.stop();
 			trackBehavior("active_view", { listingId: route.listingId, activeMilliseconds: duration, metadata: { source: "listing_page" } });
 			if (duration >= 3000) trackBehavior("qualified_view", { listingId: route.listingId, activeMilliseconds: duration });
 		};
@@ -129,7 +134,13 @@ export function App() {
     const resumeUploads = () => void processListingSubmissions(context);
     resumeUploads();
     window.addEventListener("online", resumeUploads);
-    return () => window.removeEventListener("online", resumeUploads);
+    window.addEventListener("focus", resumeUploads);
+    document.addEventListener("visibilitychange", resumeUploads);
+    return () => {
+      window.removeEventListener("online", resumeUploads);
+      window.removeEventListener("focus", resumeUploads);
+      document.removeEventListener("visibilitychange", resumeUploads);
+    };
   }, [authenticatedUserId]);
 
 	useEffect(() => {
@@ -164,23 +175,47 @@ export function App() {
   useEffect(() => {
     if (!supabase) return undefined;
 
-    let active = true;
-    fetchListings()
-      .then((remoteListings) => {
-        if (active && remoteListings.length > 0) setListings(remoteListings);
+    const loadRevision = ++catalogLoadRevisionRef.current;
+    setListingsLoading(true);
+    fetchListings({ filters, sort, offset: 0, limit: catalogPageSize })
+      .then(({ items, total }) => {
+        if (catalogLoadRevisionRef.current !== loadRevision) return;
+        setListings(items);
+        setListingTotal(total);
       })
       .catch((error) => {
         console.error("Не удалось загрузить объявления из Supabase", error);
+      })
+      .finally(() => {
+        if (catalogLoadRevisionRef.current === loadRevision) setListingsLoading(false);
       });
 
-    return () => {
-      active = false;
-    };
-  }, []);
+    return undefined;
+  }, [filters, sort]);
 
-  const visibleListings = useMemo(() => {
-    return sortListings(filterListings(listings, filters), sort);
-  }, [filters, listings, sort]);
+  async function loadMoreListings() {
+    if (listingsLoadingMore || listings.length >= listingTotal) return;
+    const loadRevision = catalogLoadRevisionRef.current;
+    setListingsLoadingMore(true);
+    try {
+      const { items, total } = await fetchListings({
+        filters,
+        sort,
+        offset: listings.length,
+        limit: catalogPageSize,
+      });
+      if (catalogLoadRevisionRef.current !== loadRevision) return;
+      setListings((current) => [
+        ...current,
+        ...items.filter((item) => !current.some((existing) => existing.id === item.id)),
+      ]);
+      setListingTotal(total);
+    } catch (error) {
+      console.error("Не удалось загрузить следующую страницу объявлений", error);
+    } finally {
+      if (catalogLoadRevisionRef.current === loadRevision) setListingsLoadingMore(false);
+    }
+  }
 
   function patchFilters(patch) {
     setFilters((current) => ({ ...current, ...patch }));
@@ -312,11 +347,15 @@ export function App() {
         authenticated={Boolean(auth.session)}
         favorites={favorites}
         filters={filters}
-        listings={visibleListings}
+        loading={listingsLoading}
+        listings={listings}
         onFavoriteToggle={toggleFavorite}
         onFiltersChange={patchFilters}
+        onLoadMore={loadMoreListings}
         onSortChange={setSort}
+        resultCount={listingTotal}
         sort={sort}
+        loadingMore={listingsLoadingMore}
       />
     );
   }

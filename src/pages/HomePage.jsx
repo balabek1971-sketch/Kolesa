@@ -9,10 +9,14 @@ export function HomePage({
   favorites,
   filters,
   listings,
+  loading,
+  loadingMore,
   onFavoriteToggle,
   onFiltersChange,
+  onLoadMore,
   onSortChange,
-  sort
+  resultCount,
+  sort,
 }) {
   return (
     <main>
@@ -21,7 +25,7 @@ export function HomePage({
           <SearchBoard
             filters={filters}
             onChange={onFiltersChange}
-            resultCount={listings.length}
+            resultCount={resultCount}
           />
         </div>
       </section>
@@ -35,8 +39,12 @@ export function HomePage({
         authenticated={authenticated}
         filters={filters}
         listings={listings}
+        loading={loading}
+        loadingMore={loadingMore}
         favorites={favorites}
         onFiltersChange={onFiltersChange}
+        onLoadMore={onLoadMore}
+        resultCount={resultCount}
         sort={sort}
         onSortChange={onSortChange}
         onFavoriteToggle={onFavoriteToggle}

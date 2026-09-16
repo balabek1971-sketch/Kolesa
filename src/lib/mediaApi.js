@@ -1,6 +1,7 @@
 const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 const maxUncompressedPhotoBytes = 2 * 1024 * 1024;
 const maxPhotoEdge = 1920;
+const heicTypes = new Set(["image/heic", "image/heif"]);
 
 export const mediaApiConfigured = Boolean(apiBaseUrl);
 
@@ -49,18 +50,24 @@ function uploadWithProgress(url, body, headers, onProgress, method = "PUT") {
 }
 
 async function preparePhotoForUpload(file) {
-  if (file.size <= maxUncompressedPhotoBytes) return file;
+  const heic = heicTypes.has(file.type.toLowerCase()) || /\.(heic|heif)$/i.test(file.name);
+  if (file.size <= maxUncompressedPhotoBytes && !heic) return file;
 
   let bitmap;
   let objectUrl = "";
   if (typeof createImageBitmap === "function") {
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-  } else {
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      bitmap = null;
+    }
+  }
+  if (!bitmap) {
     objectUrl = URL.createObjectURL(file);
     bitmap = await new Promise((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Не удалось прочитать фотографию."));
+      image.onerror = () => reject(new Error("Не удалось прочитать фотографию. Для HEIC выберите экспорт в JPEG."));
       image.src = objectUrl;
     });
   }
@@ -98,6 +105,10 @@ export async function uploadListingPhoto(listingId, file, sortOrder, accessToken
       sort_order: sortOrder,
     }),
   });
+  if (intent.already_complete) {
+    onProgress?.({ kind: "photo", index: sortOrder, progress: 1 });
+    return;
+  }
 
   await uploadWithProgress(
     intent.upload_url,
@@ -122,6 +133,10 @@ export async function uploadListingVideo(listingId, file, accessToken, onProgres
       max_duration_seconds: 60,
     }),
   });
+  if (intent.already_complete) {
+    onProgress?.({ kind: "video", index: 0, progress: 1 });
+    return;
+  }
 
   const streamUpload = intent.provider === "cloudflare_stream";
   const uploadBody = streamUpload ? new FormData() : file;

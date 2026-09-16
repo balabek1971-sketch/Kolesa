@@ -194,6 +194,8 @@ create table if not exists public.listings (
   archived_at timestamptz,
   deleted_at timestamptz,
   duplicate_fingerprint text,
+  expected_photo_count smallint not null default 0 check (expected_photo_count between 0 and 20),
+  expects_video boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   version integer not null default 1,

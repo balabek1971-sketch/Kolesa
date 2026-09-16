@@ -53,7 +53,7 @@ func (s *Server) publishListing(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	status, err := s.repository.GetOwnedListingStatus(r.Context(), listingID, claims.Subject)
+	manifest, err := s.repository.GetOwnedListingMediaManifest(r.Context(), listingID, claims.Subject)
 	if err != nil {
 		s.logger.Warn("listing status lookup failed", "error", err, "listing_id", listingID, "owner_id", claims.Subject)
 		writeJSON(w, http.StatusUnprocessableEntity, map[string]string{
@@ -62,8 +62,20 @@ func (s *Server) publishListing(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	if status == "media_processing" || status == "active" {
-		writeJSON(w, http.StatusAccepted, map[string]any{"status": status})
+	if manifest.Status == "media_processing" || manifest.Status == "active" {
+		writeJSON(w, http.StatusAccepted, map[string]any{"status": manifest.Status})
+		return
+	}
+	if manifest.ExpectedPhotoCount < 1 || manifest.ReadyPhotoCount < manifest.ExpectedPhotoCount ||
+		(manifest.ExpectsVideo && manifest.ReadyVideoCount < 1) {
+		writeJSON(w, http.StatusConflict, map[string]any{
+			"error":                "media_upload_incomplete",
+			"message":              "Фото и видео ещё загружаются. Публикация продолжится автоматически.",
+			"expected_photo_count": manifest.ExpectedPhotoCount,
+			"ready_photo_count":    manifest.ReadyPhotoCount,
+			"expects_video":        manifest.ExpectsVideo,
+			"ready_video_count":    manifest.ReadyVideoCount,
+		})
 		return
 	}
 

@@ -135,10 +135,14 @@ export function Catalog({
   favorites,
   filters,
   listings,
+  loading = false,
+  loadingMore = false,
   onFavoriteToggle,
   onFiltersChange,
+  onLoadMore,
   onSortChange,
   sort,
+  resultCount = listings.length,
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [reportListing, setReportListing] = useState(null);
@@ -184,21 +188,30 @@ export function Catalog({
         </div>
       </div>
 
-      {listings.length === 0 ? (
+      {loading ? (
+        <p className="emptyState">Загружаем объявления...</p>
+      ) : listings.length === 0 ? (
         <p className="emptyState">Под выбранные фильтры пока нет авто.</p>
       ) : (
-        <div className="listingGrid">
-          {listings.map((listing, index) => (
-            <CatalogCard
-              favorite={favorites.has(listing.id)}
-              index={index}
-              key={listing.id}
-              listing={listing}
-              onFavoriteToggle={onFavoriteToggle}
-              onReport={openReport}
-            />
-          ))}
-        </div>
+        <>
+          <div className="listingGrid">
+            {listings.map((listing, index) => (
+              <CatalogCard
+                favorite={favorites.has(listing.id)}
+                index={index}
+                key={listing.id}
+                listing={listing}
+                onFavoriteToggle={onFavoriteToggle}
+                onReport={openReport}
+              />
+            ))}
+          </div>
+          {listings.length < resultCount && onLoadMore && (
+            <button className="catalog-load-more" type="button" disabled={loadingMore} onClick={onLoadMore}>
+              {loadingMore ? "Загружаем..." : `Показать ещё (${resultCount - listings.length})`}
+            </button>
+          )}
+        </>
       )}
 
       <ListingReportDialog

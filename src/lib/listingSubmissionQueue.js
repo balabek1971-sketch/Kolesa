@@ -57,6 +57,15 @@ async function putSubmission(submission) {
   await transactionDone(transaction);
 }
 
+async function getSubmission(id) {
+  const database = await openDatabase();
+  const transaction = database.transaction(storeName, "readonly");
+  const done = transactionDone(transaction);
+  const submission = await requestResult(transaction.objectStore(storeName).get(id));
+  await done;
+  return submission;
+}
+
 async function deleteSubmission(id) {
   const database = await openDatabase();
   const transaction = database.transaction(storeName, "readwrite");
@@ -117,6 +126,8 @@ export async function enqueueListingSubmission({ listingId, ownerId, photos, vid
     ownerId,
     photos: photos.map(storeFile),
     video: storeFile(video),
+    expectedPhotoCount: photos.length,
+    expectsVideo: Boolean(video),
     publish: Boolean(publish),
     completedPhotos: [],
     videoCompleted: !video,
@@ -125,7 +136,16 @@ export async function enqueueListingSubmission({ listingId, ownerId, photos, vid
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
-  await putSubmission(submission);
+  try {
+    await putSubmission(submission);
+    const persisted = await getSubmission(submission.id);
+    if (!persisted || persisted.photos?.length !== photos.length || Boolean(persisted.video) !== Boolean(video)) {
+      throw new Error("Браузер сохранил не все выбранные файлы.");
+    }
+  } catch (error) {
+    await deleteSubmission(submission.id).catch(() => undefined);
+    throw error;
+  }
   emitSubmission({ listingId, state: "queued" });
   return submission.id;
 }
@@ -174,6 +194,9 @@ async function processSubmission(submission, context) {
   }
 
   if (submission.publish) {
+    if (completedPhotos.size !== submission.expectedPhotoCount || Boolean(submission.video) !== Boolean(submission.videoCompleted)) {
+      throw new Error("Не все выбранные файлы загружены.");
+    }
     emitSubmission({ listingId: submission.listingId, state: "moderating", progress: 1 });
     await publishListing(submission.listingId, accessToken);
   }
@@ -191,7 +214,22 @@ async function processPass(context) {
       continue;
     }
     try {
-      await processSubmission(submission, context);
+      if (navigator.locks?.request) {
+        const processed = await navigator.locks.request(
+          `qazauto-listing-submission-${submission.id}`,
+          { ifAvailable: true, mode: "exclusive" },
+          async (lock) => {
+            if (!lock) return false;
+            await processSubmission(submission, context);
+            return true;
+          },
+        );
+        if (!processed) {
+          earliestRetry = Math.min(earliestRetry, Date.now() + 5000);
+        }
+      } else {
+        await processSubmission(submission, context);
+      }
     } catch (error) {
       const attempts = Number(submission.attempts || 0) + 1;
       const delay = retryDelay(attempts);
